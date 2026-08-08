@@ -1,0 +1,8 @@
+(ns showcase.alumbra-hodos.renderer-catalog)
+
+(def catalog-selection
+  {:catalog/selection "alumbra-hodos/renderer-catalog"
+   :viewport/status :ready
+   :viewport/world "alumbra:lab/default"})
+
+catalog-selection

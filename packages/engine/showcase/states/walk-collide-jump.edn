@@ -1,0 +1,4 @@
+{:player/position [0 3 0]
+ :player/velocity [0 0 0]
+ :player/grounded true
+ :simulation/tick 0}

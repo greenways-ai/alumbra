@@ -1,0 +1,9 @@
+(ns showcase.alumbra-core.palette-backed-chunk)
+
+(def canonical-chunk
+  {:chunk/coord [0 0 0]
+   :chunk/palette ["alumbra/air" "alumbra/stone" "alumbra/grass"]
+   :chunk/indices [1 1 2 0]
+   :chunk/revision 1})
+
+canonical-chunk

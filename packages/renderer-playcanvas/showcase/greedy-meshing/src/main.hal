@@ -1,0 +1,9 @@
+(ns showcase.alumbra-renderer-playcanvas.greedy-meshing)
+
+(def render-evidence
+  {:mesh/chunks 1
+   :mesh/quads 6
+   :mesh/material-groups 2
+   :mesh/revision 1})
+
+render-evidence

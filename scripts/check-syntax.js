@@ -14,7 +14,7 @@ function walk(directory) {
     if (entry.name === "node_modules" || entry.name === "dist") continue;
     const file = path.join(directory, entry.name);
     if (entry.isDirectory()) walk(file);
-    else if (entry.isFile() && entry.name.endsWith(".js")) files.push(file);
+    else if (entry.isFile() && /\.m?js$/.test(entry.name)) files.push(file);
   }
 }
 
