@@ -1,0 +1,10 @@
+{
+  "name": "@greenways/alumbra-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@greenways/alumbra-core": "0.1.0",
+    "@greenways/alumbra-renderer-playcanvas": "0.1.0"
+  }
+}

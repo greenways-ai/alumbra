@@ -5,4 +5,5 @@
 (def transaction-format "alumbra.block-transaction/1")
 
 (def packages
-  ["greenways/alumbra-core"])
+  ["greenways/alumbra-core"
+   "greenways/alumbra-renderer-playcanvas"])

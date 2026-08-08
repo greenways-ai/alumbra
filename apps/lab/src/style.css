@@ -1,0 +1,149 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #111923;
+  color: #f3efe5;
+}
+
+* { box-sizing: border-box; }
+
+html, body, .lab-shell, #alumbra-canvas {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body { background: #111923; }
+
+#alumbra-canvas {
+  display: block;
+  touch-action: none;
+  outline: none;
+}
+
+.lab-panel {
+  position: fixed;
+  top: 1.25rem;
+  left: 1.25rem;
+  width: min(25rem, calc(100vw - 2.5rem));
+  padding: 1.1rem 1.2rem 1.2rem;
+  border: 1px solid rgb(235 226 208 / 18%);
+  border-radius: 1rem;
+  background: rgb(17 25 35 / 78%);
+  box-shadow: 0 1.5rem 5rem rgb(0 0 0 / 30%);
+  backdrop-filter: blur(18px);
+  pointer-events: none;
+}
+
+.lab-eyebrow {
+  margin: 0 0 0.65rem;
+  color: #d9b76f;
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.17em;
+}
+
+.lab-panel h1 {
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 2.1rem);
+  font-weight: 650;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+
+.lab-panel > p:not(.lab-eyebrow) {
+  margin: 0.8rem 0 1rem;
+  color: rgb(243 239 229 / 67%);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.lab-panel dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.lab-panel dl div {
+  min-width: 0;
+  padding: 0.55rem 0.6rem;
+  border-radius: 0.65rem;
+  background: rgb(255 255 255 / 5%);
+}
+
+.lab-panel dt {
+  margin-bottom: 0.2rem;
+  color: rgb(243 239 229 / 46%);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lab-panel dd {
+  margin: 0;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.73rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lab-status {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  max-width: min(28rem, calc(100vw - 2.5rem));
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.7rem;
+  background: rgb(17 25 35 / 78%);
+  color: rgb(243 239 229 / 65%);
+  font-size: 0.72rem;
+  backdrop-filter: blur(14px);
+  pointer-events: none;
+}
+
+.lab-crosshair {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 1.05rem;
+  height: 1.05rem;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.lab-crosshair::before,
+.lab-crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgb(255 249 232 / 83%);
+  box-shadow: 0 0 0.3rem rgb(0 0 0 / 70%);
+}
+
+.lab-crosshair::before {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+}
+
+.lab-crosshair::after {
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+}
+
+@media (max-width: 620px) {
+  .lab-panel {
+    top: 0.75rem;
+    left: 0.75rem;
+    width: calc(100vw - 1.5rem);
+  }
+
+  .lab-panel > p:not(.lab-eyebrow) { display: none; }
+  .lab-status { right: 0.75rem; bottom: 0.75rem; }
+}
