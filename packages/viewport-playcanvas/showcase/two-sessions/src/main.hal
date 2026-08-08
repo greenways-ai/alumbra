@@ -1,0 +1,21 @@
+(ns showcase.alumbra-viewport-playcanvas.two-sessions
+  (:require [gw.alumbra.viewport :as viewport]))
+
+(def primary
+  (viewport/session "primary" "world:alumbra/lab"))
+
+(def secondary
+  (viewport/session "secondary" "world:alumbra/lab-secondary"))
+
+{:story/id :viewport/two-sessions
+ :story/sessions [primary secondary]
+ :checks
+ [{:check/id :viewport/session-identity
+   :check/status (not= (:viewport/session primary)
+                       (:viewport/session secondary))}
+  {:check/id :viewport/world-identity
+   :check/status (not= (:viewport/world primary)
+                       (:viewport/world secondary))}
+  {:check/id :viewport/lifecycle-independence
+   :check/status (= :suspended
+                    (:viewport/status (viewport/suspend secondary)))}]}

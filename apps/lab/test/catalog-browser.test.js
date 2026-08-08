@@ -59,17 +59,30 @@ const find = (node, predicate) => {
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
-test("generated Catalog projection contains identities but no project paths", () => {
+test("generated Catalog projection contains viewport identities but no project paths", () => {
   assert.equal(ALUMBRA_RENDERER_CATALOG.id, "catalog/alumbra-renderer");
-  assert.equal(ALUMBRA_RENDERER_CATALOG.toolsets.length, 5);
-  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 5);
+  assert.equal(ALUMBRA_RENDERER_CATALOG.toolsets.length, 6);
+  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 7);
   assert.ok(ALUMBRA_RENDERER_CATALOG.activities.every((activity) => activity.path === null));
   assert.equal(
     ALUMBRA_RENDERER_CATALOG.selectedActivityId,
     "alumbra-hodos/renderer-catalog",
   );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_CATALOG.activities
+      .filter((activity) => activity.toolsetId === "alumbra-viewport-playcanvas")
+      .map((activity) => activity.id),
+    [
+      "alumbra-viewport-playcanvas/playable-world",
+      "alumbra-viewport-playcanvas/two-sessions",
+    ],
+  );
   assert.equal(
-    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hodos/renderer-catalog"].host,
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/playable-world"].host,
+    "playable-lab",
+  );
+  assert.equal(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/two-sessions"].host,
     "playable-lab",
   );
 });
@@ -105,6 +118,22 @@ test("browser Catalog selects and opens the installed playable lab by semantic i
 
   host.dispose();
   assert.equal(container.children.length, 0);
+});
+
+test("Catalog opens the two-session activity through its installed semantic identity", async () => {
+  const opened = [];
+  const session = createCatalogSession({
+    catalog: ALUMBRA_RENDERER_CATALOG,
+    installedDemos: ALUMBRA_RENDERER_INSTALLED_DEMOS,
+    openDemo: async (request) => opened.push(request),
+  });
+  session.selectActivity("alumbra-viewport-playcanvas/two-sessions");
+  await session.openActivity();
+  assert.equal(opened.length, 1);
+  assert.equal(opened[0].activityId, "alumbra-viewport-playcanvas/two-sessions");
+  assert.equal(opened[0].demo.project, "packages/viewport-playcanvas/showcase/two-sessions");
+  assert.equal(opened[0].demo.host, "playable-lab");
+  session.dispose();
 });
 
 test("Catalog session rejects caller-supplied paths and unknown identities", async () => {

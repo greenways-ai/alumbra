@@ -5,6 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111923">
   <title>Alumbra Renderer Catalog</title>
+  <script>
+  (() => {
+    const errors = [];
+    const serialize = (value) => {
+      if (value instanceof Error) return value.stack || value.message;
+      if (typeof value === "string") return value;
+      try { return JSON.stringify(value); } catch { return String(value); }
+    };
+    const record = (kind, values) => {
+      const message = `${kind}: ${values.map(serialize).join(" ")}`.slice(0, 4096);
+      errors.push(message);
+      document.documentElement.dataset.labError = "true";
+      document.documentElement.dataset.labErrorCount = String(errors.length);
+      document.documentElement.dataset.labErrorMessage = message;
+    };
+    window.__ALUMBRA_PAGE_ERRORS__ = errors;
+    const originalError = console.error.bind(console);
+    console.error = (...values) => {
+      record("console", values);
+      originalError(...values);
+    };
+    window.addEventListener("error", (event) => {
+      record("error", [event.error || event.message || "unknown page error"]);
+    });
+    window.addEventListener("unhandledrejection", (event) => {
+      record("rejection", [event.reason || "unknown rejection"]);
+    });
+  })();
+  </script>
   <link rel="stylesheet" href="./src/style.css">
   <link rel="stylesheet" href="./src/catalog.css">
   <script type="importmap">
@@ -13,6 +42,10 @@
       "playcanvas": "https://cdn.jsdelivr.net/npm/playcanvas@2.21.3/build/playcanvas/src/index.js",
       "@greenways/alumbra-core": "../../packages/core/src/index.js",
       "@greenways/alumbra-engine": "../../packages/engine/src/index.js",
+      "@greenways/alumbra-renderer-playcanvas": "../../packages/renderer-playcanvas/src/index.js",
+      "@greenways/alumbra-viewport-playcanvas": "../../packages/viewport-playcanvas/src/index.js",
+      "@greenways/alumbra-viewport-playcanvas/input": "../../packages/viewport-playcanvas/src/input.js",
+      "@greenways/alumbra-viewport-playcanvas/world": "../../packages/viewport-playcanvas/src/world-controller.js",
       "@greenways/alumbra-hodos/catalog": "../../packages/hodos/generated/renderer-catalog.js",
       "@greenways/alumbra-core/blocks": "../../packages/core/src/block-registry.js",
       "@greenways/alumbra-core/chunks": "../../packages/core/src/chunk.js",
@@ -22,14 +55,17 @@
   }
   </script>
 </head>
-<body>
+<body data-viewport-mode="single">
   <main class="lab-shell">
     <aside class="renderer-catalog" data-renderer-catalog aria-label="Alumbra Renderer Catalog"></aside>
-    <canvas id="alumbra-canvas" aria-label="Playable Alumbra voxel laboratory"></canvas>
+    <section class="lab-viewport-grid" data-viewport-grid data-mode="single" aria-label="Alumbra viewport sessions">
+      <canvas id="alumbra-canvas" data-viewport-session="primary" aria-label="Primary playable Alumbra voxel world"></canvas>
+      <canvas id="alumbra-canvas-secondary" data-viewport-session="secondary" aria-label="Secondary independent Alumbra voxel world" hidden></canvas>
+    </section>
     <section class="lab-panel" aria-live="polite">
       <p class="lab-eyebrow">ALUMBRA / PLAYABLE LAB</p>
-      <h1>Canonical blocks.<br>One living world.</h1>
-      <p>Click to capture · WASD move · Space jump · Left break · Right place · 1–8 or wheel select · Z undo</p>
+      <h1>Canonical blocks.<br>Independent views.</h1>
+      <p>Click a world to capture · WASD move · Space jump · Left break · Right place · 1–8 or wheel select · Z undo</p>
       <dl>
         <div><dt>Chunks</dt><dd data-stat="chunks">—</dd></div>
         <div><dt>Visible</dt><dd data-stat="visible">—</dd></div>
@@ -41,7 +77,7 @@
       </dl>
     </section>
     <ol class="lab-hotbar" data-hotbar aria-label="Alumbra block hotbar"></ol>
-    <p class="lab-status" data-status>Loading canonical chunks and local history…</p>
+    <p class="lab-status" data-status>Loading canonical chunks and viewport sessions…</p>
     <div class="lab-crosshair" aria-hidden="true"></div>
   </main>
   <script type="module" src="./src/catalog-entry.js"></script>

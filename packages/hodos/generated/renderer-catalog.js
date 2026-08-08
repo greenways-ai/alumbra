@@ -58,6 +58,17 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       }
     },
     {
+      "id": "alumbra-viewport-playcanvas",
+      "title": "PlayCanvas Viewport",
+      "shortTitle": "PlayCanvas Viewport",
+      "description": "Lifecycle-owned viewport sessions that compose canonical worlds, players, input and PlayCanvas projection.",
+      "tools": [],
+      "metadata": {
+        "package": "@greenways/alumbra-viewport-playcanvas",
+        "version": "0.1.0"
+      }
+    },
+    {
       "id": "alumbra-hodos",
       "title": "Hodos Integration",
       "shortTitle": "Hodos Integration",
@@ -175,6 +186,60 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       }
     },
     {
+      "id": "alumbra-viewport-playcanvas/playable-world",
+      "toolsetId": "alumbra-viewport-playcanvas",
+      "title": "Playable packaged world",
+      "level": "Integration",
+      "summary": "Run one canonical world through a reusable viewport session with explicit suspend, resume and disposal.",
+      "instructions": [
+        "Run one canonical world through a reusable viewport session with explicit suspend, resume and disposal."
+      ],
+      "path": null,
+      "checkCount": 5,
+      "metadata": {
+        "package": "@greenways/alumbra-viewport-playcanvas",
+        "demo": "playable-world",
+        "surface": "viewport",
+        "tags": [
+          "viewport",
+          "playcanvas",
+          "playable-lab"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-viewport-playcanvas/two-sessions",
+      "toolsetId": "alumbra-viewport-playcanvas",
+      "title": "Two independent sessions",
+      "level": "Integration",
+      "summary": "Run two viewport sessions without sharing world state, player clocks or renderer resources.",
+      "instructions": [
+        "Run two viewport sessions without sharing world state, player clocks or renderer resources."
+      ],
+      "path": null,
+      "checkCount": 7,
+      "metadata": {
+        "package": "@greenways/alumbra-viewport-playcanvas",
+        "demo": "two-sessions",
+        "surface": "viewport",
+        "tags": [
+          "viewport",
+          "sessions",
+          "playable-lab"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
       "id": "alumbra-hodos/renderer-catalog",
       "toolsetId": "alumbra-hodos",
       "title": "Playable renderer Catalog",
@@ -242,6 +307,20 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "project": "packages/renderer-playcanvas/showcase/greedy-meshing",
     "surface": "viewport",
     "host": "showcase-project"
+  },
+  "alumbra-viewport-playcanvas/playable-world": {
+    "package": "@greenways/alumbra-viewport-playcanvas",
+    "demo": "playable-world",
+    "project": "packages/viewport-playcanvas/showcase/playable-world",
+    "surface": "viewport",
+    "host": "playable-lab"
+  },
+  "alumbra-viewport-playcanvas/two-sessions": {
+    "package": "@greenways/alumbra-viewport-playcanvas",
+    "demo": "two-sessions",
+    "project": "packages/viewport-playcanvas/showcase/two-sessions",
+    "surface": "viewport",
+    "host": "playable-lab"
   },
   "alumbra-hodos/renderer-catalog": {
     "package": "@greenways/alumbra-hodos",

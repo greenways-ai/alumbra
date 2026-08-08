@@ -1,0 +1,22 @@
+(ns showcase.alumbra-viewport-playcanvas.playable-world
+  (:require [gw.alumbra.viewport :as viewport]))
+
+(def primary
+  (viewport/session "primary" "world:alumbra/lab"))
+
+(def suspended
+  (viewport/suspend primary))
+
+(def resumed
+  (viewport/resume suspended))
+
+{:story/id :viewport/playable-world
+ :story/session resumed
+ :checks
+ [{:check/id :viewport/world-identity
+   :check/status (= (:viewport/world primary)
+                    (:viewport/world resumed))}
+  {:check/id :viewport/resume-state
+   :check/status (= :active (:viewport/status resumed))}
+  {:check/id :viewport/resume-count
+   :check/status (= 1 (:viewport/resumes resumed))}]}
