@@ -1,0 +1,12 @@
+{:hara/type :project
+ :hara/version "1.0.0"
+ :project/id greenways/alumbra-hodos
+ :project/version "0.1.0"
+ :project/source-paths ["src"]
+ :project/test-paths ["test"]
+ :project/extension-paths []
+ :project/capabilities #{:graphics/scene :input/pointer :input/keyboard}
+ :project/dependencies
+ {"hara:greenways/hodos-web" {:version "^0.1.0"}
+  "hara:greenways/hodos-workspace-ui" {:version "^0.1.0"}}
+ :project/recipe "hara.recipe.edn"}
