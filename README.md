@@ -25,9 +25,9 @@ Alumbra → Hodos
 Hodos   ✕ Alumbra
 ```
 
-Architecture and implementation are tracked in #1. The headless Core slice is
-tracked in #2, the first renderer laboratory in #3, the Workspace integration in
-#4 and the playable sequence in #5, #13 and #14.
+Architecture and implementation are tracked in #1. Core, renderer, Hodos
+integration and the headless player/build engine are established under #2, #3,
+#4 and #13. The persistent playable laboratory is tracked by #14 under #5.
 
 ## Current packages
 
@@ -84,19 +84,27 @@ workers, GPU resources or block authority into Hodos.
 Hodos Web and Workspace UI remain optional peers. The adapter contains no Hodos
 implementation code and preserves the one-way dependency `Alumbra → Hodos`.
 
-## Voxel laboratory
+## Playable voxel laboratory
 
-The checked-in browser lab projects a deterministic 4 × 4 chunk terrain with
-free-flight controls and block-face selection:
+The checked-in browser lab now composes the packages into a deterministic local
+build loop:
 
 ```sh
 npm run lab:serve
 ```
 
-Then open `http://127.0.0.1:4173/apps/lab/`. The lab pins its browser-only
-PlayCanvas ESM import. The headless collision and build engine is packaged, but
-the current lab has not yet connected movement, block mutations or persistence;
-that integration is tracked by #14.
+Open `http://127.0.0.1:4173/apps/lab/` and click the viewport. The lab supports
+WASD movement, gravity, collision, jumping, break/place, an eight-block hotbar,
+inverse undo and exact-world local save/reload.
+
+Browser-owned `alumbra.world-save/1` envelopes pin the world, generator and block
+registry; validate every canonical chunk snapshot; preserve append-only
+transaction evidence; continue deterministic transaction IDs; and recover the
+player through a bounded safe-spawn check. Renderer and input objects are never
+persisted.
+
+Inventory quantities, crafting, creatures, health, survival progression and
+public realms remain later game packages.
 
 ## Repository map
 
@@ -105,14 +113,11 @@ packages/core/                    headless voxel values, codecs and transactions
 packages/engine/                  fixed-step player, collision and build intents
 packages/renderer-playcanvas/     pure meshing plus the PlayCanvas host adapter
 packages/hodos/                   trusted Hodos Workspace component adapter
-apps/lab/                         first interactive renderer consumer
-spec/                             Alumbra format and transaction notes
+apps/lab/                         persistent local playable renderer consumer
+spec/                             Alumbra chunk, transaction and save formats
 scripts/                          syntax, boundary and lab-server checks
 src/                              Hara distribution metadata
 ```
-
-The engine, renderer and Hodos integration are independently packaged. The
-persistent playable loop and game packages remain separate issues and PRs.
 
 ## Development
 

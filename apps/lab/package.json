@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@greenways/alumbra-core": "0.1.0",
+    "@greenways/alumbra-engine": "0.1.0",
     "@greenways/alumbra-renderer-playcanvas": "0.1.0"
   }
 }
