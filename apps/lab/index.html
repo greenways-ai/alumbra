@@ -4,34 +4,41 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111923">
-  <title>Alumbra voxel laboratory</title>
+  <title>Alumbra playable voxel laboratory</title>
   <link rel="stylesheet" href="./src/style.css">
   <script type="importmap">
   {
     "imports": {
       "playcanvas": "https://cdn.jsdelivr.net/npm/playcanvas@2.21.3/build/playcanvas/src/index.js",
+      "@greenways/alumbra-core": "../../packages/core/src/index.js",
+      "@greenways/alumbra-engine": "../../packages/engine/src/index.js",
       "@greenways/alumbra-core/blocks": "../../packages/core/src/block-registry.js",
       "@greenways/alumbra-core/chunks": "../../packages/core/src/chunk.js",
-      "@greenways/alumbra-core/coordinates": "../../packages/core/src/coordinates.js"
+      "@greenways/alumbra-core/coordinates": "../../packages/core/src/coordinates.js",
+      "@greenways/alumbra-core/transactions": "../../packages/core/src/transaction.js"
     }
   }
   </script>
 </head>
 <body>
   <main class="lab-shell">
-    <canvas id="alumbra-canvas" aria-label="Interactive Alumbra voxel laboratory"></canvas>
+    <canvas id="alumbra-canvas" aria-label="Playable Alumbra voxel laboratory"></canvas>
     <section class="lab-panel" aria-live="polite">
-      <p class="lab-eyebrow">ALUMBRA / RENDERER LAB</p>
-      <h1>Deterministic chunks,<br>projected live.</h1>
-      <p>Click the viewport · WASD move · Space/Control rise and fall · Shift accelerates</p>
+      <p class="lab-eyebrow">ALUMBRA / PLAYABLE LAB</p>
+      <h1>Canonical blocks.<br>One living world.</h1>
+      <p>Click to capture · WASD move · Space jump · Left break · Right place · 1–8 or wheel select · Z undo</p>
       <dl>
         <div><dt>Chunks</dt><dd data-stat="chunks">—</dd></div>
         <div><dt>Visible</dt><dd data-stat="visible">—</dd></div>
         <div><dt>Quads</dt><dd data-stat="quads">—</dd></div>
         <div><dt>Target</dt><dd data-stat="target">none</dd></div>
+        <div><dt>World</dt><dd data-stat="world">r0</dd></div>
+        <div><dt>Player</dt><dd data-stat="player">—</dd></div>
+        <div class="lab-stat-wide"><dt>Save</dt><dd data-stat="save">loading</dd></div>
       </dl>
     </section>
-    <p class="lab-status" data-status>Loading the PlayCanvas host…</p>
+    <ol class="lab-hotbar" data-hotbar aria-label="Alumbra block hotbar"></ol>
+    <p class="lab-status" data-status>Loading canonical chunks and local history…</p>
     <div class="lab-crosshair" aria-hidden="true"></div>
   </main>
   <script type="module" src="./src/main.js"></script>
