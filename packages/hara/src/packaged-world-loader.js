@@ -4,6 +4,7 @@ import {
   validationError,
 } from "@greenways/alumbra-core";
 import {materializeBlockRegistry} from "./block-pack.js";
+import {safeInteger} from "./common.js";
 import {materializeGeneratedChunk} from "./generator-plan.js";
 import {normalizeHaraActivation} from "./runtime.js";
 import {
@@ -12,8 +13,21 @@ import {
 } from "./packaged-world-state.js";
 
 const EXPECTED_PACKAGE_MISMATCH = "hara/package-version-mismatch";
+const INTEGER_SEED = /^-?(?:0|[1-9][0-9]*)$/;
 const pinnedVersion = (activation, packageId) => activation.packages
   .find((entry) => entry.package === packageId)?.version ?? null;
+
+const generatorSeedArgument = (value) => {
+  const source = String(value);
+  if (!INTEGER_SEED.test(source)) {
+    validationError(
+      "The packaged height-field generator requires an integer identity seed",
+      "hara/packaged-world-seed",
+      {seed: source},
+    );
+  }
+  return safeInteger(Number(source), "Packaged world generator seed");
+};
 
 const rejectionEvidence = (state, pinned) => deepFreeze({
   format: PACKAGED_WORLD_EVIDENCE_FORMAT,
@@ -100,6 +114,7 @@ export async function loadPackagedHaraWorld({
   });
   const chunks = [];
   const snapshots = [];
+  const invocationSeed = generatorSeedArgument(normalizedState.generator.seed);
   for (const expectation of normalizedState.chunks) {
     const parameters = normalizedState.generator.parameters;
     const plan = await session.invokeGenerator(
@@ -111,7 +126,7 @@ export async function loadPackagedHaraWorld({
         "alumbra/air",
         "alumbra/fixture-soil",
         "alumbra/fixture-grass",
-        normalizedState.generator.seed,
+        invocationSeed,
         parameters.minimum,
         parameters.span,
       ],
