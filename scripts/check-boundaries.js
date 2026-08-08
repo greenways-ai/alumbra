@@ -6,6 +6,13 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
 const failures = [];
 
+const browserGlobals = [
+  /\bglobalThis\.document\b/,
+  /\bglobalThis\.window\b/,
+  /\bwindow\./,
+  /\bdocument\./,
+];
+
 const packageRules = [
   {
     label: "Core",
@@ -13,17 +20,40 @@ const packageRules = [
     forbiddenSpecifiers: [
       "@greenways/hodos",
       "playcanvas",
+      "@greenways/alumbra-engine",
       "@greenways/alumbra-renderer",
       "@greenways/alumbra-game",
       "@greenways/alumbra-hodos",
     ],
-    forbiddenGlobals: [
-      /\bglobalThis\.document\b/,
-      /\bglobalThis\.window\b/,
-      /\bwindow\./,
-      /\bdocument\./,
-    ],
+    forbiddenGlobals: browserGlobals,
     allowedDependencies: new Set(),
+    allowedPeers: new Set(),
+    optionalPeers: new Set(),
+  },
+  {
+    label: "Engine",
+    directory: "packages/engine",
+    forbiddenSpecifiers: [
+      "@greenways/hodos",
+      "playcanvas",
+      "@greenways/alumbra-renderer",
+      "@greenways/alumbra-game",
+      "@greenways/alumbra-hodos",
+      "node:fs",
+      "node:http",
+      "node:https",
+      "node:net",
+      "node:tls",
+      "node:dgram",
+    ],
+    forbiddenGlobals: [
+      ...browserGlobals,
+      /\bglobalThis\.indexedDB\b/,
+      /\bindexedDB\b/,
+      /\bglobalThis\.localStorage\b/,
+      /\blocalStorage\b/,
+    ],
+    allowedDependencies: new Set(["@greenways/alumbra-core"]),
     allowedPeers: new Set(),
     optionalPeers: new Set(),
   },
@@ -32,6 +62,7 @@ const packageRules = [
     directory: "packages/renderer-playcanvas",
     forbiddenSpecifiers: [
       "@greenways/hodos",
+      "@greenways/alumbra-engine",
       "@greenways/alumbra-game",
       "@greenways/alumbra-hodos",
     ],
@@ -46,15 +77,11 @@ const packageRules = [
     forbiddenSpecifiers: [
       "@greenways/hodos",
       "playcanvas",
+      "@greenways/alumbra-engine",
       "@greenways/alumbra-renderer",
       "@greenways/alumbra-game",
     ],
-    forbiddenGlobals: [
-      /\bglobalThis\.document\b/,
-      /\bglobalThis\.window\b/,
-      /\bwindow\./,
-      /\bdocument\./,
-    ],
+    forbiddenGlobals: browserGlobals,
     allowedDependencies: new Set(),
     allowedPeers: new Set(["@greenways/hodos-web", "@greenways/hodos-workspace-ui"]),
     optionalPeers: new Set(["@greenways/hodos-web", "@greenways/hodos-workspace-ui"]),

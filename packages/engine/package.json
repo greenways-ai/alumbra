@@ -1,0 +1,26 @@
+{
+  "name": "@greenways/alumbra-engine",
+  "version": "0.1.0",
+  "description": "Headless fixed-step player, collision and build-intent engine for Alumbra",
+  "type": "module",
+  "license": "EPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/greenways-ai/alumbra.git",
+    "directory": "packages/engine"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./fixed-step": "./src/fixed-step.js",
+    "./collision": "./src/collision.js",
+    "./player": "./src/player.js",
+    "./world": "./src/world.js",
+    "./build": "./src/build.js",
+    "./hara/*": "./src/gw/alumbra/*.hal"
+  },
+  "files": ["src", "README.md", "project.edn", "project.lock.edn", "hara.recipe.edn"],
+  "sideEffects": false,
+  "publishConfig": {"access": "public"},
+  "dependencies": {"@greenways/alumbra-core": "0.1.0"},
+  "engines": {"node": ">=20"}
+}
