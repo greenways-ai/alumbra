@@ -1,0 +1,11 @@
+(ns gw.alumbra.renderer.playcanvas)
+
+(def renderer-id "alumbra.renderer/playcanvas")
+(def mesh-format "alumbra.chunk-mesh/1")
+(def capabilities #{:graphics/scene :input/pointer :input/keyboard})
+
+(defn descriptor []
+  {:renderer/id renderer-id
+   :renderer/mesh-format mesh-format
+   :renderer/capabilities capabilities
+   :renderer/state :host-owned})

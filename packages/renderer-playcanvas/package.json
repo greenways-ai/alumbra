@@ -1,0 +1,47 @@
+{
+  "name": "@greenways/alumbra-renderer-playcanvas",
+  "version": "0.1.0",
+  "description": "PlayCanvas voxel meshing, picking and projection for Alumbra",
+  "type": "module",
+  "license": "EPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/greenways-ai/alumbra.git",
+    "directory": "packages/renderer-playcanvas"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./mesh": "./src/mesh.js",
+    "./raycast": "./src/raycast.js",
+    "./visibility": "./src/visibility.js",
+    "./resources": "./src/resource-pool.js",
+    "./adapter": "./src/playcanvas-renderer.js",
+    "./controls": "./src/first-person.js",
+    "./hara/*": "./src/gw/alumbra/renderer/*.hal"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "project.edn",
+    "project.lock.edn",
+    "hara.recipe.edn"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@greenways/alumbra-core": "0.1.0"
+  },
+  "peerDependencies": {
+    "playcanvas": "^2.21.0"
+  },
+  "peerDependenciesMeta": {
+    "playcanvas": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
