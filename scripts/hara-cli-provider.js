@@ -228,7 +228,6 @@ function execute(binary, args, {
 export function createHaraCliProvider({
   binary = process.env.HARA_BIN || "hara",
   projectRoot,
-  sourceRoot = null,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   maximumOutputBytes = DEFAULT_OUTPUT_BYTES,
 } = {}) {
@@ -236,7 +235,6 @@ export function createHaraCliProvider({
     throw runtimeError("hara/provider-project", "Hara CLI provider requires projectRoot");
   }
   const resolvedProjectRoot = path.resolve(projectRoot);
-  const resolvedSourceRoot = path.resolve(sourceRoot ?? path.join(resolvedProjectRoot, "src"));
 
   return {
     async activate(activationValue) {
@@ -318,6 +316,17 @@ export function createHaraCliProvider({
           if (disposed) {
             return resultError(request, "hara/session-disposed", "Hara CLI session is disposed");
           }
+          if (request.package !== rootPackage || request.version !== project.version) {
+            return resultError(
+              request,
+              "hara/provider-package",
+              "Hara CLI provider cannot resolve the requested package from this project",
+              {
+                expected:{package:rootPackage, version:project.version},
+                actual:{package:request.package, version:request.version},
+              },
+            );
+          }
           let source;
           try {
             source = buildHaraInvocationSource(request);
@@ -332,7 +341,7 @@ export function createHaraCliProvider({
           let execution;
           try {
             execution = await execute(binary, [
-              "--root", resolvedSourceRoot,
+              "--project", resolvedProjectRoot,
               "--no-color",
               "--no-splash",
               "stdin",
