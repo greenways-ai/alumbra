@@ -36,7 +36,7 @@ export const PACKAGED_WORLD_FIXTURE = deepFreeze({
   },
   generatorId: "alumbra/fixture-height-field",
   generatorEntry: {
-    module: "gw.alumbra.fixture",
+    module: "gw.alumbra.generator",
     function: "height-field-fixture-plan",
   },
   shape: [8, 8, 8],
@@ -183,13 +183,13 @@ export const PACKAGED_WORLD_STATES = deepFreeze({
     id: PACKAGED_WORLD_STATE_IDS.defaultSeed,
     coord: [0, 0, 0],
     digest: "sha256:3d11dc2d8176c2ddaff622544196e7111b8cfafaefef0746521ae304a1a953e6",
-    spawn: {position: [3.5, 7, 3.5], velocity: [0, 0, 0], yaw: 12, pitch: -24},
+    spawn: {position: [3.5, 4.2, 3.5], velocity: [0, 0, 0], yaw: 12, pitch: -24},
   }),
   [PACKAGED_WORLD_STATE_IDS.negativeCoordinate]: packagedState({
     id: PACKAGED_WORLD_STATE_IDS.negativeCoordinate,
     coord: [-2, 0, 3],
     digest: "sha256:d11756fe007f7252053b95c996c0f8884e0561793205c9cc2a0fde8fcc336fc3",
-    spawn: {position: [-12.5, 7, 27.5], velocity: [0, 0, 0], yaw: -24, pitch: -24},
+    spawn: {position: [-12.5, 6.2, 27.5], velocity: [0, 0, 0], yaw: -24, pitch: -24},
   }),
   [PACKAGED_WORLD_STATE_IDS.packageMismatch]: packagedState({
     id: PACKAGED_WORLD_STATE_IDS.packageMismatch,
