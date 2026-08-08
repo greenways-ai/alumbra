@@ -260,5 +260,11 @@ async function main() {
 
 main().catch((error) => {
   console.error(error?.stack ?? error);
+  console.error(JSON.stringify({
+    name:error?.name ?? null,
+    code:error?.code ?? null,
+    message:error?.message ?? String(error),
+    details:error?.details ?? null,
+  }, null, 2));
   process.exitCode = 1;
 });
