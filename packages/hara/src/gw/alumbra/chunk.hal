@@ -1,0 +1,21 @@
+(ns gw.alumbra.chunk)
+
+(def generated-chunk-format "alumbra.generated-chunk/1")
+
+(defn region [from to block]
+  {"from" from "to" to "block" block})
+
+(defn override [local block]
+  {"local" local "block" block})
+
+(defn plan
+  [generator coord shape revision base regions overrides metadata]
+  {"format" generated-chunk-format
+   "generator" generator
+   "coord" coord
+   "shape" shape
+   "revision" revision
+   "base" base
+   "regions" regions
+   "overrides" overrides
+   "metadata" metadata})

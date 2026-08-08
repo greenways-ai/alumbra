@@ -1,0 +1,16 @@
+(ns gw.alumbra.transaction)
+
+(def transaction-format "alumbra.block-transaction/1")
+
+(defn change [chunk local before after]
+  {"chunk" chunk
+   "local" local
+   "before" before
+   "after" after})
+
+(defn transaction [id expected-revisions changes metadata]
+  {"format" transaction-format
+   "id" id
+   "expectedRevisions" expected-revisions
+   "changes" changes
+   "metadata" metadata})
