@@ -8,4 +8,4 @@
  :chunk/coord [0 0 0]
  :chunk/shape [8 8 8]
  :chunk/digest "sha256:3d11dc2d8176c2ddaff622544196e7111b8cfafaefef0746521ae304a1a953e6"
- :player/spawn [3.5 7 3.5]}
+ :player/spawn [3.5 4.2 3.5]}
