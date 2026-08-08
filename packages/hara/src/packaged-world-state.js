@@ -36,7 +36,7 @@ export const PACKAGED_WORLD_FIXTURE = deepFreeze({
   },
   generatorId: "alumbra/fixture-height-field",
   generatorEntry: {
-    module: "gw.alumbra.fixture",
+    module: "gw.alumbra.generator",
     function: "height-field-fixture-plan",
   },
   shape: [8, 8, 8],
