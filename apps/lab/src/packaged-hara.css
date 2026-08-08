@@ -1,0 +1,63 @@
+.lab-world-error {
+  position: relative;
+  z-index: 3;
+  place-self: center;
+  width: min(38rem, calc(100vw - 3rem));
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid rgb(234 184 117 / 28%);
+  border-radius: 1.4rem;
+  background:
+    radial-gradient(circle at 18% 0%, rgb(218 158 85 / 16%), transparent 46%),
+    rgb(13 20 29 / 94%);
+  box-shadow: 0 2rem 7rem rgb(0 0 0 / 45%);
+  backdrop-filter: blur(22px);
+}
+
+.lab-world-error[hidden] { display: none; }
+
+.lab-world-error-eyebrow {
+  margin: 0 0 0.75rem;
+  color: #e5bd7b;
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.17em;
+}
+
+.lab-world-error h2 {
+  margin: 0;
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.lab-world-error p:not(.lab-world-error-eyebrow) {
+  max-width: 34rem;
+  margin: 1rem 0 1.25rem;
+  color: rgb(243 239 229 / 70%);
+  line-height: 1.6;
+}
+
+.lab-world-error code {
+  display: inline-block;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.55rem;
+  background: rgb(255 255 255 / 6%);
+  color: #ffd8a6;
+  font: 600 0.76rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+body[data-viewport-mode="error"] .lab-crosshair,
+body[data-viewport-mode="error"] .lab-hotbar {
+  display: none;
+}
+
+body[data-viewport-mode="hara"] .lab-eyebrow {
+  color: #9ee5c3;
+}
+
+@media (max-width: 760px) {
+  .lab-world-error {
+    width: calc(100vw - 1.5rem);
+    padding: 1.25rem;
+  }
+}

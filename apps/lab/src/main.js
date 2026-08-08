@@ -23,6 +23,10 @@ import {
   resolveSafePlayerState,
   restoreWorldSave,
 } from "./world-save.js";
+import {
+  PACKAGED_HARA_ACTIVITY,
+  createPackagedHaraWorldHost,
+} from "./packaged-hara-host.js";
 import {setViewportEvidenceProvider} from "./viewport-evidence.js";
 
 const PLAYABLE_WORLD_ACTIVITY = "alumbra-viewport-playcanvas/playable-world";
@@ -32,13 +36,23 @@ const CATALOG_ACTIVITY = "alumbra-hodos/renderer-catalog";
 const viewportGrid = document.querySelector("[data-viewport-grid]");
 const canvas = document.querySelector("#alumbra-canvas");
 const secondaryCanvas = document.querySelector("#alumbra-canvas-secondary");
+const haraCanvas = document.querySelector("#alumbra-canvas-hara");
+const packagedWorldError = document.querySelector("[data-packaged-world-error]");
 const status = document.querySelector("[data-status]");
 const hotbar = document.querySelector("[data-hotbar]");
 const stats = Object.fromEntries(
   [...document.querySelectorAll("[data-stat]")].map((node) => [node.dataset.stat, node]),
 );
 
-if (!viewportGrid || !canvas || !secondaryCanvas || !status || !hotbar) {
+if (
+  !viewportGrid
+  || !canvas
+  || !secondaryCanvas
+  || !haraCanvas
+  || !packagedWorldError
+  || !status
+  || !hotbar
+) {
   throw new Error("Alumbra lab is missing a viewport or host control");
 }
 
@@ -108,27 +122,40 @@ const player = createPlayerRuntime({
   missingSolid: true,
 });
 
-const hotbarButtons = LAB_BLOCKS.map((block, index) => {
-  const item = document.createElement("li");
-  const button = document.createElement("button");
-  button.type = "button";
-  button.dataset.slot = String(index);
-  button.title = `${index + 1}: ${block.label}`;
-  button.setAttribute("aria-label", `Select ${block.label}`);
-  const swatch = document.createElement("span");
-  swatch.className = "lab-hotbar-swatch";
-  swatch.style.setProperty("--block-color", `rgb(${block.color.slice(0, 3).map((entry) => Math.round(entry * 255)).join(" ")})`);
-  const key = document.createElement("span");
-  key.className = "lab-hotbar-key";
-  key.textContent = String(index + 1);
-  const label = document.createElement("span");
-  label.className = "lab-hotbar-label";
-  label.textContent = block.label;
-  button.append(swatch, key, label);
-  item.append(button);
-  hotbar.append(item);
-  return button;
-});
+let hotbarButtons = [];
+let activeHotbarInput = null;
+let activePaletteKey = "";
+
+const paletteKey = (palette) => palette.map((block) => block.id).join("\n");
+const colorCss = (value) => `rgb(${value.slice(0, 3)
+  .map((entry) => Math.round(Math.max(0, Math.min(1, Number(entry) || 0)) * 255))
+  .join(" ")})`;
+
+function buildHotbar(palette) {
+  hotbar.replaceChildren();
+  hotbarButtons = palette.map((block, index) => {
+    const item = document.createElement("li");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.slot = String(index);
+    button.title = `${index + 1}: ${block.label}`;
+    button.setAttribute("aria-label", `Select ${block.label}`);
+    const swatch = document.createElement("span");
+    swatch.className = "lab-hotbar-swatch";
+    swatch.style.setProperty("--block-color", colorCss(block.color));
+    const key = document.createElement("span");
+    key.className = "lab-hotbar-key";
+    key.textContent = String(index + 1);
+    const label = document.createElement("span");
+    label.className = "lab-hotbar-label";
+    label.textContent = block.label;
+    button.append(swatch, key, label);
+    item.append(button);
+    hotbar.append(item);
+    return button;
+  });
+  hotbar.hidden = palette.length === 0;
+}
 
 function selectHotbar(slot) {
   hotbarButtons.forEach((button, index) => {
@@ -137,15 +164,28 @@ function selectHotbar(slot) {
   });
 }
 
+function activatePalette(palette, input, slot = input?.selectedSlot ?? 0) {
+  const nextKey = paletteKey(palette);
+  if (nextKey !== activePaletteKey) {
+    activePaletteKey = nextKey;
+    buildHotbar(palette);
+  }
+  activeHotbarInput = input ?? activeHotbarInput;
+  hotbar.hidden = palette.length === 0;
+  selectHotbar(slot);
+}
+
 let saveSequence = restored?.saveSequence ?? 0;
 let lastHud = 0;
 let autosaveElapsed = 0;
 let disposed = false;
 let activeActivity = CATALOG_ACTIVITY;
+let activePackagedState = null;
 let primaryFrame = null;
 let secondaryFrame = null;
 let primaryViewport = null;
 let secondaryViewport = null;
+let packagedHara = null;
 const pendingSaves = new Set();
 const viewports = createViewportSessionGroup();
 
@@ -184,14 +224,14 @@ function queueSave(reason) {
   return promise;
 }
 
-function reportAction({action, outcome, error}, {persistent}) {
+function reportAction({action, outcome, error}, {persistent, label}) {
   if (error) {
     console.error(`Alumbra ${action.type} failed`, error);
     setStatus(`${action.type} rejected: ${error.message}`, {error: true});
     return;
   }
   if (outcome?.status === "applied") {
-    setStatus(`${action.type} accepted in ${persistent ? "the persistent" : "the secondary"} world`);
+    setStatus(`${action.type} accepted in ${label}`);
     if (persistent) queueSave(action.type);
   } else if (outcome?.status === "noop") {
     setStatus("Nothing remains to undo");
@@ -205,7 +245,7 @@ function reportViewportError({sessionId, phase, error}) {
   setStatus(`${sessionId} ${phase} failed: ${error.message}`, {error: true});
 }
 
-function updateHud(frame) {
+function updatePrimaryHud(frame) {
   primaryFrame = frame;
   autosaveElapsed += frame.delta;
   if (autosaveElapsed >= 10) {
@@ -221,6 +261,20 @@ function updateHud(frame) {
   stats.target.textContent = frame.hit ? `${frame.hit.voxel.join(",")} · ${frame.hit.face ?? "inside"}` : "none";
   stats.world.textContent = `r${controllerState.worldRevision} · ${controllerState.undoDepth} undo`;
   stats.player.textContent = frame.player.position.map((entry) => entry.toFixed(1)).join(" · ");
+  lastHud = now;
+}
+
+function updatePackagedHud(frame) {
+  const now = performance.now();
+  if (now - lastHud <= 100) return;
+  const viewport = packagedHara?.snapshot().viewport;
+  stats.chunks.textContent = String(frame.renderer.chunks ?? 0);
+  stats.visible.textContent = String(frame.view.visible ?? 0);
+  stats.quads.textContent = Number(frame.renderer.quads ?? 0).toLocaleString();
+  stats.target.textContent = frame.hit ? `${frame.hit.voxel.join(",")} · ${frame.hit.face ?? "inside"}` : "none";
+  stats.world.textContent = `${activePackagedState ?? "world"} · r${frame.world.revision}`;
+  stats.player.textContent = frame.player.position.map((entry) => entry.toFixed(1)).join(" · ");
+  stats.save.textContent = viewport ? "exact lock · immutable state" : "exact lock";
   lastHud = now;
 }
 
@@ -242,14 +296,15 @@ primaryViewport = viewports.create("primary", {
     initialSlot: 0,
     onSelectionChange: selectHotbar,
   },
-  onFrame: updateHud,
-  onActionResult: (event) => reportAction(event, {persistent: true}),
+  onFrame: updatePrimaryHud,
+  onActionResult: (event) => reportAction(event, {persistent: true, label: "the persistent world"}),
   onError: reportViewportError,
 });
+activatePalette(LAB_BLOCKS, primaryViewport.input, primaryViewport.input.selectedSlot);
 
 const hotbarClick = (event) => {
   const button = event.target.closest?.("button[data-slot]");
-  if (button) primaryViewport.input.select(Number(button.dataset.slot));
+  if (button) activeHotbarInput?.select(Number(button.dataset.slot));
 };
 hotbar.addEventListener("click", hotbarClick);
 
@@ -289,20 +344,77 @@ function ensureSecondaryViewport() {
       secondaryFrame = frame;
       secondaryCanvas.dataset.worldRevision = String(frame.world.revision);
     },
-    onActionResult: (event) => reportAction(event, {persistent: false}),
+    onActionResult: (event) => reportAction(event, {persistent: false, label: "the secondary world"}),
     onError: reportViewportError,
   });
   return secondaryViewport;
 }
 
+packagedHara = await createPackagedHaraWorldHost({
+  pc,
+  canvas: haraCanvas,
+  errorPanel: packagedWorldError,
+  viewports,
+  playerBody: LAB_PLAYER_BODY,
+  onFrame: updatePackagedHud,
+  onActionResult: (event) => reportAction(event, {persistent: false, label: "the packaged Hara world"}),
+  onError: reportViewportError,
+  onPalette: ({palette, input, slot}) => {
+    if (input) activatePalette(palette, input, slot);
+    else selectHotbar(slot);
+  },
+  onState: ({stateId, status: stateStatus, result}) => {
+    if (!stateId) return;
+    if (stateStatus === "rejected") {
+      setStatus(`${stateId}: ${result.evidence.error.message}`);
+    } else {
+      setStatus(`${stateId} materialized from its exact Hara package and generator lock.`);
+    }
+  },
+});
+
 function resizeViewports() {
   primaryViewport.resize();
   secondaryViewport?.resize();
+  packagedHara.resize();
 }
 
-function showActivity(activityId, {announce = true} = {}) {
-  if (![PLAYABLE_WORLD_ACTIVITY, TWO_SESSIONS_ACTIVITY, CATALOG_ACTIVITY].includes(activityId)) return false;
+function showActivity(activityId, {
+  announce = true,
+  stateId = null,
+} = {}) {
+  if (![PLAYABLE_WORLD_ACTIVITY, TWO_SESSIONS_ACTIVITY, CATALOG_ACTIVITY, PACKAGED_HARA_ACTIVITY].includes(activityId)) {
+    return false;
+  }
   activeActivity = activityId;
+
+  if (activityId === PACKAGED_HARA_ACTIVITY) {
+    primaryViewport.suspend(`activity:${activityId}`);
+    secondaryViewport?.suspend(`activity:${activityId}`);
+    canvas.hidden = true;
+    secondaryCanvas.hidden = true;
+    activePackagedState = stateId ?? packagedHara.stateIds.defaultSeed;
+    const result = packagedHara.open(activePackagedState);
+    if (result.status === "rejected") {
+      viewportGrid.dataset.mode = "error";
+      document.body.dataset.viewportMode = "error";
+      hotbar.hidden = true;
+    } else {
+      viewportGrid.dataset.mode = "hara";
+      document.body.dataset.viewportMode = "hara";
+      hotbar.hidden = false;
+      if (announce) setStatus(`${activePackagedState} opened through the packaged Hara world host.`);
+    }
+    requestAnimationFrame(resizeViewports);
+    return true;
+  }
+
+  packagedHara.close(`activity:${activityId}`);
+  activePackagedState = null;
+  haraCanvas.hidden = true;
+  canvas.hidden = false;
+  packagedWorldError.hidden = true;
+  activatePalette(LAB_BLOCKS, primaryViewport.input, primaryViewport.input.selectedSlot);
   primaryViewport.resume(`activity:${activityId}`);
   if (activityId === TWO_SESSIONS_ACTIVITY) {
     const secondary = ensureSecondaryViewport();
@@ -324,7 +436,9 @@ function showActivity(activityId, {announce = true} = {}) {
   return true;
 }
 
-const openDemo = (event) => showActivity(event.detail?.activityId);
+const openDemo = (event) => showActivity(event.detail?.activityId, {
+  stateId: event.detail?.stateId ?? null,
+});
 window.addEventListener("alumbra:open-demo", openDemo);
 
 const visibility = () => {
@@ -333,16 +447,21 @@ const visibility = () => {
     queueSave("visibility change");
     return;
   }
-  showActivity(activeActivity, {announce: false});
+  showActivity(activeActivity, {
+    announce: false,
+    stateId: activePackagedState,
+  });
 };
 document.addEventListener("visibilitychange", visibility);
 
 const clearEvidence = setViewportEvidenceProvider(() => Object.freeze({
   activeActivity,
+  activePackagedState,
   mode: viewportGrid.dataset.mode ?? "single",
   sessions: viewports.snapshot(),
   primaryFrame: primaryFrame?.sequence ?? 0,
   secondaryFrame: secondaryFrame?.sequence ?? 0,
+  packagedWorld: packagedHara.snapshot(),
 }));
 
 stats.save.textContent = restored ? `${storageMode} · restored` : `${storageMode} · new`;
@@ -362,6 +481,7 @@ function destroy() {
   document.removeEventListener("visibilitychange", visibility);
   hotbar.removeEventListener("click", hotbarClick);
   clearEvidence();
+  void packagedHara.destroy();
   viewports.destroy();
   Promise.allSettled([...pendingSaves]).finally(() => store.destroy());
 }
