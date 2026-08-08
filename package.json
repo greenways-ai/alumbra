@@ -1,0 +1,19 @@
+{
+  "name": "@greenways/alumbra-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "node --test packages/core/test/*.test.js",
+    "check:boundaries": "node scripts/check-boundaries.js",
+    "check": "npm run check:boundaries && npm test",
+    "pack:check": "npm pack --dry-run -w @greenways/alumbra-core"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

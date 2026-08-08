@@ -1,0 +1,8 @@
+(ns gw.alumbra.core)
+
+(def chunk-format "alumbra.chunk/1")
+(def snapshot-format "alumbra.chunk-snapshot/1")
+(def transaction-format "alumbra.block-transaction/1")
+
+(def packages
+  ["greenways/alumbra-core"])
