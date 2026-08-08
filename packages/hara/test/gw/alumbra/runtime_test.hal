@@ -1,0 +1,116 @@
+(ns gw.alumbra.runtime-test
+  (:require [std.lib.test :as test]
+            [gw.alumbra.fixture :as fixture]
+            [gw.alumbra.generator :as generator]
+            [gw.alumbra.game :as game]))
+
+(def fixture-pack
+  (fixture/fixture-block-pack))
+
+(def height-generator
+  (generator/descriptor
+   fixture/fixture-package
+   fixture/fixture-version
+   "alumbra/fixture-height-field"
+   17
+   "gw.alumbra.generator"
+   "height-field-fixture-plan"
+   {"minimum" 2 "span" 5}))
+
+(def flat-generator
+  (generator/descriptor
+   fixture/fixture-package
+   fixture/fixture-version
+   "alumbra/fixture-flat"
+   0
+   "gw.alumbra.generator"
+   "flat-fixture-plan"
+   {"surface" 3}))
+
+(def flat-plan
+  (generator/flat-fixture-plan
+   flat-generator
+   [0 0 0]
+   [4 8 4]
+   "alumbra/air"
+   "alumbra/fixture-stone"
+   3))
+
+(def height-plan
+  (generator/height-field-fixture-plan
+   height-generator
+   [-2 0 3]
+   [4 8 4]
+   "alumbra/air"
+   "alumbra/fixture-soil"
+   "alumbra/fixture-grass"
+   17
+   2
+   5))
+
+(def interaction
+  (game/toggle-fixture-lamp
+   {"event/type" "use"}
+   {"id" "alumbra/fixture-lamp"
+    "state" {"lit" false}}))
+
+(def results
+  [(test/check
+    "the executable block pack preserves the portable fixture identity"
+    [(get fixture-pack "format")
+     (get fixture-pack "package")
+     (get fixture-pack "version")
+     (get fixture-pack "id")
+     (count (get fixture-pack "blocks"))]
+    ["alumbra.block-pack/1"
+     "hara:greenways/alumbra-hara"
+     "0.1.0"
+     "alumbra/fixture-blocks"
+     7])
+
+   (test/check
+    "integer fixture heights are stable for positive and negative coordinates"
+    [(generator/fixture-height 0 0 17 2 5)
+     (generator/fixture-height -1 0 17 2 5)
+     (generator/fixture-height 2 -3 17 2 5)
+     (generator/fixture-height -17 9 17 2 5)]
+    [4 6 5 3])
+
+   (test/check
+    "the flat fixture uses a bounded half-open region"
+    [(get flat-plan "format")
+     (count (get flat-plan "regions"))
+     (get (first (get flat-plan "regions")) "from")
+     (get (first (get flat-plan "regions")) "to")
+     (get (get flat-plan "metadata") "surface")]
+    ["alumbra.generated-chunk/1"
+     1
+     [0 0 0]
+     [4 4 4]
+     3])
+
+   (test/check
+    "the height-field fixture covers every column deterministically"
+    [(get height-plan "coord")
+     (count (get height-plan "regions"))
+     (count (get height-plan "overrides"))
+     (get (get height-plan "metadata") "fixture")]
+    [[-2 0 3]
+     16
+     16
+     "integer-height-field"])
+
+   (test/check
+    "portable interactions return feedback rather than mutating host state"
+    [(get interaction "format")
+     (get interaction "id")
+     (count (get interaction "transactions"))
+     (get (get (first (get interaction "feedback")) "data") "lit")
+     (get (get (first (get interaction "feedback")) "data") "event")]
+    ["alumbra.interaction/1"
+     "alumbra/toggle-fixture-lamp"
+     0
+     true
+     "use"])])
+
+(test/print-results results)
