@@ -16,6 +16,7 @@
     "./world": "./src/world-extension.js",
     "./interaction": "./src/interaction.js",
     "./fixtures": "./src/fixtures.js",
+    "./runtime": "./src/runtime.js",
     "./hara/*": "./src/gw/alumbra/*.hal"
   },
   "files": [
