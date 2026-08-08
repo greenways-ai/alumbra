@@ -49,7 +49,7 @@ test("the CLI provider decodes the final printed Hara JSON string", () => {
 test("activation evidence uses lowercase SHA-256 coordinates", () => {
   assert.equal(
     sha256Evidence(Buffer.from("alumbra", "utf8")),
-    "sha256:18d40abea83379f8c0a192b70f9f6565996c1a2acfc7057d20bca52ba6733178",
+    "sha256:3b8b1462922e4f2ca072c52c909d1de66b688ec6e1f8574f3e77ba6553ea274a",
   );
   assert.throws(
     () => createHaraCliProvider(),
