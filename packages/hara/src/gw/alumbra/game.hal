@@ -34,3 +34,6 @@
                   "data" {"lit" (not lit)
                           "event" (get event "event/type")}}]
      "metadata" {}}))
+
+(defn handle-fixture-interaction [event block]
+  (toggle-fixture-lamp event block))
