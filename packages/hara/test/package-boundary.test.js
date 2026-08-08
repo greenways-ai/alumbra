@@ -29,7 +29,7 @@ test("Hara rules package imports only Core and contains required HAL namespaces"
     assert.doesNotMatch(source, /\b(?:window|document|localStorage|indexedDB)\b/);
     assert.doesNotMatch(source, /@greenways\/hodos|playcanvas|@greenways\/alumbra-(?:engine|renderer|game|hodos)/);
   }
-  const expected = ["block", "chunk", "generator", "transaction", "world", "game"];
+  const expected = ["block", "chunk", "fixture", "generator", "transaction", "world", "game"];
   for (const namespace of expected) {
     const file = path.join(root, "src/gw/alumbra", `${namespace}.hal`);
     assert.equal(fs.existsSync(file), true, `${namespace}.hal is required`);
