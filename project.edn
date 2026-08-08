@@ -10,5 +10,6 @@
  {"hara:greenways/alumbra-core" {:version "^0.1.0"}
   "hara:greenways/alumbra-engine" {:version "^0.1.0"}
   "hara:greenways/alumbra-renderer-playcanvas" {:version "^0.1.0"}
-  "hara:greenways/alumbra-hodos" {:version "^0.1.0"}}
+  "hara:greenways/alumbra-hodos" {:version "^0.1.0"}
+  "hara:greenways/alumbra-hara" {:version "^0.1.0"}}
  :project/recipe "hara.recipe.edn"}

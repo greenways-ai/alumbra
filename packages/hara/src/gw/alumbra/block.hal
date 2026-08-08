@@ -1,0 +1,24 @@
+(ns gw.alumbra.block)
+
+(def block-pack-format "alumbra.block-pack/1")
+
+(defn declaration
+  [id label empty states material physics drops emitted-light on-use metadata]
+  {"id" id
+   "label" label
+   "empty" empty
+   "states" states
+   "material" material
+   "physics" physics
+   "drops" drops
+   "emittedLight" emitted-light
+   "onUse" on-use
+   "metadata" metadata})
+
+(defn pack [package version id blocks metadata]
+  {"format" block-pack-format
+   "package" package
+   "version" version
+   "id" id
+   "blocks" blocks
+   "metadata" metadata})

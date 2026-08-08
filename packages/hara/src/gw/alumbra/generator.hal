@@ -1,0 +1,87 @@
+(ns gw.alumbra.generator)
+
+(def generator-format "alumbra.generator/1")
+(def generated-chunk-format "alumbra.generated-chunk/1")
+
+(defn descriptor [package version id seed module function parameters]
+  {"format" generator-format
+   "package" package
+   "version" version
+   "id" id
+   "seed" seed
+   "entry" {"module" module "function" function}
+   "parameters" parameters})
+
+(defn fixture-height [world-x world-z seed minimum span]
+  (+ minimum (mod (+ (* world-x 3) (* world-z 5) seed) span)))
+
+(defn flat-fixture-plan [generator coord shape base block surface]
+  (let [world-y (* (get coord 1) (get shape 1))
+        end (max 0 (min (get shape 1) (+ 1 (- surface world-y))))
+        regions (if (> end 0)
+                  [{"from" [0 0 0]
+                    "to" [(get shape 0) end (get shape 2)]
+                    "block" block}]
+                  [])]
+    {"format" generated-chunk-format
+     "generator" generator
+     "coord" coord
+     "shape" shape
+     "revision" 0
+     "base" base
+     "regions" regions
+     "overrides" []
+     "metadata" {"fixture" "flat" "surface" surface}}))
+
+(defn height-regions
+  [coord shape fill seed minimum span x z output]
+  (if (= z (get shape 2))
+    output
+    (if (= x (get shape 0))
+      (height-regions coord shape fill seed minimum span 0 (+ z 1) output)
+      (let [world-x (+ (* (get coord 0) (get shape 0)) x)
+            world-z (+ (* (get coord 2) (get shape 2)) z)
+            height (fixture-height world-x world-z seed minimum span)
+            world-y (* (get coord 1) (get shape 1))
+            end (max 0 (min (get shape 1) (+ 1 (- height world-y))))
+            next-output (if (> end 0)
+                          (conj output
+                                {"from" [x 0 z]
+                                 "to" [(+ x 1) end (+ z 1)]
+                                 "block" fill})
+                          output)]
+        (height-regions coord shape fill seed minimum span (+ x 1) z next-output)))))
+
+(defn height-overrides
+  [coord shape surface-block seed minimum span x z output]
+  (if (= z (get shape 2))
+    output
+    (if (= x (get shape 0))
+      (height-overrides coord shape surface-block seed minimum span 0 (+ z 1) output)
+      (let [world-x (+ (* (get coord 0) (get shape 0)) x)
+            world-z (+ (* (get coord 2) (get shape 2)) z)
+            height (fixture-height world-x world-z seed minimum span)
+            world-y (* (get coord 1) (get shape 1))
+            local-y (- height world-y)
+            inside (and (>= local-y 0) (< local-y (get shape 1)))
+            next-output (if inside
+                          (conj output
+                                {"local" [x local-y z]
+                                 "block" surface-block})
+                          output)]
+        (height-overrides coord shape surface-block seed minimum span (+ x 1) z next-output)))))
+
+(defn height-field-fixture-plan
+  [generator coord shape base fill surface-block seed minimum span]
+  {"format" generated-chunk-format
+   "generator" generator
+   "coord" coord
+   "shape" shape
+   "revision" 0
+   "base" base
+   "regions" (height-regions coord shape fill seed minimum span 0 0 [])
+   "overrides" (height-overrides coord shape surface-block seed minimum span 0 0 [])
+   "metadata" {"fixture" "integer-height-field"
+               "seed" seed
+               "minimum" minimum
+               "span" span}})

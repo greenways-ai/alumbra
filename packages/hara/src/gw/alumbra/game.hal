@@ -1,0 +1,36 @@
+(ns gw.alumbra.game)
+
+(def interaction-format "alumbra.interaction/1")
+
+(defn effect [capability operation request-id arguments]
+  {"capability" capability
+   "operation" operation
+   "requestId" request-id
+   "arguments" arguments})
+
+(defn feedback [kind code message data]
+  {"kind" kind
+   "code" code
+   "message" message
+   "data" data})
+
+(defn interaction [id transactions effects feedback metadata]
+  {"format" interaction-format
+   "id" id
+   "transactions" transactions
+   "effects" effects
+   "feedback" feedback
+   "metadata" metadata})
+
+(defn toggle-fixture-lamp [event block]
+  (let [lit (get (get block "state") "lit")]
+    {"format" interaction-format
+     "id" "alumbra/toggle-fixture-lamp"
+     "transactions" []
+     "effects" []
+     "feedback" [{"kind" "programmatic"
+                  "code" "alumbra/lamp-toggle"
+                  "message" nil
+                  "data" {"lit" (not lit)
+                          "event" (get event "event/type")}}]
+     "metadata" {}}))

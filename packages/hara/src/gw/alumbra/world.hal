@@ -1,0 +1,13 @@
+(ns gw.alumbra.world)
+
+(def world-extension-format "alumbra.world-extension/1")
+(def world-extension-key "ai.greenways.alumbra/world")
+
+(defn extension [block-packs generator rules mode state metadata]
+  {"format" world-extension-format
+   "blockPacks" block-packs
+   "generator" generator
+   "rules" rules
+   "mode" mode
+   "state" state
+   "metadata" metadata})
