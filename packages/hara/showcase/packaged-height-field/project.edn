@@ -6,4 +6,10 @@
  :project/test-paths []
  :project/extension-paths []
  :project/main showcase.alumbra-hara.packaged-height-field
- :project/capabilities #{:studio/eval}}
+ :project/capabilities #{:graphics/scene :input/pointer :input/keyboard :studio/eval}
+ :project/dependencies
+ {"hara:greenways/alumbra-hara" {:version "0.1.0"}
+  "hara:greenways/alumbra-core" {:version "0.1.0"}
+  "hara:greenways/alumbra-engine" {:version "0.1.0"}
+  "hara:greenways/alumbra-renderer-playcanvas" {:version "0.1.0"}
+  "hara:greenways/alumbra-viewport-playcanvas" {:version "0.1.0"}}}

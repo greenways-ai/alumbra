@@ -1,7 +1,7 @@
 {
   "name": "@greenways/alumbra-hara",
   "version": "0.1.0",
-  "description": "Portable Hara block packs, generator plans, world extensions and interaction results for Alumbra",
+  "description": "Portable Hara block packs, generator plans, packaged worlds and interaction results for Alumbra",
   "type": "module",
   "license": "EPL-2.0",
   "repository": {
@@ -14,6 +14,7 @@
     "./block-pack": "./src/block-pack.js",
     "./generator": "./src/generator-plan.js",
     "./world": "./src/world-extension.js",
+    "./packaged-world": "./src/packaged-world.js",
     "./interaction": "./src/interaction.js",
     "./fixtures": "./src/fixtures.js",
     "./runtime": "./src/runtime.js",
