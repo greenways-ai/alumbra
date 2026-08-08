@@ -12,6 +12,11 @@ const MODULE_PATTERN = /^[a-z][a-z0-9._-]*(?:\.[a-z][a-z0-9._-]*)*$/;
 const FUNCTION_PATTERN = /^[a-z][a-z0-9._!?*-]*$/;
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_OUTPUT_BYTES = 4 * 1024 * 1024;
+const CAPABILITY_KEYS = new Set([
+  "capabilities",
+  "capabilityRequests",
+  "capability-requests",
+]);
 
 export function sha256Evidence(value) {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
@@ -73,6 +78,31 @@ function resultValue(request, value) {
     status:"ok",
     value,
   };
+}
+
+function requestedCapabilityPath(value, pathValue = "$", depth = 0) {
+  if (depth > 64 || value == null || typeof value !== "object") return null;
+  if (Array.isArray(value)) {
+    for (let index = 0; index < value.length; index += 1) {
+      const found = requestedCapabilityPath(value[index], `${pathValue}[${index}]`, depth + 1);
+      if (found) return found;
+    }
+    return null;
+  }
+  for (const [key, entry] of Object.entries(value)) {
+    if (CAPABILITY_KEYS.has(key)) {
+      const emptyArray = Array.isArray(entry) && entry.length === 0;
+      const emptyObject = entry && typeof entry === "object"
+        && !Array.isArray(entry)
+        && Object.keys(entry).length === 0;
+      if (entry != null && entry !== false && !emptyArray && !emptyObject) {
+        return `${pathValue}.${key}`;
+      }
+    }
+    const found = requestedCapabilityPath(entry, `${pathValue}.${key}`, depth + 1);
+    if (found) return found;
+  }
+  return null;
 }
 
 export function buildHaraInvocationSource(request) {
@@ -341,7 +371,17 @@ export function createHaraCliProvider({
             });
           }
           try {
-            return resultValue(request, parseHaraJsonOutput(execution.stdout));
+            const value = parseHaraJsonOutput(execution.stdout);
+            const capabilityPath = requestedCapabilityPath(value);
+            if (capabilityPath) {
+              return resultError(
+                request,
+                "hara/result-capability-request",
+                "Hara rule result requested ambient capabilities",
+                {path:capabilityPath},
+              );
+            }
+            return resultValue(request, value);
           } catch (error) {
             return resultError(
               request,
