@@ -7,5 +7,6 @@
  :project/extension-paths []
  :project/capabilities #{}
  :project/dependencies
- {"hara:greenways/alumbra-core" {:version "^0.1.0"}}
+ {"hara:greenways/alumbra-core" {:version "^0.1.0"}
+  "hara:greenways/alumbra-renderer-playcanvas" {:version "^0.1.0"}}
  :project/recipe "hara.recipe.edn"}

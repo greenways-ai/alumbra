@@ -25,13 +25,14 @@ Alumbra → Hodos
 Hodos   ✕ Alumbra
 ```
 
-Architecture and implementation are tracked in #1. The first headless Core slice
-is tracked in #2.
+Architecture and implementation are tracked in #1. The headless Core slice is
+tracked in #2 and the first renderer laboratory in #3.
 
-## Current slice
+## Current packages
 
-This repository currently contains `@greenways/alumbra-core`, a runtime-neutral
-foundation for:
+### `@greenways/alumbra-core`
+
+A runtime-neutral foundation for:
 
 - namespaced block definitions and bounded block-state schemas;
 - mathematical world/chunk/local coordinate conversion;
@@ -43,17 +44,47 @@ foundation for:
 Core has no DOM, Hodos, PlayCanvas, storage, network, inventory or game-content
 dependency.
 
+### `@greenways/alumbra-renderer-playcanvas`
+
+A browser projection package containing:
+
+- deterministic exposed-face and greedy-quad meshing;
+- cross-chunk boundary-face removal;
+- three-dimensional DDA voxel picking;
+- view-distance chunk selection;
+- reference-counted PlayCanvas mesh and material resources;
+- an injected PlayCanvas adapter and disposable laboratory controls.
+
+PlayCanvas is an optional peer. Pure geometry, traversal, visibility and
+resource-lifecycle tests run without a browser or GPU. The package owns no game
+rules and has no Hodos dependency.
+
+## Voxel laboratory
+
+The checked-in browser lab projects a deterministic 4 × 4 chunk terrain with
+free-flight controls and block-face selection:
+
+```sh
+npm run lab:serve
+```
+
+Then open `http://127.0.0.1:4173/apps/lab/`. The lab pins its browser-only
+PlayCanvas ESM import and does not yet implement block mutations, collision,
+inventory or survival rules.
+
 ## Repository map
 
 ```text
-packages/core/     headless voxel values, codecs and transactions
-spec/              Alumbra format and transaction notes
-scripts/           package-boundary checks
-src/               Hara distribution metadata
+packages/core/                    headless voxel values, codecs and transactions
+packages/renderer-playcanvas/     pure meshing plus the PlayCanvas host adapter
+apps/lab/                         first interactive renderer consumer
+spec/                             Alumbra format and transaction notes
+scripts/                          syntax, boundary and lab-server checks
+src/                              Hara distribution metadata
 ```
 
-Planned packages for the renderer, Hodos adapter, playable loop and game remain
-separate issues and PRs.
+Planned Hodos integration, playable loop and game packages remain separate
+issues and PRs.
 
 ## Development
 
@@ -61,8 +92,7 @@ separate issues and PRs.
 npm ci
 npm run check
 npm run pack:check
+npm run lab:serve
 ```
 
-The package requires Node.js 20 or newer for the development and test toolchain.
-The public APIs themselves use standard ECMAScript, typed arrays, `TextEncoder`,
-`TextDecoder`, and Web Crypto.
+The repository requires Node.js 20 or newer for development and testing.

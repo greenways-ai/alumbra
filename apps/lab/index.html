@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111923">
+  <title>Alumbra voxel laboratory</title>
+  <link rel="stylesheet" href="./src/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "playcanvas": "https://cdn.jsdelivr.net/npm/playcanvas@2.21.3/build/playcanvas/src/index.js",
+      "@greenways/alumbra-core/blocks": "../../packages/core/src/block-registry.js",
+      "@greenways/alumbra-core/chunks": "../../packages/core/src/chunk.js",
+      "@greenways/alumbra-core/coordinates": "../../packages/core/src/coordinates.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <main class="lab-shell">
+    <canvas id="alumbra-canvas" aria-label="Interactive Alumbra voxel laboratory"></canvas>
+    <section class="lab-panel" aria-live="polite">
+      <p class="lab-eyebrow">ALUMBRA / RENDERER LAB</p>
+      <h1>Deterministic chunks,<br>projected live.</h1>
+      <p>Click the viewport · WASD move · Space/Control rise and fall · Shift accelerates</p>
+      <dl>
+        <div><dt>Chunks</dt><dd data-stat="chunks">—</dd></div>
+        <div><dt>Visible</dt><dd data-stat="visible">—</dd></div>
+        <div><dt>Quads</dt><dd data-stat="quads">—</dd></div>
+        <div><dt>Target</dt><dd data-stat="target">none</dd></div>
+      </dl>
+    </section>
+    <p class="lab-status" data-status>Loading the PlayCanvas host…</p>
+    <div class="lab-crosshair" aria-hidden="true"></div>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
