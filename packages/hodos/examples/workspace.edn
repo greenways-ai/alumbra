@@ -1,0 +1,35 @@
+{:workspace/id "alumbra/lab"
+ :workspace/title "Alumbra Lab"
+ :workspace/areas
+ [{:area/id "area/alumbra-world"
+   :area/type "alumbra.world/viewport"
+   :area/title "World"
+   :area/component
+   {:component/id "alumbra.world/viewport"
+    :component/contract "workspace.component/1"
+    :component/model
+    {:profile "alumbra.viewport/1"
+     :world/id "world:alumbra/lab"
+     :session/id "session:alumbra/lab"
+     :world/revision 0
+     :engine/handle "handle:alumbra/lab"
+     :camera {:position [3 14 22] :rotation [-18 8 0] :fov 66 :nearClip 0.05 :farClip 300}
+     :selection nil
+     :mode "play"
+     :status "ready"
+     :capabilities {:move true :look true :jump true}}
+    :component/events ["alumbra/move" "alumbra/look" "alumbra/jump"]}}
+  {:area/id "area/repl"
+   :area/type "dev"
+   :area/title "Hara REPL"
+   :area/component
+   {:component/id "hodos.dev/repl"
+    :component/contract "workspace.component/1"
+    :component/model {:status "idle"}
+    :component/events ["repl/input" "repl/submit"]}}]
+ :workspace/layout
+ {:layout/type "split"
+  :layout/direction "horizontal"
+  :layout/ratio 0.72
+  :layout/first {:layout/type "area" :layout/area "area/alumbra-world"}
+  :layout/second {:layout/type "area" :layout/area "area/repl"}}}

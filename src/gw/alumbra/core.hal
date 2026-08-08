@@ -6,4 +6,5 @@
 
 (def packages
   ["greenways/alumbra-core"
-   "greenways/alumbra-renderer-playcanvas"])
+   "greenways/alumbra-renderer-playcanvas"
+   "greenways/alumbra-hodos"])

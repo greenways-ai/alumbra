@@ -26,7 +26,8 @@ Hodos   ✕ Alumbra
 ```
 
 Architecture and implementation are tracked in #1. The headless Core slice is
-tracked in #2 and the first renderer laboratory in #3.
+tracked in #2, the first renderer laboratory in #3 and the Workspace integration
+in #4.
 
 ## Current packages
 
@@ -59,6 +60,16 @@ PlayCanvas is an optional peer. Pure geometry, traversal, visibility and
 resource-lifecycle tests run without a browser or GPU. The package owns no game
 rules and has no Hodos dependency.
 
+### `@greenways/alumbra-hodos`
+
+The Alumbra-owned integration boundary for registering `alumbra.world/viewport`
+as a trusted Hodos Workspace component. It validates a bounded serializable
+viewport model and adapts an injected engine/renderer host without moving chunks,
+workers, GPU resources or block authority into Hodos.
+
+Hodos Web and Workspace UI remain optional peers. The adapter contains no Hodos
+implementation code and preserves the one-way dependency `Alumbra → Hodos`.
+
 ## Voxel laboratory
 
 The checked-in browser lab projects a deterministic 4 × 4 chunk terrain with
@@ -77,14 +88,15 @@ inventory or survival rules.
 ```text
 packages/core/                    headless voxel values, codecs and transactions
 packages/renderer-playcanvas/     pure meshing plus the PlayCanvas host adapter
+packages/hodos/                   trusted Hodos Workspace component adapter
 apps/lab/                         first interactive renderer consumer
 spec/                             Alumbra format and transaction notes
 scripts/                          syntax, boundary and lab-server checks
 src/                              Hara distribution metadata
 ```
 
-Planned Hodos integration, playable loop and game packages remain separate
-issues and PRs.
+The first Hodos integration is packaged independently; the playable loop and
+game packages remain separate issues and PRs.
 
 ## Development
 

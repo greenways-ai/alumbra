@@ -1,0 +1,15 @@
+(ns gw.alumbra.hodos)
+
+(def viewport-component-id "alumbra.world/viewport")
+(def viewport-profile "alumbra.viewport/1")
+(def component-contract "workspace.component/1")
+
+(def viewport-events
+  #{"alumbra/move" "alumbra/look" "alumbra/jump" "alumbra/break"
+    "alumbra/place" "alumbra/use" "alumbra/open-inventory" "alumbra/command"})
+
+(defn host-requirements []
+  {:component/id viewport-component-id
+   :component/contract component-contract
+   :host/functions #{"update"}
+   :host/lifecycle #{"destroy"}})
