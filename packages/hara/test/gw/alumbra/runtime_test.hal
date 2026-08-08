@@ -69,12 +69,13 @@
      7])
 
    (test/check
-    "integer fixture heights are stable for positive and negative coordinates"
+    "integer fixture heights use positive modulo for negative world values"
     [(generator/fixture-height 0 0 17 2 5)
      (generator/fixture-height -1 0 17 2 5)
      (generator/fixture-height 2 -3 17 2 5)
-     (generator/fixture-height -17 9 17 2 5)]
-    [4 6 5 3])
+     (generator/fixture-height -17 9 17 2 5)
+     (generator/fixture-height 32 -40 17 2 5)]
+    [4 6 5 3 5])
 
    (test/check
     "the flat fixture uses a bounded half-open region"
