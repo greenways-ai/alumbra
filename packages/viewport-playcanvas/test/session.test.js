@@ -140,6 +140,7 @@ test("viewport suspension preserves the same canonical world and resumes one ses
     world,
     player,
     application: app,
+    manageApplicationRendering: true,
     renderer,
     input,
     eventTarget: events,
