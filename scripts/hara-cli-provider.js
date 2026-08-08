@@ -7,6 +7,7 @@ import {
   HaraRuleRuntimeError,
   normalizeHaraActivation,
 } from "../packages/hara/src/index.js";
+import { parseEdnData, writeEdnData } from "./lib/edn.mjs";
 
 const MODULE_PATTERN = /^[a-z][a-z0-9._-]*(?:\.[a-z][a-z0-9._-]*)*$/;
 const FUNCTION_PATTERN = /^[a-z][a-z0-9._!?*-]*$/;
@@ -115,34 +116,52 @@ export function buildHaraInvocationSource(request) {
       {module, function:functionName},
     );
   }
-  const argumentsJson = JSON.stringify(request.arguments ?? []);
-  const argumentsLiteral = JSON.stringify(argumentsJson);
+  let argumentsEdn;
+  try {
+    argumentsEdn = writeEdnData(request.arguments ?? []);
+  } catch (error) {
+    throw runtimeError(
+      "hara/invocation-arguments",
+      `Hara invocation arguments are outside the portable EDN data profile: ${error.message}`,
+    );
+  }
+  const argumentsLiteral = JSON.stringify(argumentsEdn);
   return `(ns alumbra.runtime.invoke\n`
-    + `  (:require [std.json :as json]\n`
+    + `  (:require [std.foundation.edn :as edn]\n`
+    + `            [std.json :as json]\n`
     + `            [${module} :as target]))\n\n`
-    + `(json/write\n`
-    + ` (apply target/${functionName}\n`
-    + `        (json/read ${argumentsLiteral})))\n`;
+    + `(let [value\n`
+    + `      (apply target/${functionName}\n`
+    + `             (edn/read ${argumentsLiteral}))]\n`
+    + `  (json/write\n`
+    + `   (edn/write\n`
+    + `    (edn/read (edn/write value)))))\n`;
 }
 
-export function parseHaraJsonOutput(stdout) {
+export function parseHaraEdnOutput(stdout) {
   const lines = String(stdout ?? "")
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
   for (let index = lines.length - 1; index >= 0; index -= 1) {
     try {
-      const jsonText = JSON.parse(lines[index]);
-      if (typeof jsonText !== "string") continue;
-      return JSON.parse(jsonText);
+      const encodedEdn = JSON.parse(lines[index]);
+      if (typeof encodedEdn !== "string") continue;
+      const ednText = JSON.parse(encodedEdn);
+      if (typeof ednText !== "string") continue;
+      return parseEdnData(ednText);
     } catch {
       // Earlier lines may contain diagnostics; keep looking for the final Hara string value.
     }
   }
-  throw runtimeError("hara/runtime-output", "Hara runtime did not return a JSON string value", {
+  throw runtimeError("hara/runtime-output", "Hara runtime did not return a portable EDN data value", {
     stdout:boundedText(stdout),
   });
 }
+
+// Retained for callers of the first CLI-provider slice. The transport is now
+// restricted EDN inside the same JSON-escaped outer string envelope.
+export const parseHaraJsonOutput = parseHaraEdnOutput;
 
 function execute(binary, args, {
   input = "",
@@ -380,7 +399,7 @@ export function createHaraCliProvider({
             });
           }
           try {
-            const value = parseHaraJsonOutput(execution.stdout);
+            const value = parseHaraEdnOutput(execution.stdout);
             const capabilityPath = requestedCapabilityPath(value);
             if (capabilityPath) {
               return resultError(
