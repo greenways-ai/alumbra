@@ -5,6 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111923">
   <title>Alumbra Renderer Catalog</title>
+  <script>
+  (() => {
+    const errors = [];
+    const serialize = (value) => {
+      if (value instanceof Error) return value.stack || value.message;
+      if (typeof value === "string") return value;
+      try { return JSON.stringify(value); } catch { return String(value); }
+    };
+    const record = (kind, values) => {
+      const message = `${kind}: ${values.map(serialize).join(" ")}`.slice(0, 4096);
+      errors.push(message);
+      document.documentElement.dataset.labError = "true";
+      document.documentElement.dataset.labErrorCount = String(errors.length);
+      document.documentElement.dataset.labErrorMessage = message;
+    };
+    window.__ALUMBRA_PAGE_ERRORS__ = errors;
+    const originalError = console.error.bind(console);
+    console.error = (...values) => {
+      record("console", values);
+      originalError(...values);
+    };
+    window.addEventListener("error", (event) => {
+      record("error", [event.error || event.message || "unknown page error"]);
+    });
+    window.addEventListener("unhandledrejection", (event) => {
+      record("rejection", [event.reason || "unknown rejection"]);
+    });
+  })();
+  </script>
   <link rel="stylesheet" href="./src/style.css">
   <link rel="stylesheet" href="./src/catalog.css">
   <script type="importmap">

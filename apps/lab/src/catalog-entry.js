@@ -130,4 +130,38 @@ const catalogHost = createCatalogHost({
   },
 });
 
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function waitForViewportHost() {
+  for (let attempt = 0; attempt < 300; attempt += 1) {
+    const evidence = readViewportEvidence();
+    if (evidence.sessions.length > 0) return evidence;
+    await sleep(50);
+  }
+  throw new Error("Alumbra viewport host did not become ready");
+}
+
+async function openBrowserStory() {
+  await waitForViewportHost();
+  const requested = new URL(window.location.href).searchParams.get("activity")
+    ?? catalogHost.session.snapshot().selectedActivityId;
+  catalogHost.session.selectActivity(requested);
+  await catalogHost.session.openActivity(requested);
+  const run = await catalogHost.session.checkActivity(requested);
+  document.documentElement.dataset.browserActivity = requested;
+  document.documentElement.dataset.browserCheck = run.status;
+  document.documentElement.dataset.browserCheckCount = String(run.checks.length);
+  if (run.status !== "passed") {
+    throw new Error(`Catalog activity checks failed for ${requested}: ${run.message}`);
+  }
+  if (window.__ALUMBRA_PAGE_ERRORS__?.length) {
+    throw new Error(`Browser story recorded ${window.__ALUMBRA_PAGE_ERRORS__.length} page errors`);
+  }
+  document.documentElement.dataset.labReady = "true";
+}
+
+void openBrowserStory().catch((error) => {
+  console.error("Alumbra browser story failed", error);
+});
+
 window.addEventListener("pagehide", () => catalogHost.dispose(), { once: true });
