@@ -77,6 +77,14 @@ test("generated Catalog projection contains viewport identities but no project p
       "alumbra-viewport-playcanvas/two-sessions",
     ],
   );
+  const packagedHara = ALUMBRA_RENDERER_CATALOG.activities
+    .find((activity) => activity.id === "alumbra-hara/packaged-height-field");
+  assert.equal(packagedHara.metadata.surface, "viewport");
+  assert.equal(packagedHara.checkCount, 9);
+  assert.equal(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hara/packaged-height-field"].host,
+    "playable-lab",
+  );
   assert.equal(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/playable-world"].host,
     "playable-lab",
@@ -120,19 +128,24 @@ test("browser Catalog selects and opens the installed playable lab by semantic i
   assert.equal(container.children.length, 0);
 });
 
-test("Catalog opens the two-session activity through its installed semantic identity", async () => {
+test("Catalog opens viewport and packaged-Hara activities through installed semantic identities", async () => {
   const opened = [];
   const session = createCatalogSession({
     catalog: ALUMBRA_RENDERER_CATALOG,
     installedDemos: ALUMBRA_RENDERER_INSTALLED_DEMOS,
     openDemo: async (request) => opened.push(request),
   });
-  session.selectActivity("alumbra-viewport-playcanvas/two-sessions");
-  await session.openActivity();
-  assert.equal(opened.length, 1);
-  assert.equal(opened[0].activityId, "alumbra-viewport-playcanvas/two-sessions");
+  for (const activityId of [
+    "alumbra-viewport-playcanvas/two-sessions",
+    "alumbra-hara/packaged-height-field",
+  ]) {
+    session.selectActivity(activityId);
+    await session.openActivity();
+  }
+  assert.equal(opened.length, 2);
   assert.equal(opened[0].demo.project, "packages/viewport-playcanvas/showcase/two-sessions");
-  assert.equal(opened[0].demo.host, "playable-lab");
+  assert.equal(opened[1].demo.project, "packages/hara/showcase/packaged-height-field");
+  assert.ok(opened.every((request) => request.demo.host === "playable-lab"));
   session.dispose();
 });
 

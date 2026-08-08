@@ -49,10 +49,13 @@ fi
 
 run_activity() {
   local activity="$1"
+  local state="${2:-}"
   local slug="${activity//\//-}"
+  if [[ -n "$state" ]]; then slug="${slug}-${state//\//-}"; fi
   local dom="$TMP/${slug}.html"
   local log="$TMP/${slug}.log"
   local url="http://127.0.0.1:${PORT}/apps/lab/?activity=${activity}"
+  if [[ -n "$state" ]]; then url="${url}&state=${state}"; fi
 
   if ! "$CHROME" \
     --headless=new \
@@ -63,18 +66,18 @@ run_activity() {
     --enable-unsafe-swiftshader \
     --use-gl=angle \
     --use-angle=swiftshader \
-    --virtual-time-budget=20000 \
+    --virtual-time-budget=25000 \
     --dump-dom \
     "$url" >"$dom" 2>"$log"; then
     cat "$log" >&2
-    echo "Headless Chromium failed for ${activity}." >&2
+    echo "Headless Chromium failed for ${activity}${state:+ / ${state}}." >&2
     return 1
   fi
 
   if ! grep -Fq 'data-lab-ready="true"' "$dom"; then
     cat "$log" >&2
     cat "$dom" >&2
-    echo "Alumbra lab did not become ready for ${activity}." >&2
+    echo "Alumbra lab did not become ready for ${activity}${state:+ / ${state}}." >&2
     return 1
   fi
   if ! grep -Fq "data-browser-activity=\"${activity}\"" "$dom"; then
@@ -84,19 +87,35 @@ run_activity() {
   fi
   if ! grep -Fq 'data-browser-check="passed"' "$dom"; then
     cat "$dom" >&2
-    echo "Bounded Catalog checks did not pass for ${activity}." >&2
+    echo "Bounded Catalog checks did not pass for ${activity}${state:+ / ${state}}." >&2
     return 1
   fi
   if grep -Fq 'data-lab-error="true"' "$dom"; then
     cat "$log" >&2
     cat "$dom" >&2
-    echo "The Alumbra browser story reported a page or console error for ${activity}." >&2
+    echo "The Alumbra browser story reported a page or console error for ${activity}${state:+ / ${state}}." >&2
     return 1
   fi
 
-  echo "Browser story passed: ${activity}"
+  if [[ -n "$state" ]]; then
+    if ! grep -Fq "data-browser-state=\"${state}\"" "$dom"; then
+      cat "$dom" >&2
+      echo "Packaged Hara story did not open named state ${state}." >&2
+      return 1
+    fi
+    if ! grep -Fq 'data-browser-disposal="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "Packaged Hara viewport disposal did not return resources to baseline." >&2
+      return 1
+    fi
+  fi
+
+  echo "Browser story passed: ${activity}${state:+ / ${state}}"
 }
 
 run_activity "alumbra-hodos/renderer-catalog"
 run_activity "alumbra-viewport-playcanvas/playable-world"
 run_activity "alumbra-viewport-playcanvas/two-sessions"
+run_activity "alumbra-hara/packaged-height-field" "world/default-seed"
+run_activity "alumbra-hara/packaged-height-field" "world/negative-coordinate"
+run_activity "alumbra-hara/packaged-height-field" "world/package-mismatch"
