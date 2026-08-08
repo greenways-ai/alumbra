@@ -8,11 +8,11 @@
     "apps/*"
   ],
   "scripts": {
-    "test": "node --test packages/core/test/*.test.js packages/engine/test/*.test.js packages/renderer-playcanvas/test/*.test.js packages/hodos/test/*.test.js apps/lab/test/*.test.js",
+    "test": "node --test packages/core/test/*.test.js packages/engine/test/*.test.js packages/renderer-playcanvas/test/*.test.js packages/hodos/test/*.test.js packages/hara/test/*.test.js apps/lab/test/*.test.js",
     "check:syntax": "node scripts/check-syntax.js",
     "check:boundaries": "node scripts/check-boundaries.js",
     "check": "npm run check:syntax && npm run check:boundaries && npm test",
-    "pack:check": "npm pack --dry-run -w @greenways/alumbra-core && npm pack --dry-run -w @greenways/alumbra-engine && npm pack --dry-run -w @greenways/alumbra-renderer-playcanvas && npm pack --dry-run -w @greenways/alumbra-hodos",
+    "pack:check": "npm pack --dry-run -w @greenways/alumbra-core && npm pack --dry-run -w @greenways/alumbra-engine && npm pack --dry-run -w @greenways/alumbra-renderer-playcanvas && npm pack --dry-run -w @greenways/alumbra-hodos && npm pack --dry-run -w @greenways/alumbra-hara",
     "lab:serve": "node scripts/serve-lab.js"
   },
   "engines": {

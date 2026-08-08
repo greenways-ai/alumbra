@@ -26,8 +26,9 @@ Hodos   ✕ Alumbra
 ```
 
 Architecture and implementation are tracked in #1. Core, renderer, Hodos
-integration and the headless player/build engine are established under #2, #3,
-#4 and #13. The persistent playable laboratory is tracked by #14 under #5.
+integration, the headless player/build engine and the persistent playable lab
+are established under #2, #3, #4 and #5. Portable package-driven Hara rules are
+tracked under #6 and #17.
 
 ## Current packages
 
@@ -84,9 +85,24 @@ workers, GPU resources or block authority into Hodos.
 Hodos Web and Workspace UI remain optional peers. The adapter contains no Hodos
 implementation code and preserves the one-way dependency `Alumbra → Hodos`.
 
+### `@greenways/alumbra-hara`
+
+The portable rules and host-validation boundary for:
+
+- package-pinned block packs with material, physics, drops and bounded state;
+- deterministic generator descriptors and bounded generated-chunk plans;
+- Alumbra-owned `world.edn` extensions;
+- validated interaction results carrying Core transactions, effects and feedback;
+- matching flat and integer height-field fixtures in JavaScript and HAL.
+
+Hara programs exchange declarations and plans rather than dense typed arrays or
+host objects. The trusted host validates those values and materializes canonical
+Core registries, chunks and transactions. Runtime activation is injected and
+tracked separately so the package does not bind Alumbra to Hodos or one Hara VM.
+
 ## Playable voxel laboratory
 
-The checked-in browser lab now composes the packages into a deterministic local
+The checked-in browser lab composes the packages into a deterministic local
 build loop:
 
 ```sh
@@ -113,8 +129,9 @@ packages/core/                    headless voxel values, codecs and transactions
 packages/engine/                  fixed-step player, collision and build intents
 packages/renderer-playcanvas/     pure meshing plus the PlayCanvas host adapter
 packages/hodos/                   trusted Hodos Workspace component adapter
+packages/hara/                    portable Hara rules and Core materialization
 apps/lab/                         persistent local playable renderer consumer
-spec/                             Alumbra chunk, transaction and save formats
+spec/                             chunk, transaction, save and rules formats
 scripts/                          syntax, boundary and lab-server checks
 src/                              Hara distribution metadata
 ```
