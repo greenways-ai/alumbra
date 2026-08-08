@@ -85,20 +85,22 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "id": "alumbra-hara/packaged-height-field",
       "toolsetId": "alumbra-hara",
       "title": "Packaged height field",
-      "level": "Foundation",
-      "summary": "Resolve a pinned Hara generator identity into a deterministic height-field fixture.",
+      "level": "Integration",
+      "summary": "Materialize an exact Hara block pack and generator plan into Core chunks and a live PlayCanvas viewport.",
       "instructions": [
-        "Resolve a pinned Hara generator identity into a deterministic height-field fixture."
+        "Materialize an exact Hara block pack and generator plan into Core chunks and a live PlayCanvas viewport."
       ],
       "path": null,
-      "checkCount": 4,
+      "checkCount": 9,
       "metadata": {
         "package": "@greenways/alumbra-hara",
         "demo": "packaged-height-field",
-        "surface": "preview",
+        "surface": "viewport",
         "tags": [
           "rules",
-          "height-field"
+          "height-field",
+          "packaged-world",
+          "playable-lab"
         ],
         "theme": "dark",
         "viewport": {
@@ -284,8 +286,8 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "package": "@greenways/alumbra-hara",
     "demo": "packaged-height-field",
     "project": "packages/hara/showcase/packaged-height-field",
-    "surface": "preview",
-    "host": "showcase-project"
+    "surface": "viewport",
+    "host": "playable-lab"
   },
   "alumbra-core/palette-backed-chunk": {
     "package": "@greenways/alumbra-core",
