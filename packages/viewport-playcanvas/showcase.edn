@@ -1,0 +1,49 @@
+{:hara/type :showcase
+ :showcase/format 1
+ :showcase/package :greenways/alumbra-viewport-playcanvas
+ :showcase/version "0.1.0"
+ :showcase/title "PlayCanvas Viewport"
+ :showcase/summary
+ "Lifecycle-owned viewport sessions that compose canonical worlds, players, input and PlayCanvas projection."
+
+ :showcase/views
+ [{:view/id :playable-world
+   :view/title "Playable packaged world"
+   :view/summary "Run one canonical world through a reusable viewport session with explicit suspend, resume and disposal."}
+  {:view/id :two-sessions
+   :view/title "Two independent sessions"
+   :view/summary "Run two viewport sessions without sharing world state, player clocks or renderer resources."}]
+
+ :showcase/states
+ [{:state/id :viewport/playable-world
+   :state/title "Playable world"
+   :state/summary "One active session retaining the same canonical world across visibility changes."
+   :state/file "showcase/states/playable-world.edn"}
+  {:state/id :viewport/two-sessions
+   :state/title "Two sessions"
+   :state/summary "Two separately owned worlds and lifecycle counters projected together."
+   :state/file "showcase/states/two-sessions.edn"}]
+
+ :showcase/demos
+ [{:demo/id :playable-world
+   :demo/title "Playable packaged world"
+   :demo/summary "Run one canonical world through a reusable viewport session with explicit suspend, resume and disposal."
+   :demo/view :playable-world
+   :demo/state :viewport/playable-world
+   :demo/project "showcase/playable-world"
+   :demo/surface :viewport
+   :demo/docs "showcase/playable-world/README.md"
+   :demo/tags ["viewport" "playcanvas" "playable-lab" "level:integration" "checks:5"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :two-sessions
+   :demo/title "Two independent sessions"
+   :demo/summary "Run two viewport sessions without sharing world state, player clocks or renderer resources."
+   :demo/view :two-sessions
+   :demo/state :viewport/two-sessions
+   :demo/project "showcase/two-sessions"
+   :demo/surface :viewport
+   :demo/docs "showcase/two-sessions/README.md"
+   :demo/tags ["viewport" "sessions" "playable-lab" "level:integration" "checks:7"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}]}

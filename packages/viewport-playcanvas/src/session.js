@@ -67,6 +67,8 @@ export function createPlayCanvasViewportSession({
   world,
   player,
   controller = null,
+  createController = null,
+  controllerOptions = {},
   application = null,
   renderer = null,
   createRenderer = createPlayCanvasVoxelRenderer,
@@ -93,7 +95,7 @@ export function createPlayCanvasViewportSession({
   disposeApplication = application == null,
   disposeRenderer = true,
   disposeInput = input == null,
-  disposeController = false,
+  disposeController = controller == null && createController != null,
   manageApplicationRendering = application == null,
 } = {}) {
   if (!canvas?.addEventListener) throw new TypeError("Viewport requires a canvas-like event target");
@@ -134,6 +136,13 @@ export function createPlayCanvasViewportSession({
     throw new TypeError("Viewport renderer must implement setChunk(chunk)");
   }
   for (const chunk of world.chunks().values()) viewportRenderer.setChunk(chunk);
+
+  const viewportController = controller ?? (createController
+    ? createController({world, renderer: viewportRenderer, ...controllerOptions})
+    : null);
+  if (viewportController && (typeof viewportController.applyAction !== "function" || typeof viewportController.undo !== "function")) {
+    throw new TypeError("Viewport controller must implement applyAction() and undo()");
+  }
 
   const camera = makeEntity(pc, `Alumbra camera ${id}`);
   camera.addComponent?.("camera", {
@@ -201,9 +210,9 @@ export function createPlayCanvasViewportSession({
   };
 
   const defaultAction = (action) => {
-    if (!controller) return Object.freeze({status: "unhandled", action: action.type});
+    if (!viewportController) return Object.freeze({status: "unhandled", action: action.type});
     if (action.type === "undo") {
-      const result = controller.undo();
+      const result = viewportController.undo();
       return result
         ? Object.freeze({status: "applied", action: action.type, result})
         : Object.freeze({status: "noop", action: action.type, reason: "empty-undo-stack"});
@@ -228,7 +237,7 @@ export function createPlayCanvasViewportSession({
       intent.playerPosition = player.state.position;
       if (playerBody) intent.playerBody = playerBody;
     }
-    const result = controller.applyAction(intent);
+    const result = viewportController.applyAction(intent);
     return Object.freeze({status: "applied", action: action.type, result});
   };
 
@@ -242,7 +251,7 @@ export function createPlayCanvasViewportSession({
           input: frameInput,
           world,
           player,
-          controller,
+          controller: viewportController,
           renderer: viewportRenderer,
           camera,
         }))
@@ -311,7 +320,7 @@ export function createPlayCanvasViewportSession({
     canvas,
     world,
     player,
-    controller,
+    controller: viewportController,
     renderer: viewportRenderer,
     input: viewportInput,
     camera,
@@ -365,7 +374,7 @@ export function createPlayCanvasViewportSession({
       updateHandle?.off?.();
       if (!updateHandle?.off) app.off?.("update", update);
       if (disposeInput) viewportInput.destroy?.();
-      if (disposeController) controller?.destroy?.();
+      if (disposeController) viewportController?.destroy?.();
       if (disposeRenderer) viewportRenderer.destroy?.();
       camera.destroy?.();
       sun.destroy?.();

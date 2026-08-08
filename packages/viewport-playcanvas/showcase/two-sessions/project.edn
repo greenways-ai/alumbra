@@ -1,0 +1,11 @@
+{:hara/type :project
+ :hara/version "1.0.0"
+ :project/id showcase.alumbra-viewport-playcanvas.two-sessions
+ :project/version "0.1.0"
+ :project/source-paths ["src"]
+ :project/test-paths []
+ :project/extension-paths []
+ :project/main showcase.alumbra-viewport-playcanvas.two-sessions
+ :project/capabilities #{:studio/eval :graphics/scene :input/pointer :input/keyboard}
+ :project/dependencies
+ {"hara:greenways/alumbra-viewport-playcanvas" {:version "0.1.0"}}}

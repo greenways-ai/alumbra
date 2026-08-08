@@ -1,0 +1,15 @@
+{:story/id "viewport/two-sessions"
+ :sessions
+ [{:session/id "primary"
+   :session/status "active"
+   :world/id "world:alumbra/lab"
+   :player/position [3.5 12 22.5]
+   :render/resident-chunks 16}
+  {:session/id "secondary"
+   :session/status "active"
+   :world/id "world:alumbra/lab-secondary"
+   :player/position [9.5 12 22.5]
+   :render/resident-chunks 16}]
+ :independence/worlds true
+ :independence/players true
+ :independence/renderers true}

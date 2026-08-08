@@ -216,3 +216,37 @@ test("session groups keep two worlds, players and frame clocks independent", () 
   group.destroy();
   assert.deepEqual(group.ids(), []);
 });
+
+test("viewport creates an owned world controller against its renderer boundary", () => {
+  const app = fakeApp();
+  const renderer = fakeRenderer();
+  const input = fakeInput();
+  const {world, player} = fixture("owned-controller");
+  let createdWith = null;
+  let destroyed = 0;
+  const viewport = createPlayCanvasViewportSession({
+    sessionId: "owned-controller",
+    pc,
+    canvas: new FakeEventTarget(),
+    world,
+    player,
+    application: app,
+    renderer,
+    input,
+    eventTarget: new FakeEventTarget(),
+    documentTarget: new FakeEventTarget(),
+    createController(options) {
+      createdWith = options;
+      return {
+        applyAction() { return {transaction: {id: "build/1/break"}}; },
+        undo() { return null; },
+        destroy() { destroyed += 1; },
+      };
+    },
+  });
+  assert.equal(createdWith.world, world);
+  assert.equal(createdWith.renderer, renderer);
+  assert.ok(viewport.controller);
+  viewport.destroy();
+  assert.equal(destroyed, 1);
+});
