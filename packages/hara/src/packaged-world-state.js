@@ -64,7 +64,7 @@ const vector3 = (value, label) => {
 
 const normalizeSpawn = (value) => {
   const input = objectValue(value, "Packaged world spawn");
-  exactKeys(input, new Set(["position", "velocity", "yaw", "pitch"]), "Packaged world spawn");
+  exactKeys(input, new Set(["position", "velocity", "yaw", "pitch", "grounded"]), "Packaged world spawn");
   return deepFreeze({
     position: vector3(input.position, "Packaged world spawn position"),
     velocity: vector3(input.velocity ?? [0, 0, 0], "Packaged world spawn velocity"),
