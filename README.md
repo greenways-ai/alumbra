@@ -26,8 +26,8 @@ Hodos   ✕ Alumbra
 ```
 
 Architecture and implementation are tracked in #1. The headless Core slice is
-tracked in #2, the first renderer laboratory in #3 and the Workspace integration
-in #4.
+tracked in #2, the first renderer laboratory in #3, the Workspace integration in
+#4 and the playable sequence in #5, #13 and #14.
 
 ## Current packages
 
@@ -44,6 +44,20 @@ A runtime-neutral foundation for:
 
 Core has no DOM, Hodos, PlayCanvas, storage, network, inventory or game-content
 dependency.
+
+### `@greenways/alumbra-engine`
+
+A headless hot-state engine over canonical Core chunks:
+
+- bounded fixed-step accumulation;
+- upright player-body collision with deterministic substeps;
+- gravity, grounding, jumping and yaw-relative movement;
+- explicit loaded/missing-chunk collision policy;
+- reach- and occupancy-checked break/place intents;
+- accepted Core transactions, affected-chunk evidence and inverse undo history.
+
+The engine receives semantic input and caller-supplied transaction IDs. It has no
+DOM, input-device, renderer, storage, Hodos or game-economy dependency.
 
 ### `@greenways/alumbra-renderer-playcanvas`
 
@@ -80,13 +94,15 @@ npm run lab:serve
 ```
 
 Then open `http://127.0.0.1:4173/apps/lab/`. The lab pins its browser-only
-PlayCanvas ESM import and does not yet implement block mutations, collision,
-inventory or survival rules.
+PlayCanvas ESM import. The headless collision and build engine is packaged, but
+the current lab has not yet connected movement, block mutations or persistence;
+that integration is tracked by #14.
 
 ## Repository map
 
 ```text
 packages/core/                    headless voxel values, codecs and transactions
+packages/engine/                  fixed-step player, collision and build intents
 packages/renderer-playcanvas/     pure meshing plus the PlayCanvas host adapter
 packages/hodos/                   trusted Hodos Workspace component adapter
 apps/lab/                         first interactive renderer consumer
@@ -95,8 +111,8 @@ scripts/                          syntax, boundary and lab-server checks
 src/                              Hara distribution metadata
 ```
 
-The first Hodos integration is packaged independently; the playable loop and
-game packages remain separate issues and PRs.
+The engine, renderer and Hodos integration are independently packaged. The
+persistent playable loop and game packages remain separate issues and PRs.
 
 ## Development
 
