@@ -23,7 +23,6 @@ import {
 
 const root = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
 const projectRoot = path.join(root, "packages/hara");
-const sourceRoot = path.join(projectRoot, "src");
 const binary = process.env.HARA_BIN || "hara";
 
 async function activationEvidence() {
@@ -108,7 +107,6 @@ async function main() {
   const provider = createHaraCliProvider({
     binary,
     projectRoot,
-    sourceRoot,
     timeoutMs:30_000,
     maximumOutputBytes:4 * 1024 * 1024,
   });
