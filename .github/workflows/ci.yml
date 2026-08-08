@@ -20,3 +20,32 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run pack:check
+
+  hara-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Check out the pinned Hara runtime
+        uses: actions/checkout@v4
+        with:
+          repository: hara-lang/hara
+          ref: cf1db09a3717ed2ea64cabc7bb6d041ca7f41b6b
+          path: .hara-runtime
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: .hara-runtime/core/rust -> target
+      - name: Build the pinned Hara CLI
+        run: cargo build --release --manifest-path .hara-runtime/core/rust/Cargo.toml --bin hara
+      - name: Execute the packaged HAL contract suite
+        run: .hara-runtime/core/rust/target/release/hara --project packages/hara --no-color --no-splash test
+      - name: Prove real-runtime Core digest parity and failure bounds
+        env:
+          HARA_BIN: ${{ github.workspace }}/.hara-runtime/core/rust/target/release/hara
+        run: npm run check:hara-runtime
