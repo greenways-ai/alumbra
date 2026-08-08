@@ -7,14 +7,17 @@ import {
   FIXTURE_PACKAGE,
   FIXTURE_VERSION,
   FIXTURE_WORLD_RULE,
+  PACKAGED_WORLD_STATE_IDS,
   createFixtureBlockPack,
   createFlatFixtureGenerator,
   createFlatFixturePlan,
   createHaraRulesSession,
   createHeightFieldFixtureGenerator,
   createHeightFieldFixturePlan,
+  loadPackagedHaraWorld,
   materializeBlockRegistry,
   materializeGeneratedChunk,
+  packagedWorldState,
 } from "@greenways/alumbra-hara";
 import {
   createHaraCliProvider,
@@ -124,6 +127,7 @@ async function main() {
 
   const session = await createHaraRulesSession({provider, activation});
   const evidence = [];
+  const packagedWorlds = [];
   try {
     const runtimePack = await session.invokeBlockPack({
       package:FIXTURE_PACKAGE,
@@ -197,6 +201,29 @@ async function main() {
       }, registry),
     }));
 
+    for (const stateId of [
+      PACKAGED_WORLD_STATE_IDS.defaultSeed,
+      PACKAGED_WORLD_STATE_IDS.negativeCoordinate,
+    ]) {
+      const world = await loadPackagedHaraWorld({
+        session,
+        state:packagedWorldState(stateId),
+      });
+      assert.equal(world.status, "ready");
+      assert.equal(world.evidence.package.matched, true);
+      assert.equal(world.evidence.generator.matched, true);
+      assert.ok(world.evidence.snapshots.every((snapshot) => snapshot.matched));
+      packagedWorlds.push(world.evidence);
+    }
+    const mismatch = await loadPackagedHaraWorld({
+      session,
+      state:packagedWorldState(PACKAGED_WORLD_STATE_IDS.packageMismatch),
+    });
+    assert.equal(mismatch.status, "rejected");
+    assert.equal(mismatch.evidence.error.code, "hara/package-version-mismatch");
+    assert.equal(mismatch.chunks.length, 0);
+    packagedWorlds.push(mismatch.evidence);
+
     const interaction = await session.invokeInteraction(
       FIXTURE_WORLD_RULE,
       [
@@ -253,6 +280,7 @@ async function main() {
     project:activation.project,
     lock:activation.lock,
     snapshots:evidence,
+    packagedWorlds,
   }, null, 2)}\n`);
 }
 

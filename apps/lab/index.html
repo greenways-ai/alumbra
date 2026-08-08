@@ -36,12 +36,14 @@
   </script>
   <link rel="stylesheet" href="./src/style.css">
   <link rel="stylesheet" href="./src/catalog.css">
+  <link rel="stylesheet" href="./src/packaged-hara.css">
   <script type="importmap">
   {
     "imports": {
       "playcanvas": "https://cdn.jsdelivr.net/npm/playcanvas@2.21.3/build/playcanvas/src/index.js",
       "@greenways/alumbra-core": "../../packages/core/src/index.js",
       "@greenways/alumbra-engine": "../../packages/engine/src/index.js",
+      "@greenways/alumbra-hara": "../../packages/hara/src/index.js",
       "@greenways/alumbra-renderer-playcanvas": "../../packages/renderer-playcanvas/src/index.js",
       "@greenways/alumbra-viewport-playcanvas": "../../packages/viewport-playcanvas/src/index.js",
       "@greenways/alumbra-viewport-playcanvas/input": "../../packages/viewport-playcanvas/src/input.js",
@@ -61,10 +63,17 @@
     <section class="lab-viewport-grid" data-viewport-grid data-mode="single" aria-label="Alumbra viewport sessions">
       <canvas id="alumbra-canvas" data-viewport-session="primary" aria-label="Primary playable Alumbra voxel world"></canvas>
       <canvas id="alumbra-canvas-secondary" data-viewport-session="secondary" aria-label="Secondary independent Alumbra voxel world" hidden></canvas>
+      <canvas id="alumbra-canvas-hara" data-viewport-session="hara" aria-label="Package-pinned Hara voxel world" hidden></canvas>
+      <section class="lab-world-error" data-packaged-world-error aria-live="polite" hidden>
+        <p class="lab-world-error-eyebrow">ALUMBRA / EXACT PACKAGE LOCK</p>
+        <h2 data-packaged-world-error-title>Package mismatch</h2>
+        <p data-packaged-world-error-message>The requested package version does not match this Showcase lock.</p>
+        <code>hara/package-version-mismatch</code>
+      </section>
     </section>
     <section class="lab-panel" aria-live="polite">
       <p class="lab-eyebrow">ALUMBRA / PLAYABLE LAB</p>
-      <h1>Canonical blocks.<br>Independent views.</h1>
+      <h1>Canonical blocks.<br>Package-pinned worlds.</h1>
       <p>Click a world to capture · WASD move · Space jump · Left break · Right place · 1–8 or wheel select · Z undo</p>
       <dl>
         <div><dt>Chunks</dt><dd data-stat="chunks">—</dd></div>

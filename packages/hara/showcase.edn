@@ -7,25 +7,35 @@
  "Packaged Hara world rules and render declarations projected without runtime authority."
 
  :showcase/views
- [{:view/id :portable-rules
-   :view/title "Portable rules"
-   :view/summary "Resolve a pinned Hara generator identity into a deterministic height-field fixture."}]
+ [{:view/id :packaged-world
+   :view/title "Packaged Hara world"
+   :view/summary
+   "Run an exact Hara block pack and generator through Core materialization into the reusable PlayCanvas viewport."}]
 
  :showcase/states
  [{:state/id :world/default-seed
    :state/title "Default seed"
-   :state/summary "A pinned package, generator and seed for the canonical height-field story."
-   :state/file "showcase/states/packaged-height-field.edn"}]
+   :state/summary "The exact package lock materializes the canonical seed-17 height-field chunk."
+   :state/file "showcase/states/default-seed.edn"}
+  {:state/id :world/negative-coordinate
+   :state/title "Negative coordinate"
+   :state/summary "The same package and generator preserve snapshot parity at a negative chunk coordinate."
+   :state/file "showcase/states/negative-coordinate.edn"}
+  {:state/id :world/package-mismatch
+   :state/title "Package mismatch"
+   :state/summary "A descriptive rejection story for a requested version that does not match the exact lock."
+   :state/file "showcase/states/package-mismatch.edn"}]
 
  :showcase/demos
  [{:demo/id :packaged-height-field
    :demo/title "Packaged height field"
-   :demo/summary "Resolve a pinned Hara generator identity into a deterministic height-field fixture."
-   :demo/view :portable-rules
+   :demo/summary
+   "Materialize an exact Hara block pack and generator plan into Core chunks and a live PlayCanvas viewport."
+   :demo/view :packaged-world
    :demo/state :world/default-seed
    :demo/project "showcase/packaged-height-field"
-   :demo/surface :preview
+   :demo/surface :viewport
    :demo/docs "showcase/packaged-height-field/README.md"
-   :demo/tags ["rules" "height-field" "level:foundation" "checks:4"]
+   :demo/tags ["rules" "height-field" "packaged-world" "playable-lab" "level:integration" "checks:9"]
    :demo/theme :dark
    :demo/viewport {:viewport/width 1180 :viewport/height 760}}]}
