@@ -105,7 +105,27 @@ closed success/error envelope, are canonicalized under byte limits, and cannot
 request ambient capabilities. Abort and disposal propagate to provider-owned
 sessions without allowing runtime objects into manifests, chunks or transactions.
 
-The included flat and integer height-field fixtures are mirrored by HAL entry
-points under `gw.alumbra.generator`. The next conformance layer supplies a real
-Hara provider and runs the HAL contract suite and cross-runtime digest matrix in
-CI while preserving this provider-neutral package boundary.
+## Real-runtime conformance
+
+The repository includes an executable fixture namespace at
+`gw.alumbra.fixture`, a HAL `std.lib.test` suite and a Node reference provider in
+`scripts/hara-cli-provider.js`. The provider runs a pinned Hara CLI without
+network, process or key authority, checks exact `project.edn` and
+`project.lock.edn` digests, and transports only JSON-compatible values through
+the public session contract.
+
+CI builds Hara from the reviewed commit pinned in `.github/workflows/ci.yml`,
+executes the packaged HAL tests, then compares Core snapshot digests for flat and
+integer height-field plans across positive and negative chunk coordinates. It
+also proves fail-closed behavior for lock mismatch, capability requests,
+malformed plans, non-JSON values and oversized results.
+
+```sh
+hara --project packages/hara --no-color --no-splash test
+HARA_BIN=/path/to/hara npm run check:hara-runtime
+```
+
+The CLI provider is conformance evidence rather than a dependency of the
+published package. Browser workers, embedded runtimes and future Hodos hosts can
+implement the same injected provider contract without changing portable Alumbra
+rules or Core materialization.
