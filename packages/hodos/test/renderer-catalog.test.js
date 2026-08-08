@@ -11,17 +11,21 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
     "area/type": "hodos.dev/catalog",
     "area/component": { "component/model": options },
   }));
+  const model = area["area/component"]["component/model"];
   assert.equal(area["area/type"], "hodos.dev/catalog");
-  assert.equal(
-    area["area/component"]["component/model"].catalogId,
-    "catalog/alumbra-renderer",
-  );
-  assert.equal(
-    area["area/component"]["component/model"].selectedActivityId,
-    "alumbra-hodos/renderer-catalog",
-  );
-  assert.ok(
-    area["area/component"]["component/model"].activities.every((activity) => activity.path === null),
+  assert.equal(model.catalogId, "catalog/alumbra-renderer");
+  assert.equal(model.selectedActivityId, "alumbra-hodos/renderer-catalog");
+  assert.equal(model.toolsets.length, 6);
+  assert.equal(model.activities.length, 7);
+  assert.ok(model.activities.every((activity) => activity.path === null));
+  assert.deepEqual(
+    model.activities
+      .filter((activity) => activity.toolsetId === "alumbra-viewport-playcanvas")
+      .map((activity) => activity.id),
+    [
+      "alumbra-viewport-playcanvas/playable-world",
+      "alumbra-viewport-playcanvas/two-sessions",
+    ],
   );
   assert.throws(
     () => createAlumbraRendererCatalogArea(() => ({}), {
@@ -29,7 +33,6 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
     }),
     /Unsupported Alumbra Renderer Catalog override: activities/,
   );
-
 });
 
 test("generated Catalog and installed-demo registry are deeply immutable", () => {
@@ -37,8 +40,8 @@ test("generated Catalog and installed-demo registry are deeply immutable", () =>
   assert.ok(Object.isFrozen(ALUMBRA_RENDERER_CATALOG.activities));
   assert.ok(Object.isFrozen(ALUMBRA_RENDERER_CATALOG.activities[0].metadata));
   assert.ok(Object.isFrozen(ALUMBRA_RENDERER_INSTALLED_DEMOS));
-  assert.ok(Object.isFrozen(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hodos/renderer-catalog"]));
+  assert.ok(Object.isFrozen(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/two-sessions"]));
   assert.throws(() => {
-    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hodos/renderer-catalog"].project = "elsewhere";
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/two-sessions"].project = "elsewhere";
   }, TypeError);
 });
