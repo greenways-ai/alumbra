@@ -235,7 +235,7 @@ async function main() {
 
     await rejectsCode(
       session.invoke(reference("non-json-result")),
-      "hara/runtime-evaluation",
+      "hara/runtime-output",
     );
 
     await rejectsCode(

@@ -12,8 +12,12 @@
    "entry" {"module" module "function" function}
    "parameters" parameters})
 
+(defn positive-mod [value divisor]
+  (mod (+ (mod value divisor) divisor) divisor))
+
 (defn fixture-height [world-x world-z seed minimum span]
-  (+ minimum (mod (+ (* world-x 3) (* world-z 5) seed) span)))
+  (+ minimum
+     (positive-mod (+ (* world-x 3) (* world-z 5) seed) span)))
 
 (defn flat-fixture-plan [generator coord shape base block surface]
   (let [world-y (* (get coord 1) (get shape 1))

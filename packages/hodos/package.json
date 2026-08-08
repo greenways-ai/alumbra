@@ -13,9 +13,10 @@
     ".": "./src/index.js",
     "./model": "./src/model.js",
     "./host": "./src/host.js",
+    "./catalog": "./generated/renderer-catalog.js",
     "./hara/*": "./src/gw/alumbra/*.hal"
   },
-  "files": ["src", "examples", "README.md", "project.edn", "project.lock.edn", "hara.recipe.edn"],
+  "files": ["src", "generated", "examples", "README.md", "project.edn", "project.lock.edn", "hara.recipe.edn", "showcase.edn", "showcase"],
   "sideEffects": false,
   "publishConfig": { "access": "public" },
   "peerDependencies": {

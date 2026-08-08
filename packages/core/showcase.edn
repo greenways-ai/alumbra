@@ -1,0 +1,31 @@
+{:hara/type :showcase
+ :showcase/format 1
+ :showcase/package :greenways/alumbra-core
+ :showcase/version "0.1.0"
+ :showcase/title "Core"
+ :showcase/summary
+ "Runtime-neutral block registries, palette-backed chunks and reversible transactions."
+
+ :showcase/views
+ [{:view/id :canonical-chunk
+   :view/title "Canonical chunk"
+   :view/summary "Inspect a bounded canonical chunk fixture whose palette and indices remain renderer-neutral."}]
+
+ :showcase/states
+ [{:state/id :chunk/palette
+   :state/title "Palette-backed chunk"
+   :state/summary "A small canonical chunk state with stable block identities and revision evidence."
+   :state/file "showcase/states/palette-backed-chunk.edn"}]
+
+ :showcase/demos
+ [{:demo/id :palette-backed-chunk
+   :demo/title "Palette-backed chunk"
+   :demo/summary "Inspect a bounded canonical chunk fixture whose palette and indices remain renderer-neutral."
+   :demo/view :canonical-chunk
+   :demo/state :chunk/palette
+   :demo/project "showcase/palette-backed-chunk"
+   :demo/surface :preview
+   :demo/docs "showcase/palette-backed-chunk/README.md"
+   :demo/tags ["chunk" "palette" "level:foundation" "checks:3"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}]}

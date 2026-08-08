@@ -1,0 +1,4 @@
+{:world/seed 1729
+ :world/origin [0 0 0]
+ :world/generator :alumbra.generator/height-field
+ :world/package "greenways/alumbra-hara@0.1.0"}

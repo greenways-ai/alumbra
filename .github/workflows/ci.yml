@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: hara-lang/hara
-          ref: cf1db09a3717ed2ea64cabc7bb6d041ca7f41b6b
+          ref: 55644dc578be5da9f815f95c575f126b4dba63ee
           path: .hara-runtime
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2

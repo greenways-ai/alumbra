@@ -1,0 +1,3 @@
+{:catalog/selection "alumbra-hodos/renderer-catalog"
+ :viewport/status :ready
+ :viewport/world "alumbra:lab/default"}

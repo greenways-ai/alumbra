@@ -4,14 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111923">
-  <title>Alumbra playable voxel laboratory</title>
+  <title>Alumbra Renderer Catalog</title>
   <link rel="stylesheet" href="./src/style.css">
+  <link rel="stylesheet" href="./src/catalog.css">
   <script type="importmap">
   {
     "imports": {
       "playcanvas": "https://cdn.jsdelivr.net/npm/playcanvas@2.21.3/build/playcanvas/src/index.js",
       "@greenways/alumbra-core": "../../packages/core/src/index.js",
       "@greenways/alumbra-engine": "../../packages/engine/src/index.js",
+      "@greenways/alumbra-hodos/catalog": "../../packages/hodos/generated/renderer-catalog.js",
       "@greenways/alumbra-core/blocks": "../../packages/core/src/block-registry.js",
       "@greenways/alumbra-core/chunks": "../../packages/core/src/chunk.js",
       "@greenways/alumbra-core/coordinates": "../../packages/core/src/coordinates.js",
@@ -22,6 +24,7 @@
 </head>
 <body>
   <main class="lab-shell">
+    <aside class="renderer-catalog" data-renderer-catalog aria-label="Alumbra Renderer Catalog"></aside>
     <canvas id="alumbra-canvas" aria-label="Playable Alumbra voxel laboratory"></canvas>
     <section class="lab-panel" aria-live="polite">
       <p class="lab-eyebrow">ALUMBRA / PLAYABLE LAB</p>
@@ -41,6 +44,7 @@
     <p class="lab-status" data-status>Loading canonical chunks and local history…</p>
     <div class="lab-crosshair" aria-hidden="true"></div>
   </main>
+  <script type="module" src="./src/catalog-entry.js"></script>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>
