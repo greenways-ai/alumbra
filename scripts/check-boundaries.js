@@ -25,6 +25,7 @@ const packageRules = [
     ],
     allowedDependencies: new Set(),
     allowedPeers: new Set(),
+    optionalPeers: new Set(),
   },
   {
     label: "PlayCanvas renderer",
@@ -37,6 +38,26 @@ const packageRules = [
     forbiddenGlobals: [],
     allowedDependencies: new Set(["@greenways/alumbra-core"]),
     allowedPeers: new Set(["playcanvas"]),
+    optionalPeers: new Set(["playcanvas"]),
+  },
+  {
+    label: "Hodos adapter",
+    directory: "packages/hodos",
+    forbiddenSpecifiers: [
+      "@greenways/hodos",
+      "playcanvas",
+      "@greenways/alumbra-renderer",
+      "@greenways/alumbra-game",
+    ],
+    forbiddenGlobals: [
+      /\bglobalThis\.document\b/,
+      /\bglobalThis\.window\b/,
+      /\bwindow\./,
+      /\bdocument\./,
+    ],
+    allowedDependencies: new Set(),
+    allowedPeers: new Set(["@greenways/hodos-web", "@greenways/hodos-workspace-ui"]),
+    optionalPeers: new Set(["@greenways/hodos-web", "@greenways/hodos-workspace-ui"]),
   },
 ];
 
@@ -83,8 +104,10 @@ function inspectPackage(rule) {
   for (const dependency of Object.keys(manifest.optionalDependencies ?? {})) {
     failures.push(`${rule.directory}/package.json: unexpected optional dependency ${dependency}`);
   }
-  if (manifest.peerDependencies?.playcanvas && manifest.peerDependenciesMeta?.playcanvas?.optional !== true) {
-    failures.push(`${rule.directory}/package.json: PlayCanvas peer must remain optional`);
+  for (const dependency of rule.optionalPeers) {
+    if (manifest.peerDependencies?.[dependency] && manifest.peerDependenciesMeta?.[dependency]?.optional !== true) {
+      failures.push(`${rule.directory}/package.json: peer ${dependency} must remain optional`);
+    }
   }
 }
 
