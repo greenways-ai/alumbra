@@ -22,7 +22,9 @@
     "README.md",
     "project.edn",
     "project.lock.edn",
-    "hara.recipe.edn"
+    "hara.recipe.edn",
+    "showcase.edn",
+    "showcase"
   ],
   "sideEffects": false,
   "publishConfig": {

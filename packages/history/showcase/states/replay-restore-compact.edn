@@ -1,0 +1,46 @@
+{:format "alumbra.history-showcase/1"
+ :world {:id "world:history-showcase" :version "0.1.0"}
+ :region-shape [8 4 8]
+ :initial
+ {:chunk-coordinates [[-9 0 -1] [-1 0 0] [0 0 0] [8 0 1]]
+  :region-coordinates [[-2 0 -1] [-1 0 0] [0 0 0] [1 0 0]]
+  :chunk-count 4
+  :region-count 4}
+ :base-checkpoint
+ {:id "history/showcase-base"
+  :name "history/base"
+  :sequence 0
+  :snapshot-count 4}
+ :accepted-transaction
+ {:id "history/change-1"
+  :sequence 1
+  :affected-regions [[0 0 0]]
+  :record-count 1
+  :head-changed true}
+ :named-checkpoint
+ {:id "history/showcase-after-change"
+  :name "history/after-change"
+  :sequence 1}
+ :named-restore
+ {:name "history/after-change"
+  :sequence 1
+  :head-matches-checkpoint true}
+ :compaction
+ {:id "history/showcase-compacted"
+  :name "history/compacted"
+  :sequence 1
+  :transaction-count-before 1
+  :transaction-count-after 0
+  :semantic-head-preserved true
+  :base-checkpoint-replaced true}
+ :rejected-sequence
+ {:requested 3
+  :expected 2
+  :accepted false
+  :state-changed false
+  :error-code "history/sequence-conflict"}
+ :authority-boundary
+ {:storage-selected false
+  :renderer-selected false
+  :network-selected false
+  :transient-engine-state-recorded false}}
