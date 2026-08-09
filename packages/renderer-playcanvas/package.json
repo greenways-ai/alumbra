@@ -16,6 +16,7 @@
     "./visibility": "./src/visibility.js",
     "./resources": "./src/resource-pool.js",
     "./adapter": "./src/playcanvas-renderer.js",
+    "./adapter/prebuilt": "./src/prebuilt-renderer.js",
     "./controls": "./src/first-person.js",
     "./residency": "./src/residency.js",
     "./residency/evidence": "./src/residency-evidence.js",

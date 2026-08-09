@@ -3,6 +3,7 @@ export * from "./raycast.js";
 export * from "./visibility.js";
 export * from "./resource-pool.js";
 export * from "./playcanvas-renderer.js";
+export * from "./prebuilt-renderer.js";
 export * from "./first-person.js";
 export * from "./job-queue.js";
 export * from "./mesh-worker.js";
