@@ -3,10 +3,18 @@
 (def engine-format "alumbra.engine/1")
 (def player-state-format "alumbra.player-state/1")
 (def build-intent-format "alumbra.build-intent/1")
+(def lighting-profile-format "alumbra.lighting-profile/1")
+(def light-field-format "alumbra.light-field/1")
 
 (defn descriptor []
   {:engine/format engine-format
    :engine/state :host-owned
    :engine/input :semantic
    :engine/world-format "alumbra.chunk/1"
-   :engine/transaction-format "alumbra.block-transaction/1"})
+   :engine/transaction-format "alumbra.block-transaction/1"
+   :engine/lighting
+   {:profile-format lighting-profile-format
+    :field-format light-field-format
+    :levels [0 15]
+    :state :hot-reconstructible
+    :publication :revision-fenced}})
