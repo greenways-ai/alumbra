@@ -1,0 +1,7 @@
+{:lighting/state :lighting/lamp-restored
+ :lighting/transactions ["lit-world/remove-boundary-lamp"
+                         "lit-world/restore-boundary-lamp"]
+ :lighting/affected ["-1,0,0" "0,0,0"]
+ :lighting/lamp-present true
+ :lighting/boundary-emission 14
+ :lighting/status :ready}

@@ -1,6 +1,8 @@
 import * as pc from "playcanvas";
 import {
   LIT_WORLD_ACTIVITY,
+  LIT_WORLD_DEFAULT_STATE,
+  LIT_WORLD_STATE_IDS,
   createLitWorldStoryHost,
 } from "./lit-world-host.js";
 import { setViewportEvidenceContributor } from "./viewport-evidence.js";
@@ -27,6 +29,7 @@ if (!viewportGrid || !canvas || !status || !panel) {
 
 const host = createLitWorldStoryHost({ pc, canvas });
 let activeActivity = null;
+let activeState = null;
 let disposed = false;
 
 function hideOtherSurfaces() {
@@ -47,7 +50,8 @@ function publishHud(snapshot) {
   const scenario = snapshot.scenario;
   const lighting = scenario?.lighting;
   const materialLighting = scenario?.materials?.lighting;
-  if (litStats.status) litStats.status.textContent = String(snapshot.status);
+  const mutation = scenario?.mutation;
+  if (litStats.status) litStats.status.textContent = `${snapshot.status} · ${snapshot.activeState ?? "none"}`;
   if (litStats.chunks) {
     litStats.chunks.textContent = `${lighting?.installedChunks ?? 0}/${lighting?.loadedChunks ?? 0}`;
   }
@@ -60,7 +64,8 @@ function publishHud(snapshot) {
     litStats.resources.textContent = `${lighting?.renderer?.meshResources ?? 0}M · ${lighting?.renderer?.materialResources ?? 0}T`;
   }
   if (litStats.lifecycle) {
-    litStats.lifecycle.textContent = `${snapshot.lifecycle?.suspensions ?? 0} suspend · ${snapshot.lifecycle?.resumes ?? 0} resume`;
+    const stale = mutation?.stale?.rejected ? " · stale fenced" : "";
+    litStats.lifecycle.textContent = `${snapshot.lifecycle?.suspensions ?? 0} suspend · ${snapshot.lifecycle?.resumes ?? 0} resume${stale}`;
   }
   if (litStats.disposal) {
     litStats.disposal.textContent = snapshot.disposal?.baseline
@@ -69,21 +74,30 @@ function publishHud(snapshot) {
   }
 }
 
-async function openLitWorld() {
+const stateMessage = (stateId) => ({
+  [LIT_WORLD_STATE_IDS.live]: "The boundary lamp lights both chunks through current Engine fields and PlayCanvas vertex colours.",
+  [LIT_WORLD_STATE_IDS.removed]: "A revision-checked Core transaction removed the lamp and only the bounded affected projections were relit dark.",
+  [LIT_WORLD_STATE_IDS.restored]: "The accepted inverse transaction restored the lamp and the current boundary lighting generation.",
+  [LIT_WORLD_STATE_IDS.stale]: "An obsolete delayed lighting generation was fenced; only the restored canonical revision reached PlayCanvas.",
+}[stateId] ?? `Lit-world state ${stateId} is ready.`);
+
+async function openLitWorld(stateId = LIT_WORLD_DEFAULT_STATE) {
   activeActivity = LIT_WORLD_ACTIVITY;
+  activeState = stateId;
   hideOtherSurfaces();
-  status.textContent = "Building the negative-to-zero cave, propagating light, and projecting vertex colours…";
-  const snapshot = await host.open(LIT_WORLD_ACTIVITY);
-  if (activeActivity !== LIT_WORLD_ACTIVITY) return snapshot;
+  status.textContent = "Applying the selected canonical lighting transition and projecting its current generation…";
+  const snapshot = await host.open(LIT_WORLD_ACTIVITY, { stateId });
+  if (activeActivity !== LIT_WORLD_ACTIVITY || activeState !== stateId) return snapshot;
   hideOtherSurfaces();
   publishHud(snapshot);
-  status.textContent = "The boundary lamp now lights both chunks through Engine fields, deterministic meshes, and PlayCanvas vertex colours.";
+  status.textContent = stateMessage(snapshot.activeState);
   return snapshot;
 }
 
 async function closeLitWorld(reason) {
   if (!activeActivity) return host.snapshot();
   activeActivity = null;
+  activeState = null;
   canvas.hidden = true;
   panel.hidden = true;
   return host.close(reason);
@@ -92,7 +106,8 @@ async function closeLitWorld(reason) {
 const openDemo = (event) => {
   const activityId = event.detail?.activityId;
   if (activityId === LIT_WORLD_ACTIVITY) {
-    void openLitWorld().catch((error) => {
+    const stateId = event.detail?.stateId ?? LIT_WORLD_DEFAULT_STATE;
+    void openLitWorld(stateId).catch((error) => {
       console.error("Alumbra lit-world story failed", error);
     });
     return;

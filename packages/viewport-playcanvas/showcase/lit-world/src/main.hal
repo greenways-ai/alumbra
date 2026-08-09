@@ -7,15 +7,26 @@
 (def session
   (viewport/session "lit-world/1" "world:alumbra/lit-cave"))
 
-(def suspended
-  (viewport/suspend session))
-
-(def resumed
-  (viewport/resume suspended))
+(def states
+  [{:state/id :lighting/live
+    :state/lamp :present
+    :state/boundary-emission 14}
+   {:state/id :lighting/lamp-removed
+    :state/transaction "lit-world/remove-boundary-lamp"
+    :state/lamp :removed
+    :state/boundary-emission 0}
+   {:state/id :lighting/lamp-restored
+    :state/transaction "lit-world/restore-boundary-lamp"
+    :state/lamp :present
+    :state/boundary-emission 14}
+   {:state/id :lighting/stale-generation-rejected
+    :state/fence :coordinator-request-version
+    :state/final-authority :newest-canonical-revision}])
 
 {:story/id :viewport/lit-world
  :story/activity "alumbra-viewport-playcanvas/lit-world"
- :story/session resumed
+ :story/session (viewport/resume (viewport/suspend session))
+ :story/states states
  :story/fixture
  {:chunks ["-1,0,0" "0,0,0"]
   :boundary-lamp {:chunk "-1,0,0"
@@ -24,17 +35,10 @@
                   :adjacent-local [0 2 4]}}
  :story/lighting lighting
  :story/authority
- {:canonical :core
+ {:transactions :core
   :fields :engine
   :meshes :renderer
   :orchestration :viewport}
- :checks
- [{:check/id :lighting/revision-fenced
-   :check/status (= :revision-fenced (:viewport/publication lighting))}
-  {:check/id :lighting/hot-fields
-   :check/status (= :engine (:viewport/field-authority lighting))}
-  {:check/id :viewport/resumed
-   :check/status (= :active (:viewport/status resumed))}
-  {:check/id :viewport/same-world
-   :check/status (= (:viewport/world session)
-                    (:viewport/world resumed))}]}
+ :story/excludes
+ [:chunks :dense-light-fields :mesh-buffers :callbacks
+  :playcanvas-objects :capabilities :project-paths]}

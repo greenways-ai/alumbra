@@ -72,3 +72,15 @@ The caller continues to own canonical chunks, package activation, persistence,
 UI, save timing and public authority. `createViewportSessionGroup` tracks several
 independent sessions without sharing worlds, players, renderer resources or
 lifecycle state.
+
+
+## Accepted block transactions
+
+`routeAcceptedLightingTransaction` verifies a Core world-runtime acceptance receipt,
+loads the exact post-transaction chunks and routes them through the existing lighting
+coordinator. Revision, changed-key and affected-key mismatches fail before coordinator
+mutation; duplicate delivery of the exact current post-state is idempotent.
+
+The live lit-world Showcase exercises four installed states: `lighting/live`,
+`lighting/lamp-removed`, `lighting/lamp-restored`, and
+`lighting/stale-generation-rejected`.

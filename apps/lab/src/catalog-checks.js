@@ -33,6 +33,13 @@ export const WORKSPACE_STATE_IDS = Object.freeze({
   compact: WORKSPACE_COMPACT_STATE,
 });
 
+export const LIT_WORLD_STATE_IDS = Object.freeze({
+  live: "lighting/live",
+  removed: "lighting/lamp-removed",
+  restored: "lighting/lamp-restored",
+  stale: "lighting/stale-generation-rejected",
+});
+
 const passed = (id, label, condition) => ({
   id,
   label,
@@ -299,39 +306,65 @@ function workspaceChecks({ activityId, evidence, elements, requestedWorkspaceSta
   ];
 }
 
-function litWorldChecks({ activityId, evidence, elements }) {
+function litWorldChecks({ activityId, evidence, elements, requestedLitWorldState }) {
   const story = evidence.litWorld;
   const scenario = story?.scenario;
   const lighting = scenario?.lighting;
   const materialLighting = scenario?.materials?.lighting;
+  const mutation = scenario?.mutation;
+  const receipts = mutation?.receipts ?? [];
+  const stale = mutation?.stale;
   const serialized = JSON.stringify(story ?? {});
+  const expectedMutation = requestedLitWorldState === LIT_WORLD_STATE_IDS.live
+    ? receipts.length === 0
+    : requestedLitWorldState === LIT_WORLD_STATE_IDS.removed
+      ? receipts.length === 1
+        && mutation?.current?.lampPresent === false
+        && mutation?.current?.boundaryEmission === 0
+      : requestedLitWorldState === LIT_WORLD_STATE_IDS.restored
+        ? receipts.length === 2
+          && mutation?.phases?.some((phase) => phase.id === LIT_WORLD_STATE_IDS.removed
+            && phase.lampPresent === false
+            && phase.boundaryEmission === 0)
+          && mutation?.current?.lampPresent === true
+          && mutation?.current?.boundaryEmission > 0
+        : requestedLitWorldState === LIT_WORLD_STATE_IDS.stale
+          ? receipts.length === 2
+            && stale?.rejected === true
+            && stale.discardedAfter > stale.discardedBefore
+            && stale.finalRequestedGeneration === stale.finalInstalledGeneration
+            && mutation?.current?.lampPresent === true
+            && mutation?.current?.installedFieldRevision === mutation?.current?.lampChunkRevision
+          : false;
   return [
     passed(
       "lit-world/live-surface",
-      "The live lit-world canvas opens through its installed semantic identity",
+      "The selected lit-world state opens through its installed semantic identity",
       story?.format === LIT_WORLD_STORY_FORMAT
         && story.activeActivity === activityId
+        && story.activeState === requestedLitWorldState
         && story.status === "ready"
         && scenario?.kind === "lit-world"
+        && scenario.stateId === requestedLitWorldState
         && Boolean(elements.litWorldCanvas && !elements.litWorldCanvas.hidden)
         && Boolean(elements.litWorldPanel && !elements.litWorldPanel.hidden),
     ),
     passed(
-      "lit-world/cross-boundary-fields",
-      "Sunlight and emitted light reach the negative-to-zero two-chunk fixture",
+      "lit-world/canonical-mutation",
+      "Accepted Core transactions produce the expected bounded lighting state",
       lighting?.format === VIEWPORT_LIGHTING_EVIDENCE_FORMAT
         && lighting.status === "ready"
         && lighting.loadedChunks === 2
         && lighting.installedChunks === 2
-        && lighting.maximumSunlight > 0
-        && lighting.maximumEmitted > 0
-        && scenario.boundaryEmission > 0
         && scenario.world?.negativeToZero === true
-        && scenario.proofs?.crossChunkEmission === true,
+        && scenario.proofs?.expectedState === true
+        && scenario.proofs?.boundedAffected === true
+        && scenario.proofs?.duplicateActionRejected === true
+        && expectedMutation,
     ),
     passed(
       "lit-world/vertex-colour-projection",
-      "Every installed lit mesh vertex has aligned renderer-owned colour projection",
+      "Every current lit mesh vertex has aligned renderer-owned colour projection",
       materialLighting?.format === MESH_LIGHT_RENDER_EVIDENCE_FORMAT
         && materialLighting.litGroupCount > 0
         && materialLighting.vertices > 0
@@ -339,13 +372,15 @@ function litWorldChecks({ activityId, evidence, elements }) {
         && scenario.proofs?.alignedVertexColors === true,
     ),
     passed(
-      "lit-world/lifecycle",
-      "Suspend and resume retain the same canonical session and installed projection",
+      "lit-world/lifecycle-and-fence",
+      "Visibility retains the canonical session and obsolete lighting work cannot install",
       scenario.proofs?.sameCanonicalSessionAfterResume === true
+        && scenario.proofs?.staleGenerationRejected === true
         && story.lifecycle?.suspensions >= 1
         && story.lifecycle?.resumes >= 1
         && scenario.session?.status === "active"
-        && scenario.session?.worldId === scenario.world?.id,
+        && scenario.session?.worldId === scenario.world?.id
+        && lighting.dirtyChunks === 0,
     ),
     passed(
       "lit-world/bounded-disposal",
@@ -471,10 +506,11 @@ export function buildCatalogChecks({
   requestedHaraState,
   requestedMaterialState,
   requestedWorkspaceState,
+  requestedLitWorldState,
 }) {
   const checks = commonChecks({ activity, demo, eventLog });
   if (activityId === ids.litWorld) {
-    checks.push(...litWorldChecks({ activityId, evidence, elements }));
+    checks.push(...litWorldChecks({ activityId, evidence, elements, requestedLitWorldState }));
   } else if (activityId === ids.rendererWorkspace) {
     checks.push(...workspaceChecks({ activityId, evidence, elements, requestedWorkspaceState }));
   } else if (ids.residencyActivities.has(activityId)) {

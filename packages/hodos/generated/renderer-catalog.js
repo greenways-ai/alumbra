@@ -520,9 +520,9 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "toolsetId": "alumbra-viewport-playcanvas",
       "title": "Live lit-world viewport",
       "level": "Integration",
-      "summary": "Open a two-chunk cave whose boundary lamp travels through Engine fields, light-aware meshes and PlayCanvas vertex colours.",
+      "summary": "Remove and restore a cross-boundary lamp through accepted Core transactions while obsolete lighting generations remain fenced.",
       "instructions": [
-        "Open a two-chunk cave whose boundary lamp travels through Engine fields, light-aware meshes and PlayCanvas vertex colours."
+        "Remove and restore a cross-boundary lamp through accepted Core transactions while obsolete lighting generations remain fenced."
       ],
       "path": null,
       "checkCount": 8,

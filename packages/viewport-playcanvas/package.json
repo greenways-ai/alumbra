@@ -16,6 +16,7 @@
     "./session": "./src/session.js",
     "./sessions": "./src/session-group.js",
     "./lighting": "./src/lighting-coordinator.js",
+    "./lighting-transactions": "./src/transaction-lighting.js",
     "./lit-session": "./src/lit-session.js",
     "./hara/*": "./src/gw/alumbra/*.hal"
   },

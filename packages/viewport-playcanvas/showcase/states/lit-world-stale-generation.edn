@@ -1,0 +1,7 @@
+{:lighting/state :lighting/stale-generation-rejected
+ :lighting/overlap {:older :delayed :newer :canonical-current}
+ :lighting/fence :coordinator-request-version
+ :lighting/stale-result :discarded
+ :lighting/final-lamp-present true
+ :lighting/final-boundary-emission 14
+ :lighting/status :ready}
