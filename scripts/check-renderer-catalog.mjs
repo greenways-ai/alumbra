@@ -1,9 +1,9 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { loadShowcases, renderRendererCatalogModule } from "./lib/showcase.mjs";
+import { loadRendererShowcases, renderRendererCatalogModule } from "./lib/showcase.mjs";
 
 const output = path.join(process.cwd(), "packages/hodos/generated/renderer-catalog.js");
-const expected = renderRendererCatalogModule(await loadShowcases());
+const expected = renderRendererCatalogModule(await loadRendererShowcases());
 let actual = null;
 try {
   actual = await readFile(output, "utf8");

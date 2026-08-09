@@ -1,0 +1,45 @@
+{:format "alumbra.history-store-showcase/1"
+ :archive
+ {:id "history-store/showcase-archive"
+  :head-sequence 1
+  :snapshot-count 3
+  :record-count 1
+  :named-checkpoints ["history/start"]}
+ :first-save
+ {:written-snapshots 3
+  :reused-snapshots 0
+  :archive-written true
+  :manifest-written-last true}
+ :repeated-save
+ {:same-archive-identity true
+  :written-snapshots 0
+  :reused-snapshots 3
+  :archive-written false
+  :snapshot-write-counts [1 1 1]}
+ :verified-load
+ {:archive-digest-verified true
+  :canonical-manifest-verified true
+  :snapshot-digests-verified true
+  :ordered-replay-verified true
+  :head-sequence 1
+  :semantic-head-matches true
+  :named-restore-matches true}
+ :failure-cases
+ [{:case :missing-snapshot
+   :accepted false
+   :returns-world false
+   :accepted-error-codes ["history/snapshot-missing" "history-store/archive-head"]}
+  {:case :tampered-snapshot
+   :accepted false
+   :returns-world false
+   :error-code "history-store/blob-digest"}
+  {:case :manifest-publication-failure
+   :accepted false
+   :prior-archive-readable true
+   :current-pointer-advanced false}]
+ :authority-boundary
+ {:store-interface-injected true
+  :filesystem-selected false
+  :browser-store-selected false
+  :network-selected false
+  :mutable-current-pointer-owned false}}

@@ -1,0 +1,9 @@
+{:hara/type :project
+ :hara/version "1.0.0"
+ :project/id showcase.alumbra-history-store.content-addressed-archive
+ :project/version "0.1.0"
+ :project/source-paths ["src"]
+ :project/test-paths []
+ :project/extension-paths []
+ :project/main showcase.alumbra-history-store.content-addressed-archive
+ :project/capabilities #{:studio/eval}}

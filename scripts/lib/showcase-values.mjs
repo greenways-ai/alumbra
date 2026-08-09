@@ -5,6 +5,17 @@ import { parseEdn } from "./edn.mjs";
 export const PUBLIC_PACKAGE_ORDER = Object.freeze([
   "@greenways/alumbra-hara",
   "@greenways/alumbra-core",
+  "@greenways/alumbra-history",
+  "@greenways/alumbra-history-store",
+  "@greenways/alumbra-engine",
+  "@greenways/alumbra-renderer-playcanvas",
+  "@greenways/alumbra-viewport-playcanvas",
+  "@greenways/alumbra-hodos",
+]);
+
+export const RENDERER_PACKAGE_ORDER = Object.freeze([
+  "@greenways/alumbra-hara",
+  "@greenways/alumbra-core",
   "@greenways/alumbra-engine",
   "@greenways/alumbra-renderer-playcanvas",
   "@greenways/alumbra-viewport-playcanvas",
@@ -55,7 +66,8 @@ const FORBIDDEN_STATE_KEY = /(?:^|\/|-)(?:callback|callbacks|function|functions|
 const EXECUTABLE_STRING = /(?:=>|\bfunction\s*\(|\beval\s*\(|javascript:|<script\b|#version\s+\d|\bgl_(?:Position|FragColor)\b)/i;
 
 export const PACKAGE_INDEX = new Map(PUBLIC_PACKAGE_ORDER.map((name, index) => [name, index]));
-export const RENDERER_PACKAGE_SET = new Set(PUBLIC_PACKAGE_ORDER);
+export const SHOWCASE_PACKAGE_SET = new Set(PUBLIC_PACKAGE_ORDER);
+export const RENDERER_PACKAGE_SET = new Set(RENDERER_PACKAGE_ORDER);
 
 export const RENDERER_CATALOG_ID = "catalog/alumbra-renderer";
 export const RENDERER_CATALOG_VERSION = "1";

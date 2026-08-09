@@ -1,0 +1,29 @@
+(ns showcase.alumbra-history.replay-restore-compact)
+
+(def region-count 4)
+(def accepted-sequence 1)
+(def affected-regions [[0 0 0]])
+(def transaction-prefix {:before 1 :after 0})
+
+[:main {:class "preview-shell"}
+ [:article {:class "card"}
+  [:span {:class "eyebrow"} "ALUMBRA / HISTORY"]
+  [:h1 "Replay, restore and compact"]
+  [:p "Canonical world history stays independent of storage. Checkpoints own bounded region manifests; ordered Core transactions move the head; named restore and compaction remain explicit verified operations."]
+  [:div {:class "workspace-showcase-grid"}
+   [:section
+    [:strong "1 · Checkpoint"]
+    [:p "4 chunks → 4 region manifests"]
+    [:code "sequence 0 · history/base"]]
+   [:section
+    [:strong "2 · Append"]
+    [:p "one affected region"]
+    [:code "sequence 1 · [0 0 0]"]]
+   [:section
+    [:strong "3 · Restore"]
+    [:p "named exact semantic head"]
+    [:code "history/after-change"]]
+   [:section
+    [:strong "4 · Compact"]
+    [:p "transaction prefix 1 → 0"]
+    [:code "semantic head preserved"]]]]]

@@ -1,0 +1,28 @@
+(ns showcase.alumbra-history-store.content-addressed-archive)
+
+(def first-save {:written 3 :reused 0 :manifest true})
+(def repeated-save {:written 0 :reused 3 :same-identity true})
+(def verification [:manifest :snapshots :replay :semantic-head])
+
+[:main {:class "preview-shell"}
+ [:article {:class "card"}
+  [:span {:class "eyebrow"} "ALUMBRA / HISTORY STORE"]
+  [:h1 "Content-addressed archive"]
+  [:p "Canonical snapshots are stored once by digest. The archive manifest is published last, and loading verifies every referenced byte and replay boundary before exposing world state."]
+  [:div {:class "workspace-showcase-grid"}
+   [:section
+    [:strong "1 · Unique blobs"]
+    [:p "3 snapshots written once"]
+    [:code "sha256-addressed"]]
+   [:section
+    [:strong "2 · Publish last"]
+    [:p "canonical archive manifest"]
+    [:code "pointer update remains external"]]
+   [:section
+    [:strong "3 · Save again"]
+    [:p "0 writes · 3 reused"]
+    [:code "same archive identity"]]
+   [:section
+    [:strong "4 · Verify"]
+    [:p "manifest · snapshots · replay · head"]
+    [:code "corruption fails closed"]]]]]
