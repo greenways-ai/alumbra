@@ -21,9 +21,9 @@ jobs:
       - run: npm ci
       - name: Verify and materialize the incremental AR-09 slice
         run: |
-          cat .github/ar09-v2.chunk* | base64 --decode > /tmp/ar09-v2.bundle
-          echo "e6127cd829654782187a8effd319df62233e46c3cf3c596f8e66b6c2ae3fc05c  /tmp/ar09-v2.bundle" | sha256sum -c -
-          tar -xzf /tmp/ar09-v2.bundle -C .
+          cat .github/ar09-v3.part* | base64 --decode > /tmp/ar09-v3.bundle
+          echo "40e6b33d1497d3104c47c8000d6d11e24bbb7deb7556fcb198e9760382b98ab9  /tmp/ar09-v3.bundle" | sha256sum -c -
+          tar -xzf /tmp/ar09-v3.bundle -C .
           node .github/ar09-v2.mjs
       - name: Validate renderer and repository gates
         run: |
@@ -33,7 +33,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm -f .github/ar09.bundle.chunk* .github/ar09.bundle.part* .github/ar09-v2.chunk* .github/ar09-wire.mjs .github/ar09-v2.mjs .github/workflows/apply-ar09.yml
+          git rm -f .github/ar09.bundle.chunk* .github/ar09.bundle.part* .github/ar09-v2.chunk* .github/ar09-v3.part* .github/ar09-wire.mjs .github/ar09-v2.mjs .github/workflows/apply-ar09.yml
           git add packages/renderer-playcanvas spec/lighting.md
           git commit -m "Project voxel light fields through PlayCanvas residency"
           git push origin HEAD:agent/light-aware-mesh-attributes
