@@ -1,0 +1,15 @@
+(ns gw.alumbra.history)
+
+(def checkpoint-format "alumbra.world-checkpoint/1")
+(def region-format "alumbra.region-manifest/1")
+(def transaction-format "alumbra.history-transaction/1")
+(def semantic-head-format "alumbra.semantic-world-head/1")
+
+(defn descriptor []
+  {:history/checkpoint-format checkpoint-format
+   :history/region-format region-format
+   :history/transaction-format transaction-format
+   :history/semantic-head-format semantic-head-format
+   :history/chunk-format "alumbra.chunk-snapshot/1"
+   :history/storage :injected
+   :history/authority :alumbra})

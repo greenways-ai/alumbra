@@ -13,6 +13,22 @@ const browserGlobals = [
   /\bdocument\./,
 ];
 
+const storageGlobals = [
+  /\bglobalThis\.indexedDB\b/,
+  /\bindexedDB\b/,
+  /\bglobalThis\.localStorage\b/,
+  /\blocalStorage\b/,
+];
+
+const serverAndNetworkImports = [
+  "node:fs",
+  "node:http",
+  "node:https",
+  "node:net",
+  "node:tls",
+  "node:dgram",
+];
+
 const packageRules = [
   {
     label: "Core",
@@ -20,6 +36,7 @@ const packageRules = [
     forbiddenSpecifiers: [
       "@greenways/hodos",
       "playcanvas",
+      "@greenways/alumbra-history",
       "@greenways/alumbra-engine",
       "@greenways/alumbra-renderer",
       "@greenways/alumbra-viewport",
@@ -33,29 +50,48 @@ const packageRules = [
     optionalPeers: new Set(),
   },
   {
-    label: "Engine",
-    directory: "packages/engine",
+    label: "History",
+    directory: "packages/history",
     forbiddenSpecifiers: [
       "@greenways/hodos",
       "playcanvas",
+      "@greenways/alumbra-engine",
       "@greenways/alumbra-renderer",
       "@greenways/alumbra-viewport",
       "@greenways/alumbra-game",
       "@greenways/alumbra-hodos",
       "@greenways/alumbra-hara",
-      "node:fs",
-      "node:http",
-      "node:https",
-      "node:net",
-      "node:tls",
-      "node:dgram",
+      "@greenways/hestia",
+      "@greenways/ignatius",
+      "@greenways/tahto",
+      "opfs",
+      ...serverAndNetworkImports,
     ],
     forbiddenGlobals: [
       ...browserGlobals,
-      /\bglobalThis\.indexedDB\b/,
-      /\bindexedDB\b/,
-      /\bglobalThis\.localStorage\b/,
-      /\blocalStorage\b/,
+      ...storageGlobals,
+    ],
+    allowedDependencies: new Set(["@greenways/alumbra-core"]),
+    allowedPeers: new Set(),
+    optionalPeers: new Set(),
+  },
+  {
+    label: "Engine",
+    directory: "packages/engine",
+    forbiddenSpecifiers: [
+      "@greenways/hodos",
+      "playcanvas",
+      "@greenways/alumbra-history",
+      "@greenways/alumbra-renderer",
+      "@greenways/alumbra-viewport",
+      "@greenways/alumbra-game",
+      "@greenways/alumbra-hodos",
+      "@greenways/alumbra-hara",
+      ...serverAndNetworkImports,
+    ],
+    forbiddenGlobals: [
+      ...browserGlobals,
+      ...storageGlobals,
     ],
     allowedDependencies: new Set(["@greenways/alumbra-core"]),
     allowedPeers: new Set(),
@@ -66,6 +102,7 @@ const packageRules = [
     directory: "packages/renderer-playcanvas",
     forbiddenSpecifiers: [
       "@greenways/hodos",
+      "@greenways/alumbra-history",
       "@greenways/alumbra-engine",
       "@greenways/alumbra-viewport",
       "@greenways/alumbra-game",
@@ -82,15 +119,11 @@ const packageRules = [
     directory: "packages/viewport-playcanvas",
     forbiddenSpecifiers: [
       "@greenways/hodos",
+      "@greenways/alumbra-history",
       "@greenways/alumbra-game",
       "@greenways/alumbra-hodos",
       "@greenways/alumbra-hara",
-      "node:fs",
-      "node:http",
-      "node:https",
-      "node:net",
-      "node:tls",
-      "node:dgram",
+      ...serverAndNetworkImports,
     ],
     forbiddenGlobals: [],
     allowedDependencies: new Set([
@@ -107,6 +140,7 @@ const packageRules = [
     forbiddenSpecifiers: [
       "@greenways/hodos",
       "playcanvas",
+      "@greenways/alumbra-history",
       "@greenways/alumbra-engine",
       "@greenways/alumbra-renderer",
       "@greenways/alumbra-viewport",
@@ -124,24 +158,17 @@ const packageRules = [
     forbiddenSpecifiers: [
       "@greenways/hodos",
       "playcanvas",
+      "@greenways/alumbra-history",
       "@greenways/alumbra-engine",
       "@greenways/alumbra-renderer",
       "@greenways/alumbra-viewport",
       "@greenways/alumbra-game",
       "@greenways/alumbra-hodos",
-      "node:fs",
-      "node:http",
-      "node:https",
-      "node:net",
-      "node:tls",
-      "node:dgram",
+      ...serverAndNetworkImports,
     ],
     forbiddenGlobals: [
       ...browserGlobals,
-      /\bglobalThis\.indexedDB\b/,
-      /\bindexedDB\b/,
-      /\bglobalThis\.localStorage\b/,
-      /\blocalStorage\b/,
+      ...storageGlobals,
     ],
     allowedDependencies: new Set(["@greenways/alumbra-core"]),
     allowedPeers: new Set(),
