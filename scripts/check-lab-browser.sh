@@ -142,6 +142,31 @@ run_activity() {
     fi
   fi
 
+  if [[ "$activity" == "alumbra-hodos/renderer-workspace" ]]; then
+    local expected_layout="wide"
+    if [[ "$state" == "workspace/compact" ]]; then expected_layout="compact"; fi
+    if ! grep -Fq 'data-browser-workspace="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "The integrated Hodos renderer Workspace did not become ready." >&2
+      return 1
+    fi
+    if ! grep -Fq "data-browser-state=\"${state}\"" "$dom"; then
+      cat "$dom" >&2
+      echo "Renderer Workspace did not open named state ${state}." >&2
+      return 1
+    fi
+    if ! grep -Fq "data-browser-workspace-layout=\"${expected_layout}\"" "$dom"; then
+      cat "$dom" >&2
+      echo "Renderer Workspace did not project the expected ${expected_layout} layout." >&2
+      return 1
+    fi
+    if ! grep -Fq 'data-browser-disposal="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "Renderer Workspace activity switching did not return the previous viewport to baseline." >&2
+      return 1
+    fi
+  fi
+
   if [[ "$activity" == "alumbra-hara/packaged-height-field" ]]; then
     if ! grep -Fq "data-browser-state=\"${state}\"" "$dom"; then
       cat "$dom" >&2
@@ -168,6 +193,8 @@ run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/daylig
 run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/fog"
 run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/emissive"
 run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/unknown-profile-error"
+run_activity "alumbra-hodos/renderer-workspace" "workspace/wide"
+run_activity "alumbra-hodos/renderer-workspace" "workspace/compact"
 run_activity "alumbra-hara/packaged-height-field" "world/default-seed"
 run_activity "alumbra-hara/packaged-height-field" "world/negative-coordinate"
 run_activity "alumbra-hara/packaged-height-field" "world/package-mismatch"
