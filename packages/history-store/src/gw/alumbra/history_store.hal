@@ -1,0 +1,13 @@
+(ns gw.alumbra.history-store)
+
+(def archive-format "alumbra.history-archive/1")
+(def checkpoint-format "alumbra.history-archive-checkpoint/1")
+
+(defn descriptor []
+  {:history-store/archive-format archive-format
+   :history-store/checkpoint-format checkpoint-format
+   :history-store/blob-address :sha256
+   :history-store/publication :write-last
+   :history-store/protocol [:has :put :get :delete-optional]
+   :history-store/storage :injected
+   :history-store/authority :alumbra})
