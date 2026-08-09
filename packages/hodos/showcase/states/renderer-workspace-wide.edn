@@ -1,0 +1,9 @@
+{:workspace/state :workspace/wide
+ :workspace/layout "wide"
+ :workspace/viewport-width 1280
+ :workspace/active-surface "world"
+ :workspace/areas ["catalog" "world" "code" "execution" "problems" "repl"]
+ :workspace/authority-count 6
+ :workspace/lifecycle {:model-update-preserves-engine true
+                       :hidden-world-suspends true
+                       :activity-switch-destroys-previous true}}
