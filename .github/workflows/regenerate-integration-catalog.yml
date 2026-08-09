@@ -33,3 +33,5 @@ jobs:
           git add packages/hodos/generated/renderer-catalog.js
           git commit -m "Regenerate the integrated Renderer Catalog"
           git push origin HEAD:agent/material-environment-pipeline
+
+# Regenerate after reconciling the Workspace surface contract.
