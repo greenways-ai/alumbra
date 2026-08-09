@@ -22,7 +22,7 @@ jobs:
       - name: Verify and materialize the incremental AR-09 slice
         run: |
           cat .github/ar09-v2.chunk* | base64 --decode > /tmp/ar09-v2.bundle
-          echo "551a0a82999d8a9b70f025415b71bfa8578f8bd76e3ed06783b7bdd90ea1b877  /tmp/ar09-v2.bundle" | sha256sum -c -
+          echo "e6127cd829654782187a8effd319df62233e46c3cf3c596f8e66b6c2ae3fc05c  /tmp/ar09-v2.bundle" | sha256sum -c -
           tar -xzf /tmp/ar09-v2.bundle -C .
           node .github/ar09-v2.mjs
       - name: Validate renderer and repository gates
