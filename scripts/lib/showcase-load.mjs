@@ -2,10 +2,19 @@ import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { validateShowcase } from "./showcase-package.mjs";
 import {
-  PACKAGE_INDEX, PUBLIC_PACKAGE_ORDER, RENDERER_PACKAGE_SET, objectValue, parseFile,
+  PUBLIC_PACKAGE_ORDER,
+  RENDERER_PACKAGE_ORDER,
+  SHOWCASE_PACKAGE_SET,
+  RENDERER_PACKAGE_SET,
+  objectValue,
+  parseFile,
 } from "./showcase-values.mjs";
 
-export async function loadShowcases(root = process.cwd()) {
+async function loadSelectedShowcases(root, {
+  packageOrder,
+  packageSet,
+  familyLabel,
+}) {
   const packagesRoot = path.join(root, "packages");
   const errors = [];
   const showcases = [];
@@ -17,9 +26,9 @@ export async function loadShowcases(root = process.cwd()) {
     const directory = path.join(packagesRoot, entry.name);
     try {
       const packageManifest = JSON.parse(await readFile(path.join(directory, "package.json"), "utf8"));
-      if (packageManifest.private || !RENDERER_PACKAGE_SET.has(packageManifest.name)) continue;
+      if (packageManifest.private || !packageSet.has(packageManifest.name)) continue;
       await access(path.join(directory, "showcase.edn")).catch(() => {
-        throw new Error(`${packageManifest.name}: every public Alumbra renderer-chain package requires showcase.edn`);
+        throw new Error(`${packageManifest.name}: every ${familyLabel} requires showcase.edn`);
       });
       const project = objectValue(
         await parseFile(path.join(directory, "project.edn"), `${packageManifest.name} project.edn`),
@@ -35,9 +44,9 @@ export async function loadShowcases(root = process.cwd()) {
     }
   }
 
-  for (const packageName of PUBLIC_PACKAGE_ORDER) {
+  for (const packageName of packageOrder) {
     if (!showcases.some((showcase) => showcase.packageName === packageName)) {
-      errors.push(`missing: renderer-chain package ${packageName} has no valid Showcase`);
+      errors.push(`missing: ${familyLabel} ${packageName} has no valid Showcase`);
     }
   }
 
@@ -46,9 +55,26 @@ export async function loadShowcases(root = process.cwd()) {
     error.errors = errors;
     throw error;
   }
+  const packageIndex = new Map(packageOrder.map((name, index) => [name, index]));
   return Object.freeze(showcases.sort((left, right) => {
-    const leftOrder = PACKAGE_INDEX.get(left.packageName) ?? Number.MAX_SAFE_INTEGER;
-    const rightOrder = PACKAGE_INDEX.get(right.packageName) ?? Number.MAX_SAFE_INTEGER;
+    const leftOrder = packageIndex.get(left.packageName) ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = packageIndex.get(right.packageName) ?? Number.MAX_SAFE_INTEGER;
     return leftOrder - rightOrder || left.packageName.localeCompare(right.packageName);
   }));
+}
+
+export function loadShowcases(root = process.cwd()) {
+  return loadSelectedShowcases(root, {
+    packageOrder: PUBLIC_PACKAGE_ORDER,
+    packageSet: SHOWCASE_PACKAGE_SET,
+    familyLabel: "public Alumbra package",
+  });
+}
+
+export function loadRendererShowcases(root = process.cwd()) {
+  return loadSelectedShowcases(root, {
+    packageOrder: RENDERER_PACKAGE_ORDER,
+    packageSet: RENDERER_PACKAGE_SET,
+    familyLabel: "public Alumbra renderer-chain package",
+  });
 }
