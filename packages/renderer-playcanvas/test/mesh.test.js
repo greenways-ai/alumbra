@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildChunkMesh, createChunkWorldAccessor } from "../src/mesh.js";
+import { createChunk } from "@greenways/alumbra-core/chunks";
+import {
+  MESH_LIGHT_SNAPSHOT_FORMAT,
+} from "../src/mesh-light.js";
+import {
+  buildChunkMesh,
+  createChunkWorldAccessor,
+  meshGroupSignature,
+} from "../src/mesh.js";
 import { createTestRegistry, solidChunk } from "./fixtures.js";
 
 const arrays = (mesh) => mesh.groups.map((group) => ({
@@ -11,6 +19,33 @@ const arrays = (mesh) => mesh.groups.map((group) => ({
   indices: [...group.indices],
   quads: group.quads,
 }));
+
+const bytes = (chunk, value) => {
+  const output = new Uint8Array(chunk.volume);
+  if (value instanceof Uint8Array) return value;
+  if (Array.isArray(value)) output.set(value);
+  else output.fill(value);
+  return output;
+};
+
+const lightSnapshot = (chunk, {
+  sunlight = 0,
+  emitted = 0,
+  generation = 1,
+  epoch = 0,
+} = {}) => ({
+  format: MESH_LIGHT_SNAPSHOT_FORMAT,
+  profileId: "alumbra/lighting-default",
+  generation,
+  epoch,
+  maxLevel: 15,
+  key: chunk.key,
+  coord: chunk.coord,
+  shape: chunk.shape,
+  sourceRevision: chunk.revision,
+  sunlight: bytes(chunk, sunlight),
+  emitted: bytes(chunk, emitted),
+});
 
 test("one voxel emits six outward quads", () => {
   const registry = createTestRegistry();
@@ -23,6 +58,9 @@ test("one voxel emits six outward quads", () => {
   assert.deepEqual(new Set(mesh.groups[0].quads.map((quad) => quad.face)), new Set([
     "east", "west", "up", "down", "south", "north",
   ]));
+  assert.equal(Object.hasOwn(mesh, "lighting"), false);
+  assert.equal(Object.hasOwn(mesh.groups[0], "sunlight"), false);
+  assert.equal(Object.hasOwn(mesh.groups[0], "emitted"), false);
 });
 
 test("greedy meshing reduces a solid rectangular chunk to six quads", () => {
@@ -62,4 +100,68 @@ test("adjacent identical transparent blocks suppress their internal face", () =>
   const chunk = solidChunk(registry, { shape: [2, 1, 1], block: "alumbra/glass" });
   const mesh = buildChunkMesh({ chunk, registry });
   assert.equal(mesh.quadCount, 6);
+});
+
+test("equal face light permits greedy merging while different light splits quads", () => {
+  const registry = createTestRegistry();
+  const chunk = solidChunk(registry, { shape: [2, 1, 1] });
+  const equal = buildChunkMesh({
+    chunk,
+    registry,
+    lightSnapshots: [lightSnapshot(chunk, { sunlight: 8, emitted: 2 })],
+  });
+  const split = buildChunkMesh({
+    chunk,
+    registry,
+    lightSnapshots: [lightSnapshot(chunk, { sunlight: [4, 10], emitted: [1, 3] })],
+  });
+
+  assert.equal(equal.quadCount, 6);
+  assert.equal(split.quadCount, 10);
+  assert.equal(equal.groups[0].sunlight.length, equal.groups[0].vertexCount);
+  assert.equal(equal.groups[0].emitted.length, equal.groups[0].vertexCount);
+  assert.deepEqual([...new Set(equal.groups[0].sunlight)], [8]);
+  assert.deepEqual([...new Set(equal.groups[0].emitted)], [2]);
+  assert.notEqual(meshGroupSignature(equal.groups[0]), meshGroupSignature(split.groups[0]));
+
+  const repeated = buildChunkMesh({
+    chunk,
+    registry,
+    lightSnapshots: [lightSnapshot(chunk, { sunlight: [4, 10], emitted: [1, 3] })],
+  });
+  assert.deepEqual(
+    split.groups.map((group) => ({
+      sunlight: [...group.sunlight],
+      emitted: [...group.emitted],
+      quads: group.quads,
+    })),
+    repeated.groups.map((group) => ({
+      sunlight: [...group.sunlight],
+      emitted: [...group.emitted],
+      quads: group.quads,
+    })),
+  );
+});
+
+test("an exposed negative-coordinate boundary face samples its loaded neighbour", () => {
+  const registry = createTestRegistry();
+  const left = solidChunk(registry, { coord: [-1, 0, 0], shape: [1, 1, 1] });
+  const right = createChunk({ registry, coord: [0, 0, 0], shape: [1, 1, 1] });
+  const accessor = createChunkWorldAccessor(new Map([
+    [left.key, left],
+    [right.key, right],
+  ]), registry);
+  const mesh = buildChunkMesh({
+    chunk: left,
+    registry,
+    getBlockAtWorld: accessor.getBlock,
+    lightSnapshots: [
+      lightSnapshot(right, { sunlight: 13, emitted: 4 }),
+      lightSnapshot(left, { sunlight: 2, emitted: 1 }),
+    ],
+  });
+  const east = mesh.groups[0].quads.find((quad) => quad.face === "east");
+  const west = mesh.groups[0].quads.find((quad) => quad.face === "west");
+  assert.deepEqual({ sunlight: east.sunlight, emitted: east.emitted }, { sunlight: 13, emitted: 4 });
+  assert.deepEqual({ sunlight: west.sunlight, emitted: west.emitted }, { sunlight: 2, emitted: 1 });
 });

@@ -5,6 +5,7 @@ import {
   normalizeChunkShape,
   worldToChunk,
 } from "@greenways/alumbra-core/coordinates";
+import { createMeshLightingContext } from "./mesh-light.js";
 
 export const CHUNK_MESH_FORMAT = "alumbra.chunk-mesh/1";
 
@@ -84,7 +85,7 @@ function shouldRenderFace(current, neighbor) {
   return current.opaque || current.mergeKey !== neighbor.mergeKey;
 }
 
-function groupFor(groups, appearance) {
+function groupFor(groups, appearance, lighted) {
   let group = groups.get(appearance.material);
   if (!group) {
     group = {
@@ -96,6 +97,10 @@ function groupFor(groups, appearance) {
       indices: [],
       quads: [],
     };
+    if (lighted) {
+      group.sunlight = [];
+      group.emitted = [];
+    }
     groups.set(appearance.material, group);
   }
   return group;
@@ -107,8 +112,8 @@ function addVector(base, axis, amount) {
   return result;
 }
 
-function emitQuad(groups, face, slice, u, v, width, height, cell) {
-  const group = groupFor(groups, cell.appearance);
+function emitQuad(groups, face, slice, u, v, width, height, cell, lighted) {
+  const group = groupFor(groups, cell.appearance, lighted);
   const p0 = [0, 0, 0];
   p0[face.axis] = slice + (face.sign > 0 ? 1 : 0);
   p0[face.uAxis] = u;
@@ -122,7 +127,13 @@ function emitQuad(groups, face, slice, u, v, width, height, cell) {
   for (let index = 0; index < 4; index += 1) group.normals.push(...face.normal);
   group.uvs.push(0, 0, width, 0, width, height, 0, height);
   group.indices.push(offset, offset + 1, offset + 2, offset, offset + 2, offset + 3);
-  group.quads.push(Object.freeze({
+  if (lighted) {
+    for (let index = 0; index < 4; index += 1) {
+      group.sunlight.push(cell.light.sunlight);
+      group.emitted.push(cell.light.emitted);
+    }
+  }
+  const quad = {
     face: face.name,
     normal: face.normal,
     origin: Object.freeze(p0),
@@ -130,11 +141,19 @@ function emitQuad(groups, face, slice, u, v, width, height, cell) {
     block: cell.block,
     material: cell.appearance.material,
     tile: cell.appearance.tile,
-  }));
+  };
+  if (lighted) {
+    quad.sunlight = cell.light.sunlight;
+    quad.emitted = cell.light.emitted;
+  }
+  group.quads.push(Object.freeze(quad));
 }
 
 function sameCell(left, right) {
-  return left != null && right != null && left.appearance.mergeKey === right.appearance.mergeKey;
+  return left != null
+    && right != null
+    && left.appearance.mergeKey === right.appearance.mergeKey
+    && left.lightKey === right.lightKey;
 }
 
 function typedIndices(values, vertexCount) {
@@ -146,8 +165,12 @@ export function buildChunkMesh({
   registry,
   getBlockAtWorld = null,
   describeBlock = defaultBlockAppearance,
+  lightSnapshots = null,
 } = {}) {
   if (!chunk || !registry) throw new TypeError("Chunk meshing requires a chunk and block registry");
+  const lighting = lightSnapshots == null
+    ? null
+    : createMeshLightingContext({ chunk, snapshots: lightSnapshots });
   const empty = normalizeBlockValue(registry, registry.emptyBlock);
   const appearanceCache = new Map();
   const appearanceFor = (block) => {
@@ -179,7 +202,21 @@ export function buildChunkMesh({
           const neighbor = blockAt(neighborLocal);
           const appearance = appearanceFor(block);
           if (shouldRenderFace(appearance, appearanceFor(neighbor))) {
-            mask[u + width * v] = { block, appearance };
+            let light = null;
+            if (lighting) {
+              const currentWorld = worldCoordinate(chunk, local);
+              const neighborWorld = currentWorld.map((entry, axis) => entry + face.normal[axis]);
+              light = lighting.sample(neighborWorld) ?? lighting.sample(currentWorld);
+              if (!light) {
+                throw new Error(`Mesh lighting cannot sample the target voxel ${currentWorld.join(",")}`);
+              }
+            }
+            mask[u + width * v] = {
+              block,
+              appearance,
+              light,
+              lightKey: light ? `${light.sunlight}:${light.emitted}` : null,
+            };
           }
         }
       }
@@ -207,7 +244,7 @@ export function buildChunkMesh({
               mask[(v + row) * width + u + column] = null;
             }
           }
-          emitQuad(groups, face, slice, u, v, runWidth, runHeight, cell);
+          emitQuad(groups, face, slice, u, v, runWidth, runHeight, cell, lighting != null);
         }
       }
     }
@@ -217,7 +254,7 @@ export function buildChunkMesh({
     .sort((left, right) => left.material.localeCompare(right.material))
     .map((group) => {
       const vertexCount = group.positions.length / 3;
-      return Object.freeze({
+      const output = {
         material: group.material,
         color: group.color,
         positions: Float32Array.from(group.positions),
@@ -227,10 +264,15 @@ export function buildChunkMesh({
         quads: Object.freeze(group.quads),
         vertexCount,
         triangleCount: group.indices.length / 3,
-      });
+      };
+      if (lighting) {
+        output.sunlight = Uint8Array.from(group.sunlight);
+        output.emitted = Uint8Array.from(group.emitted);
+      }
+      return Object.freeze(output);
     });
 
-  return Object.freeze({
+  const output = {
     format: CHUNK_MESH_FORMAT,
     coord: chunk.coord,
     chunkKey: chunk.key,
@@ -239,7 +281,9 @@ export function buildChunkMesh({
     groups: Object.freeze(outputGroups),
     quadCount: outputGroups.reduce((sum, group) => sum + group.quads.length, 0),
     triangleCount: outputGroups.reduce((sum, group) => sum + group.triangleCount, 0),
-  });
+  };
+  if (lighting) output.lighting = lighting.evidence();
+  return Object.freeze(output);
 }
 
 const hashByte = (state, byte) => Math.imul((state ^ byte) >>> 0, 16777619) >>> 0;
@@ -261,5 +305,19 @@ export function meshGroupSignature(group) {
   for (const value of group.normals) visitFloat(value);
   for (const value of group.uvs) visitFloat(value);
   for (const value of group.indices) visitIndex(value);
+  const hasSunlight = group.sunlight != null;
+  const hasEmitted = group.emitted != null;
+  if (hasSunlight !== hasEmitted) {
+    throw new TypeError("Mesh group lighting requires both sunlight and emitted arrays");
+  }
+  if (hasSunlight) {
+    hash = hashByte(hash, 0x6c);
+    hash = hashByte(hash, 0x73);
+    for (const value of group.sunlight) hash = hashByte(hash, value);
+    hash = hashByte(hash, 0xff);
+    hash = hashByte(hash, 0x6c);
+    hash = hashByte(hash, 0x65);
+    for (const value of group.emitted) hash = hashByte(hash, value);
+  }
   return `mesh:${hash.toString(16).padStart(8, "0")}:${group.positions.length}:${group.indices.length}`;
 }

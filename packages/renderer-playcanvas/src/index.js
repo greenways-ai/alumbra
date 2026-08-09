@@ -1,3 +1,4 @@
+export * from "./mesh-light.js";
 export * from "./mesh.js";
 export * from "./raycast.js";
 export * from "./visibility.js";
