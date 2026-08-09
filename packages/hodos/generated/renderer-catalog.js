@@ -61,7 +61,7 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "id": "alumbra-viewport-playcanvas",
       "title": "PlayCanvas Viewport",
       "shortTitle": "PlayCanvas Viewport",
-      "description": "Lifecycle-owned viewport sessions that compose canonical worlds, players, input and PlayCanvas projection.",
+      "description": "Lifecycle-owned viewport sessions that compose canonical worlds, players, input and revision-fenced PlayCanvas lighting projection.",
       "tools": [],
       "metadata": {
         "package": "@greenways/alumbra-viewport-playcanvas",
@@ -516,6 +516,34 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       }
     },
     {
+      "id": "alumbra-viewport-playcanvas/lit-world",
+      "toolsetId": "alumbra-viewport-playcanvas",
+      "title": "Live lit-world viewport",
+      "level": "Integration",
+      "summary": "Open a two-chunk cave whose boundary lamp travels through Engine fields, light-aware meshes and PlayCanvas vertex colours.",
+      "instructions": [
+        "Open a two-chunk cave whose boundary lamp travels through Engine fields, light-aware meshes and PlayCanvas vertex colours."
+      ],
+      "path": null,
+      "checkCount": 8,
+      "metadata": {
+        "package": "@greenways/alumbra-viewport-playcanvas",
+        "demo": "lit-world",
+        "surface": "viewport",
+        "tags": [
+          "viewport",
+          "lighting",
+          "chunk-boundary",
+          "playable-lab"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
       "id": "alumbra-hodos/renderer-catalog",
       "toolsetId": "alumbra-hodos",
       "title": "Playable renderer Catalog",
@@ -694,6 +722,13 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "package": "@greenways/alumbra-viewport-playcanvas",
     "demo": "two-sessions",
     "project": "packages/viewport-playcanvas/showcase/two-sessions",
+    "surface": "viewport",
+    "host": "playable-lab"
+  },
+  "alumbra-viewport-playcanvas/lit-world": {
+    "package": "@greenways/alumbra-viewport-playcanvas",
+    "demo": "lit-world",
+    "project": "packages/viewport-playcanvas/showcase/lit-world",
     "surface": "viewport",
     "host": "playable-lab"
   },

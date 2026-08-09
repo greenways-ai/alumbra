@@ -1,0 +1,14 @@
+{:hara/type :project
+ :hara/version "1.0.0"
+ :project/id showcase.alumbra-viewport-playcanvas.lit-world
+ :project/version "0.1.0"
+ :project/source-paths ["src"]
+ :project/test-paths []
+ :project/extension-paths []
+ :project/main showcase.alumbra-viewport-playcanvas.lit-world
+ :project/capabilities #{:studio/eval :graphics/scene}
+ :project/dependencies
+ {"hara:greenways/alumbra-core" {:version "0.1.0"}
+  "hara:greenways/alumbra-engine" {:version "0.1.0"}
+  "hara:greenways/alumbra-renderer-playcanvas" {:version "0.1.0"}
+  "hara:greenways/alumbra-viewport-playcanvas" {:version "0.1.0"}}}

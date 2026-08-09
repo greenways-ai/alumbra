@@ -1,0 +1,19 @@
+{:activity/id "alumbra-viewport-playcanvas/lit-world"
+ :story/status "ready"
+ :world/id "world:alumbra/lit-cave"
+ :world/chunks ["-1,0,0" "0,0,0"]
+ :world/negative-to-zero true
+ :lighting/profile "alumbra/lighting-default"
+ :lighting/maximum-sunlight 15
+ :lighting/maximum-emitted 15
+ :lighting/boundary-emission 14
+ :lighting/installed-chunks 2
+ :mesh/vertex-colours-aligned true
+ :lifecycle/suspensions 1
+ :lifecycle/resumes 1
+ :lifecycle/same-canonical-session true
+ :disposal/baseline true
+ :authority/canonical "core"
+ :authority/fields "engine"
+ :authority/meshes "renderer"
+ :authority/orchestration "viewport"}

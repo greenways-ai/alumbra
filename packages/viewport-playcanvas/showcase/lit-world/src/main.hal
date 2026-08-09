@@ -1,0 +1,40 @@
+(ns showcase.alumbra-viewport-playcanvas.lit-world
+  (:require [gw.alumbra.viewport :as viewport]))
+
+(def lighting
+  (viewport/lighting-descriptor))
+
+(def session
+  (viewport/session "lit-world/1" "world:alumbra/lit-cave"))
+
+(def suspended
+  (viewport/suspend session))
+
+(def resumed
+  (viewport/resume suspended))
+
+{:story/id :viewport/lit-world
+ :story/activity "alumbra-viewport-playcanvas/lit-world"
+ :story/session resumed
+ :story/fixture
+ {:chunks ["-1,0,0" "0,0,0"]
+  :boundary-lamp {:chunk "-1,0,0"
+                  :local [15 2 4]
+                  :adjacent-chunk "0,0,0"
+                  :adjacent-local [0 2 4]}}
+ :story/lighting lighting
+ :story/authority
+ {:canonical :core
+  :fields :engine
+  :meshes :renderer
+  :orchestration :viewport}
+ :checks
+ [{:check/id :lighting/revision-fenced
+   :check/status (= :revision-fenced (:viewport/publication lighting))}
+  {:check/id :lighting/hot-fields
+   :check/status (= :engine (:viewport/field-authority lighting))}
+  {:check/id :viewport/resumed
+   :check/status (= :active (:viewport/status resumed))}
+  {:check/id :viewport/same-world
+   :check/status (= (:viewport/world session)
+                    (:viewport/world resumed))}]}

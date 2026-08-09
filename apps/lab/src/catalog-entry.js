@@ -13,6 +13,7 @@ import { readViewportEvidence } from "./viewport-evidence.js";
 const ACTIVITY_IDS = {
   playableWorld: "alumbra-viewport-playcanvas/playable-world",
   twoSessions: "alumbra-viewport-playcanvas/two-sessions",
+  litWorld: "alumbra-viewport-playcanvas/lit-world",
   packagedHara: "alumbra-hara/packaged-height-field",
   chunkResidency: "alumbra-renderer-playcanvas/chunk-residency",
   staleMesh: "alumbra-renderer-playcanvas/stale-mesh-rejection",
@@ -38,6 +39,8 @@ const elements = Object.freeze({
   residencyPanel: document.querySelector("[data-residency-panel]"),
   materialCanvas: document.querySelector("#alumbra-canvas-materials"),
   materialPanel: document.querySelector("[data-material-panel]"),
+  litWorldCanvas: document.querySelector("#alumbra-canvas-lit-world"),
+  litWorldPanel: document.querySelector("[data-lit-world-panel]"),
   workspaceShell: document.querySelector("[data-renderer-workspace]"),
   workspaceCanvas: document.querySelector("#alumbra-canvas-workspace"),
   packagedWorldError: document.querySelector("[data-packaged-world-error]"),
@@ -83,6 +86,13 @@ const waitForMaterials = (activityId, stateId = null) => waitForContribution(
     && (stateId == null || value.activeState === stateId),
   `Alumbra material activity ${activityId}${stateId ? ` / ${stateId}` : ""}`,
 );
+const waitForLitWorld = () => waitForContribution(
+  "litWorld",
+  (value) => value.activeActivity === IDS.litWorld
+    && value.status === "ready"
+    && value.scenario?.kind === "lit-world",
+  "Alumbra live lit-world viewport",
+);
 const waitForWorkspace = (stateId) => waitForContribution(
   "workspace",
   (value) => value.activeActivity === IDS.rendererWorkspace
@@ -101,6 +111,7 @@ const waitForResidencyMove = (moves) => waitForContribution(
 );
 
 async function waitForActivity(activityId) {
+  if (activityId === IDS.litWorld) return waitForLitWorld();
   if (activityId === IDS.rendererWorkspace) return waitForWorkspace(requestedWorkspaceState());
   if (IDS.residencyActivities.has(activityId)) return waitForResidency(activityId);
   if (IDS.materialActivities.has(activityId)) {
@@ -129,7 +140,9 @@ const catalogHost = createCatalogHost({
     window.dispatchEvent(new CustomEvent("alumbra:open-demo", { detail: openDetail(activityId) }));
     await waitForActivity(activityId);
     if (!labStatus) return;
-    if (activityId === IDS.rendererWorkspace) {
+    if (activityId === IDS.litWorld) {
+      labStatus.textContent = `${activity.title} opened through the live revision-fenced lighting host.`;
+    } else if (activityId === IDS.rendererWorkspace) {
       labStatus.textContent = `${activity.title} opened through the integrated Hodos Workspace host.`;
     } else if (IDS.residencyActivities.has(activityId)) {
       labStatus.textContent = `${activity.title} opened through the live renderer residency host.`;
@@ -160,6 +173,7 @@ const catalogHost = createCatalogHost({
 });
 
 function selectedHostReady(activityId, evidence) {
+  if (activityId === IDS.litWorld) return evidence.litWorld?.hostReady === true;
   if (activityId === IDS.packagedHara) return Boolean(evidence.packagedWorld?.states);
   if (IDS.residencyActivities.has(activityId)) return evidence.residency?.hostReady === true;
   if (IDS.materialActivities.has(activityId)) return evidence.materials?.hostReady === true;
@@ -192,6 +206,19 @@ async function openBrowserStory() {
     data.browserState = evidence.packagedWorld?.activeState ?? "none";
     data.browserWorldStatus = evidence.packagedWorld?.status ?? "missing";
     data.browserDisposal = evidence.packagedWorld?.disposal?.baseline ? "passed" : "failed";
+  }
+  if (requested === IDS.litWorld) {
+    const litWorld = evidence.litWorld;
+    data.browserLitWorld = litWorld?.activeActivity === requested
+      && litWorld.status === "ready" ? "passed" : "failed";
+    data.browserLitBoundary = litWorld?.scenario?.proofs?.crossChunkEmission === true
+      && litWorld.scenario?.boundaryEmission > 0 ? "passed" : "failed";
+    data.browserLitColors = litWorld?.scenario?.proofs?.alignedVertexColors === true
+      ? "passed" : "failed";
+    data.browserLitVisibility = litWorld?.scenario?.proofs?.sameCanonicalSessionAfterResume === true
+      && litWorld.lifecycle?.suspensions >= 1
+      && litWorld.lifecycle?.resumes >= 1 ? "passed" : "failed";
+    data.browserDisposal = litWorld?.disposal?.baseline ? "passed" : "failed";
   }
   if (IDS.residencyActivities.has(requested)) {
     let residency = evidence.residency;

@@ -97,6 +97,21 @@ run_activity() {
     return 1
   fi
 
+  if [[ "$activity" == "alumbra-viewport-playcanvas/lit-world" ]]; then
+    if ! grep -Fq 'data-browser-lit-world="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "The live lit-world host did not become ready." >&2
+      return 1
+    fi
+    for proof in lit-boundary lit-colors lit-visibility disposal; do
+      if ! grep -Fq "data-browser-${proof}=\"passed\"" "$dom"; then
+        cat "$dom" >&2
+        echo "The lit-world browser proof ${proof} did not pass." >&2
+        return 1
+      fi
+    done
+  fi
+
   if [[ "$activity" == "alumbra-renderer-playcanvas/chunk-residency" \
     || "$activity" == "alumbra-renderer-playcanvas/stale-mesh-rejection" ]]; then
     if ! grep -Fq 'data-browser-residency="passed"' "$dom"; then
@@ -188,6 +203,7 @@ run_activity "alumbra-engine/voxel-light-fields"
 run_activity "alumbra-engine/lighting-runtime-fences"
 run_activity "alumbra-viewport-playcanvas/playable-world"
 run_activity "alumbra-viewport-playcanvas/two-sessions"
+run_activity "alumbra-viewport-playcanvas/lit-world"
 run_activity "alumbra-renderer-playcanvas/chunk-residency"
 run_activity "alumbra-renderer-playcanvas/stale-mesh-rejection"
 run_activity "alumbra-renderer-playcanvas/material-matrix"
