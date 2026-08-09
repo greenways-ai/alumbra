@@ -17,6 +17,7 @@ import {
 } from "@greenways/alumbra-renderer-playcanvas";
 import {
   createLitPlayCanvasViewportSession,
+  createPlayableWorldController,
   routeAcceptedLightingTransaction,
 } from "@greenways/alumbra-viewport-playcanvas";
 
@@ -29,6 +30,10 @@ export const LIT_WORLD_STATE_IDS = Object.freeze({
   removed: "lighting/lamp-removed",
   restored: "lighting/lamp-restored",
   stale: "lighting/stale-generation-rejected",
+  roofOpen: "world/edit-roof-open",
+  lampPlaced: "world/edit-lamp-place",
+  lampRemoved: "world/edit-lamp-remove",
+  editStale: "world/edit-stale-rebuild-rejected",
 });
 export const LIT_WORLD_DEFAULT_STATE = LIT_WORLD_STATE_IDS.live;
 export const LIT_WORLD_LAMP = Object.freeze({
@@ -37,6 +42,23 @@ export const LIT_WORLD_LAMP = Object.freeze({
   world: Object.freeze([-1, 2, 4]),
   adjacentChunk: Object.freeze([0, 0, 0]),
   adjacentLocal: Object.freeze([0, 2, 4]),
+});
+export const LIT_WORLD_EDIT = Object.freeze({
+  roof: Object.freeze({
+    chunk: Object.freeze([0, 0, 0]),
+    local: Object.freeze([5, 7, 4]),
+    world: Object.freeze([5, 7, 4]),
+    sampleChunk: Object.freeze([0, 0, 0]),
+    sampleLocal: Object.freeze([5, 6, 4]),
+  }),
+  lamp: Object.freeze({
+    chunk: Object.freeze([-1, 0, 0]),
+    local: Object.freeze([8, 1, 4]),
+    world: Object.freeze([-8, 1, 4]),
+    anchorWorld: Object.freeze([-8, 0, 4]),
+    sampleChunk: Object.freeze([-1, 0, 0]),
+    sampleLocal: Object.freeze([8, 1, 4]),
+  }),
 });
 export const LIT_WORLD_PLAYER_BODY = Object.freeze({
   radius: 0.34,
@@ -253,11 +275,17 @@ export function deriveLitWorldHeadlessEvidence({
     && group.emitted.length === group.vertexCount);
   const boundaryEmission = fields.getField(LIT_WORLD_LAMP.adjacentChunk)
     .emittedAt(LIT_WORLD_LAMP.adjacentLocal);
+  const roofSunlight = fields.getField(LIT_WORLD_EDIT.roof.sampleChunk)
+    .sunlightAt(LIT_WORLD_EDIT.roof.sampleLocal);
+  const editLampEmission = fields.getField(LIT_WORLD_EDIT.lamp.sampleChunk)
+    .emittedAt(LIT_WORLD_EDIT.lamp.sampleLocal);
   return deepFreeze({
     worldId: LIT_WORLD_ID,
     chunkKeys: chunks.map((chunk) => chunk.key),
     negativeToZero: chunks[0].key === "-1,0,0" && chunks[1].key === "0,0,0",
     boundaryEmission,
+    roofSunlight,
+    editLampEmission,
     maximumSunlight: fields.evidence().maxSunlight,
     maximumEmitted: fields.evidence().maxEmitted,
     meshGroups: groups.length,
@@ -320,6 +348,8 @@ function lightingSummary(value) {
     maximumCombined: Number(value?.maximumCombined ?? 0),
     suspensionCount: Number(value?.suspensionCount ?? 0),
     resumeCount: Number(value?.resumeCount ?? 0),
+    retainedProjections: Number(value?.retainedProjections ?? 0),
+    lastRetainedKeys: [...(value?.lastRetainedKeys ?? [])],
     discardedLightingResults: Number(value?.discardedLightingResults ?? 0),
     discardedMeshResults: Number(value?.discardedMeshResults ?? 0),
     lastAffectedKeys: [...(value?.lastAffectedKeys ?? [])],
@@ -389,16 +419,31 @@ function phaseSummary(runtime, id) {
   const lighting = lightingSummary(runtime.session.snapshot().lighting);
   const field = runtime.session.lighting.getField(LIT_WORLD_LAMP.adjacentChunk);
   const boundaryEmission = field?.emittedAt?.(LIT_WORLD_LAMP.adjacentLocal) ?? 0;
-  const lampBlock = getBlock(runtime.world.getChunk(LIT_WORLD_LAMP.chunk), LIT_WORLD_LAMP.local);
-  const lampChunkRevision = runtime.world.getChunk(LIT_WORLD_LAMP.chunk).revision;
+  const lampChunk = runtime.world.getChunk(LIT_WORLD_LAMP.chunk);
+  const lampBlock = getBlock(lampChunk, LIT_WORLD_LAMP.local);
+  const roofChunk = runtime.world.getChunk(LIT_WORLD_EDIT.roof.chunk);
+  const roofBlock = getBlock(roofChunk, LIT_WORLD_EDIT.roof.local);
+  const editLampChunk = runtime.world.getChunk(LIT_WORLD_EDIT.lamp.chunk);
+  const editLampBlock = getBlock(editLampChunk, LIT_WORLD_EDIT.lamp.local);
+  const roofSunlight = runtime.session.lighting.getField(LIT_WORLD_EDIT.roof.sampleChunk)
+    ?.sunlightAt?.(LIT_WORLD_EDIT.roof.sampleLocal) ?? 0;
+  const editLampEmission = runtime.session.lighting.getField(LIT_WORLD_EDIT.lamp.sampleChunk)
+    ?.emittedAt?.(LIT_WORLD_EDIT.lamp.sampleLocal) ?? 0;
   const installedFieldRevision = runtime.session.lighting.getField(LIT_WORLD_LAMP.chunk)?.sourceRevision ?? null;
+  const roofInstalledFieldRevision = runtime.session.lighting.getField(LIT_WORLD_EDIT.roof.chunk)?.sourceRevision ?? null;
   return deepFreeze({
     id,
     lampPresent: lampBlock.id === "lit/lamp",
     boundaryEmission,
+    roofPresent: roofBlock.id === "lit/stone",
+    roofSunlight,
+    editLampPresent: editLampBlock.id === "lit/lamp",
+    editLampEmission,
     worldRevision: runtime.world.revision,
-    lampChunkRevision,
+    lampChunkRevision: lampChunk.revision,
+    roofChunkRevision: roofChunk.revision,
     installedFieldRevision,
+    roofInstalledFieldRevision,
     requestVersion: lighting.requestVersion,
     requestedGeneration: lighting.lighting.requestedGeneration,
     installedGeneration: lighting.lighting.installedGeneration,
@@ -407,9 +452,19 @@ function phaseSummary(runtime, id) {
   });
 }
 
-function expectedStateProof(stateId, phase) {
+function expectedStateProof(stateId, phase, baseline) {
   if (stateId === LIT_WORLD_STATE_IDS.removed) {
     return phase.lampPresent === false && phase.boundaryEmission === 0;
+  }
+  if (stateId === LIT_WORLD_STATE_IDS.roofOpen) {
+    return phase.roofPresent === false && phase.roofSunlight > baseline.roofSunlight;
+  }
+  if (stateId === LIT_WORLD_STATE_IDS.lampPlaced) {
+    return phase.editLampPresent === true && phase.editLampEmission > baseline.editLampEmission;
+  }
+  if (stateId === LIT_WORLD_STATE_IDS.lampRemoved
+    || stateId === LIT_WORLD_STATE_IDS.editStale) {
+    return phase.editLampPresent === false && phase.editLampEmission === baseline.editLampEmission;
   }
   return phase.lampPresent === true && phase.boundaryEmission > 0;
 }
@@ -427,6 +482,10 @@ function runtimeScenario(runtime) {
   const session = sessionSummary(snapshot);
   const receipts = runtime.transition.receipts.map(receiptSummary);
   const stale = runtime.transition.stale;
+  const baseline = runtime.transition.baseline;
+  const ordinaryState = runtime.activeState.startsWith("world/edit-");
+  const staleState = runtime.activeState === LIT_WORLD_STATE_IDS.stale
+    || runtime.activeState === LIT_WORLD_STATE_IDS.editStale;
   return deepFreeze({
     kind: "lit-world",
     stateId: runtime.activeState,
@@ -436,6 +495,7 @@ function runtimeScenario(runtime) {
       chunkKeys: ["-1,0,0", "0,0,0"],
       negativeToZero: true,
       lamp: LIT_WORLD_LAMP,
+      edit: LIT_WORLD_EDIT,
     },
     session,
     lighting,
@@ -445,6 +505,10 @@ function runtimeScenario(runtime) {
       stateId: runtime.activeState,
       phases: runtime.transition.phases,
       receipts,
+      baseline,
+      ordinary: runtime.transition.ordinary,
+      controller: runtime.session.controller?.state ?? null,
+      rejectedEdit: runtime.transition.rejectedEdit,
       duplicateRejected: runtime.transition.duplicateRejected,
       stale,
       current: currentPhase,
@@ -453,13 +517,19 @@ function runtimeScenario(runtime) {
       ready: lighting.status === "ready"
         && lighting.loadedChunks === 2
         && lighting.installedChunks === 2,
-      expectedState: expectedStateProof(runtime.activeState, currentPhase),
+      expectedState: expectedStateProof(runtime.activeState, currentPhase, baseline),
       boundedAffected: receipts.every((receipt) =>
         JSON.stringify(receipt.affectedKeys) === JSON.stringify(AFFECTED_BOUNDARY_KEYS)),
-      staleGenerationRejected: runtime.activeState !== LIT_WORLD_STATE_IDS.stale
+      staleGenerationRejected: !staleState
         || (stale?.rejected === true
           && stale.finalRequestedGeneration === stale.finalInstalledGeneration
           && currentPhase.installedFieldRevision === currentPhase.lampChunkRevision),
+      ordinaryControllerPath: !ordinaryState
+        || (runtime.transition.ordinary === true
+          && receipts.length > 0
+          && receipts.every((receipt) => receipt.transactionId.startsWith("build/"))),
+      rejectedEditUnchanged: !ordinaryState
+        || runtime.transition.rejectedEdit?.unchanged === true,
       crossChunkEmission: currentPhase.boundaryEmission > 0
         && lighting.maximumEmitted > 0,
       sunlightPresent: lighting.maximumSunlight > 0,
@@ -562,9 +632,136 @@ async function rejectDuplicate(action) {
   }
 }
 
+const roofBreakIntent = () => ({
+  type: "break",
+  origin: [5.5, 6.4, 4.5],
+  hit: {
+    voxel: LIT_WORLD_EDIT.roof.world,
+    face: "down",
+    normal: [0, -1, 0],
+    previous: [5, 6, 4],
+  },
+});
+
+const editLampPlaceIntent = () => ({
+  type: "place",
+  origin: [-7.5, 2.6, 4.5],
+  hit: {
+    voxel: LIT_WORLD_EDIT.lamp.anchorWorld,
+    face: "up",
+    normal: [0, 1, 0],
+    previous: LIT_WORLD_EDIT.lamp.world,
+  },
+  block: "lit/lamp",
+  playerPosition: LIT_WORLD_PLAYER.position,
+});
+
+const editLampBreakIntent = () => ({
+  type: "break",
+  origin: [-7.5, 2.6, 4.5],
+  hit: {
+    voxel: LIT_WORLD_EDIT.lamp.world,
+    face: "up",
+    normal: [0, 1, 0],
+    previous: [-8, 2, 4],
+  },
+});
+
+function ordinaryActionSnapshot(runtime) {
+  return deepFreeze({
+    worldRevision: runtime.world.revision,
+    requestVersion: runtime.session.lighting.evidence().requestVersion,
+    transactionSequence: runtime.session.controller.state.transactionSequence,
+  });
+}
+
+function recordOrdinaryAcceptance(runtime, result) {
+  const receipt = result?.viewportReceipt;
+  if (receipt?.format !== "alumbra.viewport-lighting-transaction/1") {
+    const error = new Error("Ordinary edit did not return the viewport lighting receipt");
+    error.code = "lit-world/ordinary-receipt";
+    throw error;
+  }
+  runtime.transition.ordinary = true;
+  runtime.transition.receipts.push(receipt);
+  return receipt;
+}
+
+async function applyOrdinaryAction(runtime, intent, phaseId) {
+  const result = runtime.session.controller.applyAction(intent);
+  recordOrdinaryAcceptance(runtime, result);
+  await runtime.session.drain();
+  runtime.transition.phases.push(phaseSummary(runtime, phaseId));
+  return result;
+}
+
+async function rejectOrdinaryAction(runtime, action) {
+  const before = ordinaryActionSnapshot(runtime);
+  let error = null;
+  try {
+    action();
+  } catch (caught) {
+    error = caught;
+  }
+  const after = ordinaryActionSnapshot(runtime);
+  return deepFreeze({
+    rejected: error != null,
+    code: error?.code == null ? null : String(error.code),
+    message: error == null ? null : String(error.message),
+    before,
+    after,
+    unchanged: error != null
+      && before.worldRevision === after.worldRevision
+      && before.requestVersion === after.requestVersion
+      && before.transactionSequence === after.transactionSequence,
+  });
+}
+
+async function applyOrdinaryStaleEdit(runtime) {
+  const before = lightingSummary(runtime.session.snapshot().lighting);
+  const gate = runtime.gate.arm();
+  const placed = runtime.session.controller.applyAction(editLampPlaceIntent());
+  recordOrdinaryAcceptance(runtime, placed);
+  const projection = runtime.session.drain();
+  const delayed = await gate.started;
+  runtime.transition.phases.push(deepFreeze({
+    ...phaseSummary(runtime, "world/edit-delayed-rebuild"),
+    requestedGeneration: delayed.generation,
+    installedGeneration: before.lighting.installedGeneration,
+  }));
+
+  const removed = runtime.session.controller.applyAction(editLampBreakIntent());
+  recordOrdinaryAcceptance(runtime, removed);
+  gate.release();
+  await projection;
+  await runtime.session.drain();
+  const after = lightingSummary(runtime.session.snapshot().lighting);
+  runtime.transition.phases.push(phaseSummary(runtime, LIT_WORLD_STATE_IDS.editStale));
+  runtime.transition.stale = deepFreeze({
+    delayedGeneration: delayed.generation,
+    delayedEpoch: delayed.epoch,
+    discardedBefore: before.discardedLightingResults,
+    discardedAfter: after.discardedLightingResults,
+    finalRequestedGeneration: after.lighting.requestedGeneration,
+    finalInstalledGeneration: after.lighting.installedGeneration,
+    rejected: after.discardedLightingResults > before.discardedLightingResults,
+  });
+  runtime.transition.rejectedEdit = await rejectOrdinaryAction(
+    runtime,
+    () => runtime.session.controller.applyAction(editLampBreakIntent()),
+  );
+  runtime.transition.duplicateRejected = runtime.transition.rejectedEdit.rejected
+    && runtime.transition.rejectedEdit.unchanged;
+}
+
 async function applyState(runtime, stateId) {
   runtime.activeState = stateId;
-  runtime.transition.phases.push(phaseSummary(runtime, LIT_WORLD_STATE_IDS.live));
+  const initial = phaseSummary(runtime, LIT_WORLD_STATE_IDS.live);
+  runtime.transition.baseline = deepFreeze({
+    roofSunlight: initial.roofSunlight,
+    editLampEmission: initial.editLampEmission,
+  });
+  runtime.transition.phases.push(initial);
   if (stateId === LIT_WORLD_STATE_IDS.live) return;
   if (stateId === LIT_WORLD_STATE_IDS.removed) {
     await removeLamp(runtime);
@@ -577,11 +774,46 @@ async function applyState(runtime, stateId) {
     runtime.transition.duplicateRejected = await rejectDuplicate(() => restoreLamp(runtime));
     return;
   }
+  if (stateId === LIT_WORLD_STATE_IDS.roofOpen) {
+    await applyOrdinaryAction(runtime, roofBreakIntent(), stateId);
+    runtime.transition.rejectedEdit = await rejectOrdinaryAction(
+      runtime,
+      () => runtime.session.controller.applyAction(roofBreakIntent()),
+    );
+    runtime.transition.duplicateRejected = runtime.transition.rejectedEdit.rejected
+      && runtime.transition.rejectedEdit.unchanged;
+    return;
+  }
+  if (stateId === LIT_WORLD_STATE_IDS.lampPlaced) {
+    await applyOrdinaryAction(runtime, editLampPlaceIntent(), stateId);
+    runtime.transition.rejectedEdit = await rejectOrdinaryAction(
+      runtime,
+      () => runtime.session.controller.applyAction(editLampPlaceIntent()),
+    );
+    runtime.transition.duplicateRejected = runtime.transition.rejectedEdit.rejected
+      && runtime.transition.rejectedEdit.unchanged;
+    return;
+  }
+  if (stateId === LIT_WORLD_STATE_IDS.lampRemoved) {
+    await applyOrdinaryAction(runtime, editLampPlaceIntent(), LIT_WORLD_STATE_IDS.lampPlaced);
+    await applyOrdinaryAction(runtime, editLampBreakIntent(), stateId);
+    runtime.transition.rejectedEdit = await rejectOrdinaryAction(
+      runtime,
+      () => runtime.session.controller.applyAction(editLampBreakIntent()),
+    );
+    runtime.transition.duplicateRejected = runtime.transition.rejectedEdit.rejected
+      && runtime.transition.rejectedEdit.unchanged;
+    return;
+  }
+  if (stateId === LIT_WORLD_STATE_IDS.editStale) {
+    await applyOrdinaryStaleEdit(runtime);
+    return;
+  }
 
   const before = lightingSummary(runtime.session.snapshot().lighting);
   const gate = runtime.gate.arm();
   const acceptance = runtime.world.apply(lampTransaction(runtime, {
-    id: `lit-world/remove-boundary-lamp-${runtime.world.revision + 1}`,
+    id: "lit-world/remove-boundary-lamp-" + (runtime.world.revision + 1),
     before: "lit/lamp",
     after: "lit/air",
     action: "stale-remove-boundary-lamp",
@@ -604,7 +836,7 @@ async function applyState(runtime, stateId) {
   }));
 
   const restored = runtime.world.undo({
-    id: `lit-world/restore-boundary-lamp-${runtime.world.revision + 1}`,
+    id: "lit-world/restore-boundary-lamp-" + (runtime.world.revision + 1),
   });
   runtime.transition.receipts.push(routeAcceptance(runtime, restored));
   gate.release();
@@ -706,6 +938,8 @@ export function createLitWorldStoryHost({
         euler: [55, 35, 0],
       },
       lightingOptions: { runLighting: (job) => gate.run(job) },
+      createController: createPlayableWorldController,
+      controllerOptions: { actor: "actor:lit-world-story" },
       inputOptions: { requirePointerLock: false },
       autoResize: false,
       startApplication: false,
@@ -722,6 +956,7 @@ export function createLitWorldStoryHost({
     session.resume("lit-world-open");
     await session.drain();
     if (!prebuilt) throw new Error("Lit-world session did not create its prebuilt renderer");
+    if (!session.controller) throw new Error("Lit-world session did not create its ordinary edit controller");
     return {
       registry,
       chunks,
@@ -734,6 +969,9 @@ export function createLitWorldStoryHost({
       transition: {
         phases: [],
         receipts: [],
+        baseline: null,
+        ordinary: false,
+        rejectedEdit: null,
         duplicateRejected: false,
         stale: null,
       },

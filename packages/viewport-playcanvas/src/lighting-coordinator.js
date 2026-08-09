@@ -1,6 +1,8 @@
 import {
+  blockValueKey,
   chunkKey,
   getBlock,
+  localToIndex,
   normalizeBlockValue,
   normalizeChunkShape,
   normalizeVector3,
@@ -14,6 +16,7 @@ import {
   MESH_LIGHT_SNAPSHOT_FORMAT,
   buildChunkMesh,
 } from "@greenways/alumbra-renderer-playcanvas";
+import { routeAcceptedLightingTransaction } from "./transaction-lighting.js";
 
 export const VIEWPORT_LIGHTING_COORDINATOR_FORMAT = "alumbra.viewport-lighting-coordinator/1";
 export const VIEWPORT_LIGHTING_EVIDENCE_FORMAT = "alumbra.viewport-lighting-evidence/1";
@@ -188,6 +191,113 @@ function snapshotsForChunk(chunk, fieldSet) {
   return Object.freeze(fields.map((field) => snapshotFromField(field, fieldSet)));
 }
 
+const sameBytes = (left, right) => left instanceof Uint8Array
+  && right instanceof Uint8Array
+  && left.length === right.length
+  && left.every((entry, index) => entry === right[index]);
+
+const sameStrings = (left, right) => Array.isArray(left)
+  && Array.isArray(right)
+  && left.length === right.length
+  && left.every((entry, index) => entry === right[index]);
+
+function faceLocals(shape, direction) {
+  const [sizeX, sizeY, sizeZ] = shape;
+  const output = [];
+  if (direction[0] !== 0) {
+    const x = direction[0] < 0 ? sizeX - 1 : 0;
+    for (let z = 0; z < sizeZ; z += 1) {
+      for (let y = 0; y < sizeY; y += 1) output.push([x, y, z]);
+    }
+    return output;
+  }
+  if (direction[1] !== 0) {
+    const y = direction[1] < 0 ? sizeY - 1 : 0;
+    for (let z = 0; z < sizeZ; z += 1) {
+      for (let x = 0; x < sizeX; x += 1) output.push([x, y, z]);
+    }
+    return output;
+  }
+  const z = direction[2] < 0 ? sizeZ - 1 : 0;
+  for (let y = 0; y < sizeY; y += 1) {
+    for (let x = 0; x < sizeX; x += 1) output.push([x, y, z]);
+  }
+  return output;
+}
+
+function sampledNeighbourInput(chunk, neighbour, snapshot) {
+  const direction = snapshot.coord.map((value, axis) => value - chunk.coord[axis]);
+  const locals = faceLocals(snapshot.shape, direction);
+  const sunlight = new Uint8Array(locals.length);
+  const emitted = new Uint8Array(locals.length);
+  const blocks = [];
+  locals.forEach((local, index) => {
+    const fieldIndex = localToIndex(local, snapshot.shape);
+    sunlight[index] = snapshot.sunlight[fieldIndex];
+    emitted[index] = snapshot.emitted[fieldIndex];
+    blocks.push(blockValueKey(getBlock(neighbour, local)));
+  });
+  return Object.freeze({
+    key: snapshot.key,
+    direction: Object.freeze([...direction]),
+    blocks: Object.freeze(blocks),
+    sunlight,
+    emitted,
+  });
+}
+
+function projectionInputFor(chunk, chunks, snapshots) {
+  const target = snapshots.find((snapshot) => snapshot.key === chunk.key);
+  if (!target) {
+    validationError(
+      "Viewport lighting projection input is missing its target field",
+      "viewport-lighting/projection-input",
+    );
+  }
+  const neighbours = snapshots
+    .filter((snapshot) => snapshot.key !== chunk.key)
+    .map((snapshot) => {
+      const neighbour = chunks.get(snapshot.key);
+      if (!neighbour) {
+        validationError(
+          "Viewport lighting projection input references an unloaded neighbour",
+          "viewport-lighting/projection-neighbour",
+        );
+      }
+      return sampledNeighbourInput(chunk, neighbour, snapshot);
+    });
+  return Object.freeze({
+    key: chunk.key,
+    revision: chunk.revision,
+    shape: Object.freeze([...chunk.shape]),
+    profileId: target.profileId,
+    maxLevel: target.maxLevel,
+    sunlight: target.sunlight.slice(),
+    emitted: target.emitted.slice(),
+    neighbours: Object.freeze(neighbours),
+  });
+}
+
+function sameProjectionInput(left, right) {
+  if (!left || !right
+    || left.key !== right.key
+    || left.revision !== right.revision
+    || left.profileId !== right.profileId
+    || left.maxLevel !== right.maxLevel
+    || !sameVector(left.shape, right.shape)
+    || !sameBytes(left.sunlight, right.sunlight)
+    || !sameBytes(left.emitted, right.emitted)
+    || left.neighbours.length !== right.neighbours.length) return false;
+  return left.neighbours.every((entry, index) => {
+    const candidate = right.neighbours[index];
+    return entry.key === candidate.key
+      && sameVector(entry.direction, candidate.direction)
+      && sameStrings(entry.blocks, candidate.blocks)
+      && sameBytes(entry.sunlight, candidate.sunlight)
+      && sameBytes(entry.emitted, candidate.emitted);
+  });
+}
+
 function meshCounts(mesh) {
   const groups = Array.isArray(mesh?.groups) ? mesh.groups : [];
   return Object.freeze({
@@ -252,6 +362,8 @@ export function createViewportLightingCoordinator({
   const emptyBlock = normalizeBlockValue(registry, registry.emptyBlock);
   const dirty = new Set(map.keys());
   const installed = new Set();
+  const projectionInputs = new Map();
+  const projectionMeshCounts = new Map();
   let status = map.size ? "dirty" : "idle";
   let requestVersion = 0;
   let cycles = 0;
@@ -266,12 +378,14 @@ export function createViewportLightingCoordinator({
   let resumeCount = 0;
   let removalCount = 0;
   let releasedResources = 0;
+  let retainedProjections = 0;
   let suspended = false;
   let destroyed = false;
   let scheduled = false;
   let activePromise = null;
   let destroyPromise = null;
   let lastAffectedKeys = Object.freeze([...dirty].sort());
+  let lastRetainedKeys = Object.freeze([]);
   let lastLightEvidence = null;
   let lastMesh = Object.freeze({ groups: 0, vertices: 0, triangles: 0 });
 
@@ -306,6 +420,8 @@ export function createViewportLightingCoordinator({
       && map.size === 0
       && dirty.size === 0
       && installed.size === 0
+      && projectionInputs.size === 0
+      && projectionMeshCounts.size === 0
       && pendingLightingJobs === 0
       && pendingMeshJobs === 0
       && lightingEvidence.baseline
@@ -330,12 +446,14 @@ export function createViewportLightingCoordinator({
       resumeCount,
       removalCount,
       releasedResources,
+      retainedProjections,
       loadedChunks: map.size,
       dirtyChunks: dirtyKeys.length,
       installedChunks: installedKeys.length,
       dirtyKeys,
       installedKeys,
       lastAffectedKeys,
+      lastRetainedKeys,
       maximumSunlight: count(lastLightEvidence?.maxSunlight),
       maximumEmitted: count(lastLightEvidence?.maxEmitted),
       maximumCombined: Math.max(
@@ -405,26 +523,47 @@ export function createViewportLightingCoordinator({
     lastLightEvidence = result.evidence();
 
     const targetKeys = sortedKeys(dirty, map);
+    const candidates = targetKeys.map((key) => {
+      const chunk = map.get(key);
+      const lightSnapshots = snapshotsForChunk(chunk, result);
+      return Object.freeze({
+        key,
+        chunk,
+        lightSnapshots,
+        projectionInput: projectionInputFor(chunk, map, lightSnapshots),
+      });
+    });
+    const retainedKeys = [];
+    const rebuilds = candidates.filter((candidate) => {
+      if (!installed.has(candidate.key)
+        || !sameProjectionInput(projectionInputs.get(candidate.key), candidate.projectionInput)) {
+        return true;
+      }
+      dirty.delete(candidate.key);
+      retainedKeys.push(candidate.key);
+      return false;
+    });
+    lastRetainedKeys = Object.freeze([...retainedKeys]);
+    retainedProjections += retainedKeys.length;
     status = "meshing";
     let outputs;
-    pendingMeshJobs += targetKeys.length;
+    pendingMeshJobs += rebuilds.length;
     try {
-      outputs = await Promise.all(targetKeys.map(async (key) => {
-        const chunk = map.get(key);
-        const lightSnapshots = snapshotsForChunk(chunk, result);
+      outputs = await Promise.all(rebuilds.map(async (candidate) => {
         const request = Object.freeze({
-          chunk,
+          chunk: candidate.chunk,
           registry,
           getBlockAtWorld,
-          lightSnapshots,
+          lightSnapshots: candidate.lightSnapshots,
           lighting: result.evidence(),
         });
         const mesh = await runMeshing(request);
         return Object.freeze({
-          key,
-          revision: chunk.revision,
+          key: candidate.key,
+          revision: candidate.chunk.revision,
           generation: result.generation,
           epoch: result.epoch,
+          projectionInput: candidate.projectionInput,
           mesh,
         });
       }));
@@ -433,7 +572,7 @@ export function createViewportLightingCoordinator({
       report("meshing", error);
       return false;
     } finally {
-      pendingMeshJobs -= targetKeys.length;
+      pendingMeshJobs -= rebuilds.length;
     }
 
     if (destroyed || suspended || cycleVersion !== requestVersion) {
@@ -467,9 +606,11 @@ export function createViewportLightingCoordinator({
           );
         }
         installed.add(output.key);
+        projectionInputs.set(output.key, output.projectionInput);
         dirty.delete(output.key);
         meshInstalls += 1;
         const counts = meshCounts(output.mesh);
+        projectionMeshCounts.set(output.key, counts);
         groups += counts.groups;
         vertices += counts.vertices;
         triangles += counts.triangles;
@@ -479,7 +620,15 @@ export function createViewportLightingCoordinator({
       report("renderer-install", error);
       return false;
     }
-    lastMesh = Object.freeze({ groups, vertices, triangles });
+    const currentMesh = [...projectionMeshCounts.values()].reduce(
+      (total, counts) => ({
+        groups: total.groups + counts.groups,
+        vertices: total.vertices + counts.vertices,
+        triangles: total.triangles + counts.triangles,
+      }),
+      { groups: 0, vertices: 0, triangles: 0 },
+    );
+    lastMesh = Object.freeze(currentMesh);
     status = dirty.size ? "dirty" : map.size ? "ready" : "idle";
     return true;
   };
@@ -559,6 +708,8 @@ export function createViewportLightingCoordinator({
         if (next.chunks.has(key)) continue;
         map.delete(key);
         installed.delete(key);
+        projectionInputs.delete(key);
+        projectionMeshCounts.delete(key);
         dirty.delete(key);
         const removal = renderer.removeChunk(key);
         if (isThenable(removal)) {
@@ -593,6 +744,8 @@ export function createViewportLightingCoordinator({
       map.delete(key);
       dirty.delete(key);
       installed.delete(key);
+      projectionInputs.delete(key);
+      projectionMeshCounts.delete(key);
       const removal = renderer.removeChunk(key);
       if (isThenable(removal)) {
         validationError("Viewport lit-mesh removal must be synchronous", "viewport-lighting/async-removal");
@@ -648,6 +801,8 @@ export function createViewportLightingCoordinator({
         map.clear();
         dirty.clear();
         installed.clear();
+        projectionInputs.clear();
+        projectionMeshCounts.clear();
         lighting.destroy();
         if (disposeRenderer) {
           const result = renderer.destroy?.();
@@ -680,6 +835,9 @@ export function createViewportLitRenderer({
   return Object.freeze({
     format: VIEWPORT_LIT_RENDERER_FORMAT,
     coordinator,
+    routeAcceptedTransaction(acceptance, getChunk) {
+      return routeAcceptedLightingTransaction({ acceptance, getChunk, coordinator });
+    },
     setChunk(chunk) { return coordinator.updateChunk(chunk); },
     removeChunk(coordOrKey) { return coordinator.removeChunk(coordOrKey); },
     getBlock: coordinator.getBlock,

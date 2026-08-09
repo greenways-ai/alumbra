@@ -1,0 +1,5 @@
+{:world/state :world/edit-lamp-place
+ :world/edit {:type :place :block "lit/lamp" :chunk "-1,0,0" :local [8 1 4]}
+ :world/lighting {:emitted :increased :negative-coordinate true}
+ :world/affected ["-1,0,0" "0,0,0"]
+ :world/status :ready}

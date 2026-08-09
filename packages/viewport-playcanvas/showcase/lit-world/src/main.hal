@@ -21,6 +21,22 @@
     :state/boundary-emission 14}
    {:state/id :lighting/stale-generation-rejected
     :state/fence :coordinator-request-version
+    :state/final-authority :newest-canonical-revision}
+   {:state/id :world/edit-roof-open
+    :state/path :ordinary-player-controller
+    :state/edit :break
+    :state/sunlight :increased}
+   {:state/id :world/edit-lamp-place
+    :state/path :ordinary-player-controller
+    :state/edit :place
+    :state/emitted :increased}
+   {:state/id :world/edit-lamp-remove
+    :state/path :ordinary-player-controller
+    :state/edit :break
+    :state/emitted :baseline-restored}
+   {:state/id :world/edit-stale-rebuild-rejected
+    :state/path :ordinary-player-controller
+    :state/fence :coordinator-request-version
     :state/final-authority :newest-canonical-revision}])
 
 {:story/id :viewport/lit-world
@@ -35,7 +51,8 @@
                   :adjacent-local [0 2 4]}}
  :story/lighting lighting
  :story/authority
- {:transactions :core
+ {:edits :engine-player-controller
+  :transactions :core
   :fields :engine
   :meshes :renderer
   :orchestration :viewport}

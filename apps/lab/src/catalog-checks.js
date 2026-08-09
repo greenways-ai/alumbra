@@ -38,6 +38,10 @@ export const LIT_WORLD_STATE_IDS = Object.freeze({
   removed: "lighting/lamp-removed",
   restored: "lighting/lamp-restored",
   stale: "lighting/stale-generation-rejected",
+  roofOpen: "world/edit-roof-open",
+  lampPlaced: "world/edit-lamp-place",
+  lampRemoved: "world/edit-lamp-remove",
+  editStale: "world/edit-stale-rebuild-rejected",
 });
 
 const passed = (id, label, condition) => ({
@@ -315,27 +319,57 @@ function litWorldChecks({ activityId, evidence, elements, requestedLitWorldState
   const receipts = mutation?.receipts ?? [];
   const stale = mutation?.stale;
   const serialized = JSON.stringify(story ?? {});
-  const expectedMutation = requestedLitWorldState === LIT_WORLD_STATE_IDS.live
-    ? receipts.length === 0
-    : requestedLitWorldState === LIT_WORLD_STATE_IDS.removed
-      ? receipts.length === 1
-        && mutation?.current?.lampPresent === false
-        && mutation?.current?.boundaryEmission === 0
-      : requestedLitWorldState === LIT_WORLD_STATE_IDS.restored
-        ? receipts.length === 2
+  const ordinaryState = requestedLitWorldState.startsWith("world/edit-");
+  const baseline = mutation?.baseline;
+  const expectedMutation = (() => {
+    switch (requestedLitWorldState) {
+      case LIT_WORLD_STATE_IDS.live:
+        return receipts.length === 0;
+      case LIT_WORLD_STATE_IDS.removed:
+        return receipts.length === 1
+          && mutation?.current?.lampPresent === false
+          && mutation?.current?.boundaryEmission === 0;
+      case LIT_WORLD_STATE_IDS.restored:
+        return receipts.length === 2
           && mutation?.phases?.some((phase) => phase.id === LIT_WORLD_STATE_IDS.removed
             && phase.lampPresent === false
             && phase.boundaryEmission === 0)
           && mutation?.current?.lampPresent === true
-          && mutation?.current?.boundaryEmission > 0
-        : requestedLitWorldState === LIT_WORLD_STATE_IDS.stale
-          ? receipts.length === 2
-            && stale?.rejected === true
-            && stale.discardedAfter > stale.discardedBefore
-            && stale.finalRequestedGeneration === stale.finalInstalledGeneration
-            && mutation?.current?.lampPresent === true
-            && mutation?.current?.installedFieldRevision === mutation?.current?.lampChunkRevision
-          : false;
+          && mutation?.current?.boundaryEmission > 0;
+      case LIT_WORLD_STATE_IDS.stale:
+        return receipts.length === 2
+          && stale?.rejected === true
+          && stale.discardedAfter > stale.discardedBefore
+          && stale.finalRequestedGeneration === stale.finalInstalledGeneration
+          && mutation?.current?.lampPresent === true
+          && mutation?.current?.installedFieldRevision === mutation?.current?.lampChunkRevision;
+      case LIT_WORLD_STATE_IDS.roofOpen:
+        return receipts.length === 1
+          && mutation?.current?.roofPresent === false
+          && mutation?.current?.roofSunlight > baseline?.roofSunlight;
+      case LIT_WORLD_STATE_IDS.lampPlaced:
+        return receipts.length === 1
+          && mutation?.current?.editLampPresent === true
+          && mutation?.current?.editLampEmission > baseline?.editLampEmission;
+      case LIT_WORLD_STATE_IDS.lampRemoved:
+        return receipts.length === 2
+          && mutation?.phases?.some((phase) => phase.id === LIT_WORLD_STATE_IDS.lampPlaced
+            && phase.editLampPresent === true
+            && phase.editLampEmission > baseline?.editLampEmission)
+          && mutation?.current?.editLampPresent === false
+          && mutation?.current?.editLampEmission === baseline?.editLampEmission;
+      case LIT_WORLD_STATE_IDS.editStale:
+        return receipts.length === 2
+          && stale?.rejected === true
+          && stale.discardedAfter > stale.discardedBefore
+          && stale.finalRequestedGeneration === stale.finalInstalledGeneration
+          && mutation?.current?.editLampPresent === false
+          && mutation?.current?.editLampEmission === baseline?.editLampEmission
+          && mutation?.current?.installedFieldRevision === mutation?.current?.lampChunkRevision;
+      default:
+        return false;
+    }
+  })();
   return [
     passed(
       "lit-world/live-surface",
@@ -360,6 +394,8 @@ function litWorldChecks({ activityId, evidence, elements, requestedLitWorldState
         && scenario.proofs?.expectedState === true
         && scenario.proofs?.boundedAffected === true
         && scenario.proofs?.duplicateActionRejected === true
+        && (!ordinaryState || (scenario.proofs?.ordinaryControllerPath === true
+          && scenario.proofs?.rejectedEditUnchanged === true))
         && expectedMutation,
     ),
     passed(

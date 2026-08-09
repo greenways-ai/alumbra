@@ -233,10 +233,16 @@ async function openBrowserStory() {
       ? mutation?.receipts?.length === 0 ? "passed" : "failed"
       : mutation?.receipts?.length >= 1
         && scenario?.proofs?.duplicateActionRejected === true ? "passed" : "failed";
-    data.browserLitStale = stateId !== LIT_WORLD_STATE_IDS.stale
+    const staleState = stateId === LIT_WORLD_STATE_IDS.stale
+      || stateId === LIT_WORLD_STATE_IDS.editStale;
+    data.browserLitStale = !staleState
       ? "passed"
       : scenario?.proofs?.staleGenerationRejected === true
         && mutation?.stale?.rejected === true ? "passed" : "failed";
+    data.browserLitOrdinary = !stateId.startsWith("world/edit-")
+      ? "passed"
+      : scenario?.proofs?.ordinaryControllerPath === true
+        && scenario?.proofs?.rejectedEditUnchanged === true ? "passed" : "failed";
     data.browserDisposal = litWorld?.disposal?.baseline ? "passed" : "failed";
   }
   if (IDS.residencyActivities.has(requested)) {
