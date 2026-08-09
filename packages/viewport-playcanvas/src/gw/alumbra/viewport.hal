@@ -1,5 +1,9 @@
 (ns gw.alumbra.viewport)
 
+(def lighting-coordinator-format "alumbra.viewport-lighting-coordinator/1")
+(def lighting-evidence-format "alumbra.viewport-lighting-evidence/1")
+(def lit-session-format "alumbra.lit-viewport-session/1")
+
 (defn session [id world-id]
   {:viewport/session id
    :viewport/world world-id
@@ -20,3 +24,13 @@
 
 (defn dispose [value]
   (assoc value :viewport/status :disposed))
+
+(defn lighting-descriptor []
+  {:viewport/lighting-coordinator lighting-coordinator-format
+   :viewport/lighting-evidence lighting-evidence-format
+   :viewport/lit-session lit-session-format
+   :viewport/authority :orchestration
+   :viewport/canonical-authority :core
+   :viewport/field-authority :engine
+   :viewport/mesh-authority :renderer
+   :viewport/publication :revision-fenced})

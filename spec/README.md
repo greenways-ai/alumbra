@@ -10,6 +10,8 @@ The current implementation contracts are:
   fields with bounded invalidation and revision-fenced installation;
 - [Mesh lighting handoff](mesh-lighting.md) — cloneable field snapshots,
   light-aware greedy mesh attributes and worker evidence fencing;
+- [Viewport lighting coordination](viewport-lighting.md) — loaded-world
+  orchestration, bounded remeshing and stale asynchronous result fencing;
 - [World history](history.md) — region manifests, checkpoint roots, ordered
   transaction replay and semantic-head verification;
 - [History store](history-store.md) — content-addressed snapshot archives and
@@ -23,7 +25,9 @@ Chunk and transaction formats belong to the headless Core boundary. Engine
 lighting is deterministic but deliberately hot and reconstructible: dense light
 arrays stay outside durable history, Hara values and Hodos models. The renderer
 accepts copied target/cardinal light snapshots and owns only derived mesh
-attributes and bounded source evidence; it never imports the Engine runtime.
+attributes and bounded source evidence; it never imports the Engine runtime. The
+viewport owns only orchestration across current chunks, fields, meshes and
+renderer resources, with request-version fencing and bounded lifecycle evidence.
 World history is a storage-neutral package over Core values: it defines region
 addressing, checkpoint/replay semantics and content verification without
 choosing OPFS, Hestia, Ignatius, Tahto or another store. History Store owns the

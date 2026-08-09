@@ -1,8 +1,10 @@
 # @greenways/alumbra-viewport-playcanvas
 
 A reusable lifecycle boundary that composes an Alumbra world, player, build
-controller and PlayCanvas renderer without moving canonical world authority into
-the browser scene graph.
+controller, deterministic lighting pipeline and PlayCanvas renderer without
+moving canonical world or light-field authority into the browser scene graph.
+
+## Standard viewport
 
 ```js
 import * as pc from "playcanvas";
@@ -17,17 +19,56 @@ const viewport = createPlayCanvasViewportSession({
   blockIds: ["alumbra/basalt", "alumbra/glass"],
   playerBody: {radius: 0.34, height: 1.8, eyeHeight: 1.62},
 });
+```
+
+## Lit viewport
+
+```js
+import {
+  createLitPlayCanvasViewportSession,
+} from "@greenways/alumbra-viewport-playcanvas/lit-session";
+
+const viewport = createLitPlayCanvasViewportSession({
+  pc,
+  canvas,
+  world,
+  player,
+  controller,
+});
+
+await viewport.drain();
+console.log(viewport.snapshot().lighting);
 
 viewport.suspend("surface-hidden");
 viewport.resume("surface-visible");
-viewport.destroy();
+await viewport.destroy();
 ```
 
-The session owns projection, input sampling, camera/light entities, picking,
-frame evidence and deterministic disposal. The caller continues to own canonical
-chunks, package activation, persistence, UI, save timing and public authority.
+The lit session composes four independently owned boundaries:
 
-`createViewportSessionGroup` tracks several independent sessions without sharing
-worlds, players, renderer resources or lifecycle state. A group does not merge
-their authority; it only provides explicit creation, lookup, suspension and
-disposal.
+```text
+canonical Core chunks
+        ↓
+Engine lighting runtime
+        ↓
+renderer-owned light snapshots and greedy meshes
+        ↓
+PlayCanvas prebuilt mesh projection
+```
+
+`createViewportLightingCoordinator` accepts injected lighting, meshing and
+renderer execution boundaries. It performs full initial projection, bounded
+invalidation, deterministic target ordering, stale lighting and mesh fencing,
+loaded-chunk removal, suspension, resume and idempotent disposal. The companion
+`createViewportLitRenderer` presents that coordinator through the renderer shape
+already consumed by world controllers and viewport sessions.
+
+Public evidence contains semantic identities, revisions, counters, affected
+chunk keys and resource counts only. Dense light fields, chunk payloads, mesh
+buffers, callbacks, PlayCanvas objects and capabilities remain private to their
+owning runtime.
+
+The caller continues to own canonical chunks, package activation, persistence,
+UI, save timing and public authority. `createViewportSessionGroup` tracks several
+independent sessions without sharing worlds, players, renderer resources or
+lifecycle state.
