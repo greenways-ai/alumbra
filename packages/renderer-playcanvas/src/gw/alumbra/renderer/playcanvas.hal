@@ -2,10 +2,18 @@
 
 (def renderer-id "alumbra.renderer/playcanvas")
 (def mesh-format "alumbra.chunk-mesh/1")
+(def mesh-light-snapshot-format "alumbra.mesh-light-snapshot/1")
+(def mesh-lighting-format "alumbra.mesh-lighting/1")
 (def capabilities #{:graphics/scene :input/pointer :input/keyboard})
 
 (defn descriptor []
   {:renderer/id renderer-id
    :renderer/mesh-format mesh-format
+   :renderer/mesh-lighting
+   {:snapshot-format mesh-light-snapshot-format
+    :evidence-format mesh-lighting-format
+    :levels [0 15]
+    :attributes [:sunlight :emitted]
+    :authority :injected}
    :renderer/capabilities capabilities
    :renderer/state :host-owned})

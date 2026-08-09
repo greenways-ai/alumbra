@@ -5,6 +5,7 @@ The first browser projection for Alumbra voxel worlds.
 The package separates pure voxel geometry from host-owned PlayCanvas resources:
 
 - deterministic exposed-face and greedy-quad meshing;
+- optional light-aware merge keys and typed sunlight/emitted mesh attributes;
 - loaded-neighbor boundary suppression;
 - three-dimensional DDA block picking;
 - view-distance chunk selection and bounded residency scheduling;
@@ -19,10 +20,31 @@ The package separates pure voxel geometry from host-owned PlayCanvas resources:
 ```js
 import {
   ENVIRONMENT_PROFILE_IDS,
+  MESH_LIGHT_SNAPSHOT_FORMAT,
+  buildChunkMesh,
   createPlayCanvasEnvironmentController,
   createPlayCanvasPrebuiltMeshRenderer,
   raycastVoxels,
 } from "@greenways/alumbra-renderer-playcanvas";
+
+const lightSnapshot = {
+  format: MESH_LIGHT_SNAPSHOT_FORMAT,
+  profileId: lightField.profileId,
+  generation: lightField.generation,
+  epoch: lightFieldSet.epoch,
+  maxLevel: 15,
+  key: lightField.key,
+  coord: lightField.coord,
+  shape: lightField.shape,
+  sourceRevision: lightField.sourceRevision,
+  sunlight: lightField.copySunlight(),
+  emitted: lightField.copyEmitted(),
+};
+const mesh = buildChunkMesh({
+  chunk,
+  registry,
+  lightSnapshots: [lightSnapshot],
+});
 
 const renderer = createPlayCanvasPrebuiltMeshRenderer({
   pc,
@@ -46,6 +68,18 @@ const hit = raycastVoxels({
   isSolid,
 });
 ```
+
+Mesh lighting snapshots are closed, cloneable values containing exact target or
+cardinal-neighbour field bytes. The mesher copies and validates at most seven
+snapshots, samples the exposed side of each rendered face and duplicates one
+sunlight/emitted pair onto the quad's four vertices. Different light pairs do not
+greedy-merge. The mesh worker captures the exact profile, generation, epoch and
+source revisions and rejects substituted output evidence.
+
+Dense field authority remains in Engine. The renderer imports only Core and
+receives bounded snapshot copies; it never receives an Engine runtime, Hodos
+component, storage capability or PlayCanvas object through the worker envelope.
+PlayCanvas vertex-colour projection is a separate adapter slice.
 
 Material identities are resolved through installed, closed profiles before any
 PlayCanvas mesh, material or entity is allocated. An unknown profile therefore

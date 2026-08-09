@@ -1,4 +1,10 @@
 import { CHUNK_MESH_FORMAT } from "./mesh.js";
+import {
+  createMeshLightingContext,
+  meshLightingEvidenceEqual,
+  normalizeMeshLightingEvidence,
+  validateMeshLightGroup,
+} from "./mesh-light.js";
 import { createDeterministicJobQueue } from "./job-queue.js";
 
 const normalizeMeshJob = (value) => {
@@ -15,6 +21,12 @@ const normalizeMeshJob = (value) => {
   if (!value.chunk || value.chunk.key !== chunkKey || value.chunk.revision !== revision) {
     throw new TypeError("Mesh worker job must carry the matching canonical chunk revision");
   }
+  const lighting = value.lightSnapshots == null
+    ? null
+    : createMeshLightingContext({
+      chunk: value.chunk,
+      snapshots: value.lightSnapshots,
+    });
   return Object.freeze({
     id,
     chunkKey,
@@ -22,6 +34,8 @@ const normalizeMeshJob = (value) => {
     chunk: value.chunk,
     priority: Number.isSafeInteger(value.priority) ? value.priority : 0,
     context: value.context ?? null,
+    lightSnapshots: lighting?.snapshots() ?? null,
+    lighting: lighting?.evidence() ?? null,
   });
 };
 
@@ -35,12 +49,33 @@ const normalizeMeshResult = (job, mesh) => {
   if (mesh.chunkKey !== job.chunkKey || mesh.revision !== job.revision) {
     throw new Error("Mesh worker result does not match the submitted chunk revision");
   }
-  return Object.freeze({
+  const lighting = mesh.lighting == null
+    ? null
+    : normalizeMeshLightingEvidence(mesh.lighting, { chunk: job.chunk });
+  if (job.lighting == null ? lighting != null : lighting == null) {
+    throw new Error("Mesh worker result lighting does not match the submitted job");
+  }
+  if (job.lighting && !meshLightingEvidenceEqual(job.lighting, lighting)) {
+    throw new Error("Mesh worker result light-field evidence does not match the submitted job");
+  }
+  if (!Array.isArray(mesh.groups)) {
+    throw new TypeError("Mesh worker result requires mesh groups");
+  }
+  mesh.groups.forEach((group, index) => {
+    const vertexCount = group?.positions?.length / 3;
+    if (!Number.isSafeInteger(vertexCount) || vertexCount < 0) {
+      throw new TypeError(`Mesh worker group ${index} has invalid positions`);
+    }
+    validateMeshLightGroup(group, vertexCount, lighting, `Mesh worker group ${index}`);
+  });
+  const output = {
     id: job.id,
     chunkKey: job.chunkKey,
     revision: job.revision,
     mesh,
-  });
+  };
+  if (lighting) output.lighting = lighting;
+  return Object.freeze(output);
 };
 
 export function createLocalMeshWorker({
@@ -53,13 +88,18 @@ export function createLocalMeshWorker({
     name,
     concurrency,
     execute: async (job, execution) => {
-      const mesh = await buildMesh(Object.freeze({
+      const request = {
         chunk: job.chunk,
         chunkKey: job.chunkKey,
         revision: job.revision,
         context: job.context,
         signal: execution.signal,
-      }));
+      };
+      if (job.lighting) {
+        request.lightSnapshots = job.lightSnapshots;
+        request.lighting = job.lighting;
+      }
+      const mesh = await buildMesh(Object.freeze(request));
       return normalizeMeshResult(job, mesh);
     },
   });
