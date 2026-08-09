@@ -4,7 +4,7 @@
  :showcase/version "0.1.0"
  :showcase/title "PlayCanvas Viewport"
  :showcase/summary
- "Lifecycle-owned viewport sessions that compose canonical worlds, players, input and PlayCanvas projection."
+ "Lifecycle-owned viewport sessions that compose canonical worlds, players, input and revision-fenced PlayCanvas lighting projection."
 
  :showcase/views
  [{:view/id :playable-world
@@ -12,7 +12,10 @@
    :view/summary "Run one canonical world through a reusable viewport session with explicit suspend, resume and disposal."}
   {:view/id :two-sessions
    :view/title "Two independent sessions"
-   :view/summary "Run two viewport sessions without sharing world state, player clocks or renderer resources."}]
+   :view/summary "Run two viewport sessions without sharing world state, player clocks or renderer resources."}
+  {:view/id :lit-world
+   :view/title "Live lit-world viewport"
+   :view/summary "Project a negative-to-zero two-chunk cave through Engine lighting, renderer mesh sidecars and PlayCanvas vertex colours."}]
 
  :showcase/states
  [{:state/id :viewport/playable-world
@@ -22,7 +25,11 @@
   {:state/id :viewport/two-sessions
    :state/title "Two sessions"
    :state/summary "Two separately owned worlds and lifecycle counters projected together."
-   :state/file "showcase/states/two-sessions.edn"}]
+   :state/file "showcase/states/two-sessions.edn"}
+  {:state/id :viewport/lit-world
+   :state/title "Live lit world"
+   :state/summary "Two canonical chunks, cross-boundary emitted light, aligned vertex colours and exact lifecycle evidence."
+   :state/file "showcase/states/lit-world.edn"}]
 
  :showcase/demos
  [{:demo/id :playable-world
@@ -45,5 +52,16 @@
    :demo/surface :viewport
    :demo/docs "showcase/two-sessions/README.md"
    :demo/tags ["viewport" "sessions" "playable-lab" "level:integration" "checks:7"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :lit-world
+   :demo/title "Live lit-world viewport"
+   :demo/summary "Open a two-chunk cave whose boundary lamp travels through Engine fields, light-aware meshes and PlayCanvas vertex colours."
+   :demo/view :lit-world
+   :demo/state :viewport/lit-world
+   :demo/project "showcase/lit-world"
+   :demo/surface :viewport
+   :demo/docs "showcase/lit-world/README.md"
+   :demo/tags ["viewport" "lighting" "chunk-boundary" "playable-lab" "level:integration" "checks:8"]
    :demo/theme :dark
    :demo/viewport {:viewport/width 1180 :viewport/height 760}}]}

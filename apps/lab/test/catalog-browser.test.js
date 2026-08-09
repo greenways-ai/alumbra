@@ -48,7 +48,7 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
 test("generated Catalog projection contains the complete pathless renderer train", () => {
   assert.equal(ALUMBRA_RENDERER_CATALOG.id, "catalog/alumbra-renderer");
   assert.equal(ALUMBRA_RENDERER_CATALOG.toolsets.length, 6);
-  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 18);
+  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 19);
   assert.ok(ALUMBRA_RENDERER_CATALOG.activities.every((activity) => activity.path === null));
   assert.equal(ALUMBRA_RENDERER_CATALOG.selectedActivityId, "alumbra-hodos/renderer-catalog");
   assert.deepEqual(
@@ -92,6 +92,7 @@ test("generated Catalog projection contains the complete pathless renderer train
     [
       "alumbra-viewport-playcanvas/playable-world",
       "alumbra-viewport-playcanvas/two-sessions",
+      "alumbra-viewport-playcanvas/lit-world",
     ],
   );
   assert.deepEqual(
@@ -160,6 +161,16 @@ test("generated Catalog projection contains the complete pathless renderer train
   assert.equal(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hara/packaged-height-field"].host, "playable-lab");
   assert.equal(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/playable-world"].host, "playable-lab");
   assert.deepEqual(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/lit-world"],
+    {
+      package: "@greenways/alumbra-viewport-playcanvas",
+      demo: "lit-world",
+      project: "packages/viewport-playcanvas/showcase/lit-world",
+      surface: "viewport",
+      host: "playable-lab",
+    },
+  );
+  assert.deepEqual(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/chunk-residency"],
     {
       package: "@greenways/alumbra-renderer-playcanvas",
@@ -223,6 +234,7 @@ test("Catalog opens viewport, packaged-Hara and Workspace activities through ins
   });
   for (const activityId of [
     "alumbra-viewport-playcanvas/two-sessions",
+    "alumbra-viewport-playcanvas/lit-world",
     "alumbra-hara/packaged-height-field",
     "alumbra-hodos/renderer-workspace",
   ]) {
@@ -233,6 +245,7 @@ test("Catalog opens viewport, packaged-Hara and Workspace activities through ins
     opened.map((request) => request.demo.project),
     [
       "packages/viewport-playcanvas/showcase/two-sessions",
+      "packages/viewport-playcanvas/showcase/lit-world",
       "packages/hara/showcase/packaged-height-field",
       "packages/hodos/showcase/renderer-workspace",
     ],

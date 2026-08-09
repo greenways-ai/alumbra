@@ -16,7 +16,7 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
   assert.equal(model.catalogId, "catalog/alumbra-renderer");
   assert.equal(model.selectedActivityId, "alumbra-hodos/renderer-catalog");
   assert.equal(model.toolsets.length, 6);
-  assert.equal(model.activities.length, 18);
+  assert.equal(model.activities.length, 19);
   assert.ok(model.activities.every((activity) => activity.path === null));
   assert.deepEqual(
     model.activities
@@ -59,6 +59,7 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
     [
       "alumbra-viewport-playcanvas/playable-world",
       "alumbra-viewport-playcanvas/two-sessions",
+      "alumbra-viewport-playcanvas/lit-world",
     ],
   );
   assert.deepEqual(
@@ -105,6 +106,7 @@ test("generated Catalog and installed-demo registry are deeply immutable", () =>
     "alumbra-renderer-playcanvas/light-aware-meshing",
     "alumbra-renderer-playcanvas/light-field-handoff",
     "alumbra-viewport-playcanvas/two-sessions",
+    "alumbra-viewport-playcanvas/lit-world",
     "alumbra-hodos/renderer-workspace",
   ]) {
     assert.ok(Object.isFrozen(ALUMBRA_RENDERER_INSTALLED_DEMOS[activityId]));
@@ -135,6 +137,16 @@ test("generated Catalog and installed-demo registry are deeply immutable", () =>
       project: "packages/renderer-playcanvas/showcase/light-aware-meshing",
       surface: "viewport",
       host: "showcase-project",
+    },
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/lit-world"],
+    {
+      package: "@greenways/alumbra-viewport-playcanvas",
+      demo: "lit-world",
+      project: "packages/viewport-playcanvas/showcase/lit-world",
+      surface: "viewport",
+      host: "playable-lab",
     },
   );
   assert.deepEqual(

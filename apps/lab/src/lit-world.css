@@ -1,0 +1,70 @@
+.lit-world-evidence {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 6;
+  width: min(24rem, calc(100vw - 2.5rem));
+  padding: 1rem 1.1rem;
+  border: 1px solid rgb(153 190 212 / 28%);
+  border-radius: 0.8rem;
+  background: rgb(10 16 24 / 88%);
+  box-shadow: 0 1.25rem 3rem rgb(0 0 0 / 35%);
+  backdrop-filter: blur(14px);
+}
+
+.lit-world-evidence > p {
+  margin: 0 0 0.35rem;
+  color: #8fc4d8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+}
+
+.lit-world-evidence h2 {
+  margin: 0 0 0.8rem;
+  font-size: 1.15rem;
+}
+
+.lit-world-evidence dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.85rem;
+  margin: 0;
+}
+
+.lit-world-evidence dl > div {
+  min-width: 0;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+}
+
+.lit-world-evidence dt {
+  color: rgb(218 229 236 / 62%);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lit-world-evidence dd {
+  overflow: hidden;
+  margin: 0.15rem 0 0;
+  color: #f4f7f9;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-viewport-mode="lit-world"] .lab-panel,
+body[data-viewport-mode="lit-world"] .lab-crosshair {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .lit-world-evidence {
+    top: auto;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+  }
+}

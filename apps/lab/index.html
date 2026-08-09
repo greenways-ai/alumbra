@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="./src/packaged-hara.css">
   <link rel="stylesheet" href="./src/residency.css">
   <link rel="stylesheet" href="./src/material.css">
+  <link rel="stylesheet" href="./src/lit-world.css">
   <link rel="stylesheet" href="./src/workspace.css">
   <script type="importmap">
   {
@@ -140,6 +141,7 @@
       <canvas id="alumbra-canvas-hara" data-viewport-session="hara" aria-label="Package-pinned Hara voxel world" hidden></canvas>
       <canvas id="alumbra-canvas-residency" data-viewport-session="residency" aria-label="Dynamic renderer residency story" tabindex="0" hidden></canvas>
       <canvas id="alumbra-canvas-materials" data-viewport-session="materials" aria-label="Material and environment profile story" hidden></canvas>
+      <canvas id="alumbra-canvas-lit-world" data-viewport-session="lit-world" aria-label="Live cross-chunk lit Alumbra cave" tabindex="0" hidden></canvas>
       <section class="lab-world-error" data-packaged-world-error aria-live="polite" hidden>
         <p class="lab-world-error-eyebrow">ALUMBRA / EXACT PACKAGE LOCK</p>
         <h2 data-packaged-world-error-title>Package mismatch</h2>
@@ -173,6 +175,20 @@
         <div><dt>Disposal</dt><dd data-material-stat="disposal">0</dd></div>
       </dl>
     </aside>
+    <aside class="lit-world-evidence" data-lit-world-panel aria-live="polite" hidden>
+      <p>ALUMBRA / LIVE LIT WORLD</p>
+      <h2>Negative-to-zero cave</h2>
+      <dl>
+        <div><dt>Status</dt><dd data-lit-world-stat="status">idle</dd></div>
+        <div><dt>Chunks</dt><dd data-lit-world-stat="chunks">0/0</dd></div>
+        <div><dt>Sunlight</dt><dd data-lit-world-stat="sunlight">0</dd></div>
+        <div><dt>Emission</dt><dd data-lit-world-stat="emitted">0</dd></div>
+        <div><dt>Vertices</dt><dd data-lit-world-stat="vertices">0</dd></div>
+        <div><dt>GPU</dt><dd data-lit-world-stat="resources">0M · 0T</dd></div>
+        <div><dt>Lifecycle</dt><dd data-lit-world-stat="lifecycle">0 suspend · 0 resume</dd></div>
+        <div><dt>Disposal</dt><dd data-lit-world-stat="disposal">0</dd></div>
+      </dl>
+    </aside>
     <section class="lab-panel" aria-live="polite">
       <p class="lab-eyebrow">ALUMBRA / PLAYABLE LAB</p>
       <h1>Canonical blocks.<br>Package-pinned worlds.</h1>
@@ -195,6 +211,7 @@
   <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/residency-entry.js"></script>
   <script type="module" src="./src/material-entry.js"></script>
+  <script type="module" src="./src/lit-world-entry.js"></script>
   <script type="module" src="./src/workspace-entry.js"></script>
 </body>
 </html>

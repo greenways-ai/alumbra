@@ -5,6 +5,9 @@ const MATERIAL_RENDER_EVIDENCE_FORMAT = "alumbra.material-render-evidence/1";
 const ENVIRONMENT_EVIDENCE_FORMAT = "alumbra.environment-evidence/1";
 const WORKSPACE_STORY_FORMAT = "alumbra.renderer-workspace-story/1";
 const WORKSPACE_EVIDENCE_FORMAT = "alumbra.renderer-workspace-evidence/1";
+const LIT_WORLD_STORY_FORMAT = "alumbra.lit-world-story/1";
+const VIEWPORT_LIGHTING_EVIDENCE_FORMAT = "alumbra.viewport-lighting-evidence/1";
+const MESH_LIGHT_RENDER_EVIDENCE_FORMAT = "alumbra.mesh-light-render-evidence/1";
 
 const DEFAULT_SEED_STATE = "world/default-seed";
 const NEGATIVE_COORDINATE_STATE = "world/negative-coordinate";
@@ -296,6 +299,70 @@ function workspaceChecks({ activityId, evidence, elements, requestedWorkspaceSta
   ];
 }
 
+function litWorldChecks({ activityId, evidence, elements }) {
+  const story = evidence.litWorld;
+  const scenario = story?.scenario;
+  const lighting = scenario?.lighting;
+  const materialLighting = scenario?.materials?.lighting;
+  const serialized = JSON.stringify(story ?? {});
+  return [
+    passed(
+      "lit-world/live-surface",
+      "The live lit-world canvas opens through its installed semantic identity",
+      story?.format === LIT_WORLD_STORY_FORMAT
+        && story.activeActivity === activityId
+        && story.status === "ready"
+        && scenario?.kind === "lit-world"
+        && Boolean(elements.litWorldCanvas && !elements.litWorldCanvas.hidden)
+        && Boolean(elements.litWorldPanel && !elements.litWorldPanel.hidden),
+    ),
+    passed(
+      "lit-world/cross-boundary-fields",
+      "Sunlight and emitted light reach the negative-to-zero two-chunk fixture",
+      lighting?.format === VIEWPORT_LIGHTING_EVIDENCE_FORMAT
+        && lighting.status === "ready"
+        && lighting.loadedChunks === 2
+        && lighting.installedChunks === 2
+        && lighting.maximumSunlight > 0
+        && lighting.maximumEmitted > 0
+        && scenario.boundaryEmission > 0
+        && scenario.world?.negativeToZero === true
+        && scenario.proofs?.crossChunkEmission === true,
+    ),
+    passed(
+      "lit-world/vertex-colour-projection",
+      "Every installed lit mesh vertex has aligned renderer-owned colour projection",
+      materialLighting?.format === MESH_LIGHT_RENDER_EVIDENCE_FORMAT
+        && materialLighting.litGroupCount > 0
+        && materialLighting.vertices > 0
+        && materialLighting.vertices === lighting.lastMesh?.vertices
+        && scenario.proofs?.alignedVertexColors === true,
+    ),
+    passed(
+      "lit-world/lifecycle",
+      "Suspend and resume retain the same canonical session and installed projection",
+      scenario.proofs?.sameCanonicalSessionAfterResume === true
+        && story.lifecycle?.suspensions >= 1
+        && story.lifecycle?.resumes >= 1
+        && scenario.session?.status === "active"
+        && scenario.session?.worldId === scenario.world?.id,
+    ),
+    passed(
+      "lit-world/bounded-disposal",
+      "Evidence stays bounded and a real lighting/GPU disposal probe returns to baseline",
+      story.disposal?.baseline === true
+        && story.disposal.count >= 1
+        && scenario.proofs?.boundedEvidence === true
+        && !serialized.includes("Uint8Array")
+        && !serialized.includes("meshBuffer")
+        && !serialized.includes("callback")
+        && !serialized.includes("PlayCanvas")
+        && !serialized.includes("projectPath")
+        && !serialized.includes("capability"),
+    ),
+  ];
+}
+
 function haraChecks({ evidence, elements, requestedHaraState }) {
   const packaged = evidence.packagedWorld;
   const defaultWorld = packaged?.states?.[DEFAULT_SEED_STATE];
@@ -406,7 +473,9 @@ export function buildCatalogChecks({
   requestedWorkspaceState,
 }) {
   const checks = commonChecks({ activity, demo, eventLog });
-  if (activityId === ids.rendererWorkspace) {
+  if (activityId === ids.litWorld) {
+    checks.push(...litWorldChecks({ activityId, evidence, elements }));
+  } else if (activityId === ids.rendererWorkspace) {
     checks.push(...workspaceChecks({ activityId, evidence, elements, requestedWorkspaceState }));
   } else if (ids.residencyActivities.has(activityId)) {
     checks.push(...residencyChecks({ activityId, evidence, elements, ids }));
