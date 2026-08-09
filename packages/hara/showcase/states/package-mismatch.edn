@@ -1,0 +1,7 @@
+{:world/state :world/package-mismatch
+ :package/coordinate "hara:greenways/alumbra-hara"
+ :package/requested-version "0.2.0"
+ :package/pinned-version "0.1.0"
+ :error/code "hara/package-version-mismatch"
+ :error/message
+ "The requested Hara package version does not match the exact Showcase lock."}

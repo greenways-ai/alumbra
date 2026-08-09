@@ -1,9 +1,37 @@
 (ns showcase.alumbra-hara.packaged-height-field)
 
-(def world-plan
-  {:world/seed 1729
-   :world/origin [0 0 0]
-   :world/generator :alumbra.generator/height-field
-   :world/package "greenways/alumbra-hara@0.1.0"})
+(def exact-lock
+  {:lock/format 1
+   :packages
+   {"hara:greenways/alumbra-hara" "0.1.0"
+    "hara:greenways/alumbra-core" "0.1.0"
+    "hara:greenways/alumbra-engine" "0.1.0"
+    "hara:greenways/alumbra-renderer-playcanvas" "0.1.0"
+    "hara:greenways/alumbra-viewport-playcanvas" "0.1.0"}})
 
-world-plan
+(def named-states
+  {:world/default-seed
+   {:chunk/coord [0 0 0]
+    :chunk/digest "sha256:3d11dc2d8176c2ddaff622544196e7111b8cfafaefef0746521ae304a1a953e6"}
+   :world/negative-coordinate
+   {:chunk/coord [-2 0 3]
+    :chunk/digest "sha256:d11756fe007f7252053b95c996c0f8884e0561793205c9cc2a0fde8fcc336fc3"}
+   :world/package-mismatch
+   {:error/code :hara/package-version-mismatch
+    :package/requested-version "0.2.0"
+    :package/pinned-version "0.1.0"}})
+
+(def packaged-world
+  {:world/state :world/default-seed
+   :world/package "hara:greenways/alumbra-hara@0.1.0"
+   :world/block-pack :alumbra/fixture-blocks
+   :world/generator :alumbra/fixture-height-field
+   :world/pipeline
+   [:hara/block-pack
+    :hara/generator-plan
+    :alumbra/core-materialization
+    :playcanvas/viewport]
+   :world/lock exact-lock
+   :world/states named-states})
+
+packaged-world

@@ -7,7 +7,7 @@
 
 * { box-sizing: border-box; }
 
-html, body, .lab-shell, #alumbra-canvas {
+html, body, .lab-shell {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -16,10 +16,35 @@ html, body, .lab-shell, #alumbra-canvas {
 
 body { background: #111923; }
 
-#alumbra-canvas {
+.lab-viewport-grid {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  background: #0b1119;
+}
+
+.lab-viewport-grid[data-mode="two"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.lab-viewport-grid canvas {
   display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
   touch-action: none;
   outline: none;
+}
+
+.lab-viewport-grid canvas[hidden] { display: none; }
+
+.lab-viewport-grid[data-mode="two"] canvas {
+  box-shadow: inset 0 0 0 1px rgb(235 226 208 / 10%);
 }
 
 .lab-panel {
@@ -123,6 +148,8 @@ body { background: #111923; }
   pointer-events: none;
 }
 
+body[data-viewport-mode="two"] .lab-crosshair { display: none; }
+
 .lab-crosshair::before,
 .lab-crosshair::after {
   content: "";
@@ -220,6 +247,13 @@ body { background: #111923; }
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .lab-viewport-grid[data-mode="two"] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {

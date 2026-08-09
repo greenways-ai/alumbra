@@ -1,0 +1,11 @@
+{:material/state :materials/daylight
+ :material/profiles
+ ["alumbra/material-opaque"
+  "alumbra/material-cutout"
+  "alumbra/material-transparent"
+  "alumbra/material-emissive"
+  "alumbra/selection-overlay"]
+ :material/passes {:opaque 1 :cutout 1 :transparent 1 :emissive 1 :overlay 1}
+ :material/shared-resources true
+ :environment/profile "alumbra/daylight"
+ :environment/fog-mode "none"}

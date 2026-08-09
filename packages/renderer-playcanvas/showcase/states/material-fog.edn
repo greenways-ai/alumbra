@@ -1,0 +1,7 @@
+{:material/state :materials/fog
+ :material/profile-count 5
+ :material/transparent-pass-count 1
+ :environment/profile "alumbra/fog"
+ :environment/fog-mode "linear"
+ :environment/fog-start 18
+ :environment/fog-end 82}

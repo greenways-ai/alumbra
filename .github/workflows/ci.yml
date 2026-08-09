@@ -20,6 +20,8 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run pack:check
+      - name: Run installed Catalog activities in headless Chromium
+        run: npm run check:browser
 
   hara-runtime:
     runs-on: ubuntu-latest

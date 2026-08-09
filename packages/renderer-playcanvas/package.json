@@ -1,7 +1,7 @@
 {
   "name": "@greenways/alumbra-renderer-playcanvas",
   "version": "0.1.0",
-  "description": "PlayCanvas voxel meshing, picking and projection for Alumbra",
+  "description": "PlayCanvas voxel meshing, materials, environments, picking and projection for Alumbra",
   "type": "module",
   "license": "EPL-2.0",
   "repository": {
@@ -15,8 +15,14 @@
     "./raycast": "./src/raycast.js",
     "./visibility": "./src/visibility.js",
     "./resources": "./src/resource-pool.js",
+    "./materials": "./src/material-profile.js",
+    "./environment": "./src/environment-profile.js",
     "./adapter": "./src/playcanvas-renderer.js",
+    "./adapter/prebuilt": "./src/prebuilt-renderer.js",
     "./controls": "./src/first-person.js",
+    "./residency": "./src/residency.js",
+    "./residency/evidence": "./src/residency-evidence.js",
+    "./residency/worker": "./src/mesh-worker.js",
     "./hara/*": "./src/gw/alumbra/renderer/*.hal"
   },
   "files": [

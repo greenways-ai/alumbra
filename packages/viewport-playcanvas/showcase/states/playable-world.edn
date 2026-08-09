@@ -1,0 +1,11 @@
+{:session/id "primary"
+ :session/status "active"
+ :session/suspensions 1
+ :session/resumes 1
+ :world/id "world:alumbra/lab"
+ :world/revision 0
+ :player/position [3.5 12 22.5]
+ :render/resident-chunks 16
+ :render/visible-chunks 12
+ :authority/canonical "world"
+ :authority/projection "viewport"}

@@ -1,0 +1,13 @@
+{:hara/type :project
+ :hara/version "1.0.0"
+ :project/id showcase.alumbra-hodos.renderer-workspace
+ :project/version "0.1.0"
+ :project/source-paths ["src"]
+ :project/test-paths []
+ :project/extension-paths []
+ :project/main showcase.alumbra-hodos.renderer-workspace
+ :project/capabilities #{:studio/eval :graphics/scene}
+ :project/dependencies
+ {"hara:greenways/alumbra-hodos" {:version "0.1.0"}
+  "hara:greenways/alumbra-renderer-playcanvas" {:version "0.1.0"}
+  "hara:greenways/alumbra-viewport-playcanvas" {:version "0.1.0"}}}

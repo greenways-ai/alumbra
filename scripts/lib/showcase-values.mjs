@@ -7,6 +7,7 @@ export const PUBLIC_PACKAGE_ORDER = Object.freeze([
   "@greenways/alumbra-core",
   "@greenways/alumbra-engine",
   "@greenways/alumbra-renderer-playcanvas",
+  "@greenways/alumbra-viewport-playcanvas",
   "@greenways/alumbra-hodos",
 ]);
 

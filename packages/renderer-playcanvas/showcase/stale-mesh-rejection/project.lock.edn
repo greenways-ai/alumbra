@@ -1,0 +1,5 @@
+{:lock/format 1
+ :packages
+ {"hara:greenways/alumbra-core" {:version "0.1.0"}
+  "hara:greenways/alumbra-renderer-playcanvas" {:version "0.1.0"}
+  "hara:greenways/alumbra-viewport-playcanvas" {:version "0.1.0"}}}

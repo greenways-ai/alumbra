@@ -1,0 +1,7 @@
+{:material/state :materials/unknown-profile-error
+ :profile/status "rejected"
+ :profile/error
+ {:code "renderer/material-profile-not-installed"
+  :profile-id "alumbra/profile-does-not-exist"}
+ :profile/allocation-baseline true
+ :authority/portable-evidence true}

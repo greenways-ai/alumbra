@@ -1,0 +1,22 @@
+(ns gw.alumbra.viewport)
+
+(defn session [id world-id]
+  {:viewport/session id
+   :viewport/world world-id
+   :viewport/status :active
+   :viewport/frame 0
+   :viewport/suspensions 0
+   :viewport/resumes 0})
+
+(defn suspend [value]
+  (assoc value
+         :viewport/status :suspended
+         :viewport/suspensions (+ 1 (:viewport/suspensions value))))
+
+(defn resume [value]
+  (assoc value
+         :viewport/status :active
+         :viewport/resumes (+ 1 (:viewport/resumes value))))
+
+(defn dispose [value]
+  (assoc value :viewport/status :disposed))

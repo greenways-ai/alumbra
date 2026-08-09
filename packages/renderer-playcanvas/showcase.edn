@@ -4,18 +4,54 @@
  :showcase/version "0.1.0"
  :showcase/title "PlayCanvas Renderer"
  :showcase/summary
- "Voxel meshing, material grouping and picking projected from canonical Alumbra chunks."
+ "Voxel meshing, material and environment profiles, picking and bounded dynamic residency projected from canonical Alumbra chunks."
 
  :showcase/views
  [{:view/id :greedy-meshing
    :view/title "Greedy meshing"
-   :view/summary "Compare a canonical voxel fixture with bounded quad and material-group evidence."}]
+   :view/summary "Compare a canonical voxel fixture with bounded quad and material-group evidence."}
+  {:view/id :chunk-residency
+   :view/title "Dynamic chunk residency"
+   :view/summary "Drive a bounded residency window across chunk boundaries and inspect count-only scheduling evidence."}
+  {:view/id :stale-mesh-rejection
+   :view/title "Stale mesh rejection"
+   :view/summary "Complete mesh jobs out of revision order and prove only the current canonical revision installs."}
+  {:view/id :material-matrix
+   :view/title "Material matrix"
+   :view/summary "Render opaque, cutout, transparent, emissive and selection-overlay profiles together with bounded resource evidence."}
+  {:view/id :environment-profile
+   :view/title "Environment profiles"
+   :view/summary "Switch among daylight, fog and emissive-night environments and reject an unknown installed profile."}]
 
  :showcase/states
  [{:state/id :mesh/single-chunk
    :state/title "Single meshed chunk"
    :state/summary "A bounded render-evidence fixture for one canonical chunk revision."
-   :state/file "showcase/states/greedy-meshing.edn"}]
+   :state/file "showcase/states/greedy-meshing.edn"}
+  {:state/id :residency/cross-boundary
+   :state/title "Cross a chunk boundary"
+   :state/summary "A count-only residency transition that requests new chunks and evicts resources behind the player."
+   :state/file "showcase/states/chunk-residency.edn"}
+  {:state/id :residency/stale-mesh
+   :state/title "Reject a stale mesh"
+   :state/summary "Revision two installs while the later completion for revision one is discarded."
+   :state/file "showcase/states/stale-mesh-rejection.edn"}
+  {:state/id :materials/daylight
+   :state/title "Daylight material matrix"
+   :state/summary "Five installed material passes under the daylight environment profile."
+   :state/file "showcase/states/material-daylight.edn"}
+  {:state/id :materials/fog
+   :state/title "Fog environment"
+   :state/summary "The same installed materials under the bounded linear-fog environment."
+   :state/file "showcase/states/material-fog.edn"}
+  {:state/id :materials/emissive
+   :state/title "Emissive night"
+   :state/summary "The emissive material pass under the installed low-light environment."
+   :state/file "showcase/states/material-emissive.edn"}
+  {:state/id :materials/unknown-profile-error
+   :state/title "Unknown profile rejection"
+   :state/summary "An uninstalled material profile fails before any PlayCanvas resource is allocated."
+   :state/file "showcase/states/material-unknown-profile-error.edn"}]
 
  :showcase/demos
  [{:demo/id :greedy-meshing
@@ -27,5 +63,49 @@
    :demo/surface :viewport
    :demo/docs "showcase/greedy-meshing/README.md"
    :demo/tags ["meshing" "playcanvas" "level:renderer" "checks:3"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :chunk-residency
+   :demo/title "Dynamic chunk residency"
+   :demo/summary "Drive a bounded residency window across chunk boundaries and inspect count-only scheduling evidence."
+   :demo/view :chunk-residency
+   :demo/state :residency/cross-boundary
+   :demo/project "showcase/chunk-residency"
+   :demo/surface :viewport
+   :demo/docs "showcase/chunk-residency/README.md"
+   :demo/tags ["residency" "worker-meshing" "level:renderer" "checks:6"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :stale-mesh-rejection
+   :demo/title "Stale mesh rejection"
+   :demo/summary "Complete mesh jobs out of revision order and prove only the current canonical revision installs."
+   :demo/view :stale-mesh-rejection
+   :demo/state :residency/stale-mesh
+   :demo/project "showcase/stale-mesh-rejection"
+   :demo/surface :viewport
+   :demo/docs "showcase/stale-mesh-rejection/README.md"
+   :demo/tags ["residency" "revision-fence" "worker-meshing" "level:renderer" "checks:5"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :material-matrix
+   :demo/title "Material matrix"
+   :demo/summary "Install the five closed renderer material passes together and inspect bounded sharing and pass evidence."
+   :demo/view :material-matrix
+   :demo/state :materials/daylight
+   :demo/project "showcase/material-matrix"
+   :demo/surface :viewport
+   :demo/docs "showcase/material-matrix/README.md"
+   :demo/tags ["materials" "render-passes" "resource-sharing" "level:renderer" "checks:7"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :environment-profile
+   :demo/title "Environment profiles"
+   :demo/summary "Apply daylight, fog and emissive-night profiles and reject an unknown installed profile without GPU allocation."
+   :demo/view :environment-profile
+   :demo/state :materials/daylight
+   :demo/project "showcase/environment-profile"
+   :demo/surface :viewport
+   :demo/docs "showcase/environment-profile/README.md"
+   :demo/tags ["environment" "fog" "emissive" "level:renderer" "checks:6"]
    :demo/theme :dark
    :demo/viewport {:viewport/width 1180 :viewport/height 760}}]}

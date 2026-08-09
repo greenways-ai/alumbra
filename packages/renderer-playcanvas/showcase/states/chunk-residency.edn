@@ -1,0 +1,17 @@
+{:residency/state :residency/cross-boundary
+ :residency/initial-center [0 0 0]
+ :residency/next-center [1 0 0]
+ :residency/horizontal-distance 1
+ :residency/vertical-distance 0
+ :residency/viewpoint
+ {:chunk [1 0 0]
+  :moves 1
+  :controls ["KeyW" "KeyA" "KeyS" "KeyD" "ArrowUp" "ArrowLeft" "ArrowDown" "ArrowRight"]}
+ :residency/evidence
+ {:desired-chunks 5
+  :resident-chunks 5
+  :pending-generation 0
+  :pending-meshes 0
+  :mesh-installs 8
+  :discarded-stale-jobs 0
+  :evicted-resources 3}}

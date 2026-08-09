@@ -4,18 +4,29 @@
  :showcase/version "0.1.0"
  :showcase/title "Hodos Integration"
  :showcase/summary
- "Trusted Catalog and viewport adapters that keep demo selection separate from engine authority."
+ "Trusted Catalog, viewport and renderer Workspace adapters that keep selection, engine and Dev-surface authority separate."
 
  :showcase/views
  [{:view/id :renderer-catalog
    :view/title "Renderer Catalog"
-   :view/summary "Open the installed playable laboratory by semantic activity identity beside its bounded Catalog projection."}]
+   :view/summary "Open the installed playable laboratory by semantic activity identity beside its bounded Catalog projection."}
+  {:view/id :renderer-workspace
+   :view/title "Renderer Workspace"
+   :view/summary "Coordinate an installed Catalog, live viewport and bounded Code, Execution, Problems and REPL surfaces."}]
 
  :showcase/states
  [{:state/id :catalog/playable-lab
    :state/title "Playable lab selected"
    :state/summary "The renderer Catalog points at the installed playable lab without exposing its project path."
-   :state/file "showcase/states/renderer-catalog.edn"}]
+   :state/file "showcase/states/renderer-catalog.edn"}
+  {:state/id :workspace/wide
+   :state/title "Wide renderer Workspace"
+   :state/summary "Catalog and Code sit beside the live World with Problems, Execution and REPL below."
+   :state/file "showcase/states/renderer-workspace-wide.edn"}
+  {:state/id :workspace/compact
+   :state/title "Compact renderer Workspace"
+   :state/summary "Catalog, World, Code, Execution and Problems become bounded compact tabs."
+   :state/file "showcase/states/renderer-workspace-compact.edn"}]
 
  :showcase/demos
  [{:demo/id :renderer-catalog
@@ -29,4 +40,15 @@
    :demo/tags ["catalog" "workspace" "playable-lab" "level:integration" "checks:4"]
    :demo/theme :dark
    :demo/viewport {:viewport/width 1180 :viewport/height 760}
-   :demo/default true}]}
+   :demo/default true}
+  {:demo/id :renderer-workspace
+   :demo/title "Integrated renderer Workspace"
+   :demo/summary "Switch installed renderer activities, preserve model-only engine identity and suspend hidden World surfaces."
+   :demo/view :renderer-workspace
+   :demo/state :workspace/wide
+   :demo/project "showcase/renderer-workspace"
+   :demo/surface :world
+   :demo/docs "showcase/renderer-workspace/README.md"
+   :demo/tags ["workspace" "catalog" "lifecycle" "dev-surfaces" "playable-lab" "level:integration" "checks:10"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1280 :viewport/height 800}}]}

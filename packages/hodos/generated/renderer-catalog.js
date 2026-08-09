@@ -50,7 +50,7 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "id": "alumbra-renderer-playcanvas",
       "title": "PlayCanvas Renderer",
       "shortTitle": "PlayCanvas Renderer",
-      "description": "Voxel meshing, material grouping and picking projected from canonical Alumbra chunks.",
+      "description": "Voxel meshing, material and environment profiles, picking and bounded dynamic residency projected from canonical Alumbra chunks.",
       "tools": [],
       "metadata": {
         "package": "@greenways/alumbra-renderer-playcanvas",
@@ -58,10 +58,21 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       }
     },
     {
+      "id": "alumbra-viewport-playcanvas",
+      "title": "PlayCanvas Viewport",
+      "shortTitle": "PlayCanvas Viewport",
+      "description": "Lifecycle-owned viewport sessions that compose canonical worlds, players, input and PlayCanvas projection.",
+      "tools": [],
+      "metadata": {
+        "package": "@greenways/alumbra-viewport-playcanvas",
+        "version": "0.1.0"
+      }
+    },
+    {
       "id": "alumbra-hodos",
       "title": "Hodos Integration",
       "shortTitle": "Hodos Integration",
-      "description": "Trusted Catalog and viewport adapters that keep demo selection separate from engine authority.",
+      "description": "Trusted Catalog, viewport and renderer Workspace adapters that keep selection, engine and Dev-surface authority separate.",
       "tools": [],
       "metadata": {
         "package": "@greenways/alumbra-hodos",
@@ -74,20 +85,22 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "id": "alumbra-hara/packaged-height-field",
       "toolsetId": "alumbra-hara",
       "title": "Packaged height field",
-      "level": "Foundation",
-      "summary": "Resolve a pinned Hara generator identity into a deterministic height-field fixture.",
+      "level": "Integration",
+      "summary": "Materialize an exact Hara block pack and generator plan into Core chunks and a live PlayCanvas viewport.",
       "instructions": [
-        "Resolve a pinned Hara generator identity into a deterministic height-field fixture."
+        "Materialize an exact Hara block pack and generator plan into Core chunks and a live PlayCanvas viewport."
       ],
       "path": null,
-      "checkCount": 4,
+      "checkCount": 9,
       "metadata": {
         "package": "@greenways/alumbra-hara",
         "demo": "packaged-height-field",
-        "surface": "preview",
+        "surface": "viewport",
         "tags": [
           "rules",
-          "height-field"
+          "height-field",
+          "packaged-world",
+          "playable-lab"
         ],
         "theme": "dark",
         "viewport": {
@@ -230,6 +243,167 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       }
     },
     {
+      "id": "alumbra-renderer-playcanvas/chunk-residency",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Dynamic chunk residency",
+      "level": "Renderer",
+      "summary": "Drive a bounded residency window across chunk boundaries and inspect count-only scheduling evidence.",
+      "instructions": [
+        "Drive a bounded residency window across chunk boundaries and inspect count-only scheduling evidence."
+      ],
+      "path": null,
+      "checkCount": 6,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "chunk-residency",
+        "surface": "viewport",
+        "tags": [
+          "residency",
+          "worker-meshing"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-renderer-playcanvas/stale-mesh-rejection",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Stale mesh rejection",
+      "level": "Renderer",
+      "summary": "Complete mesh jobs out of revision order and prove only the current canonical revision installs.",
+      "instructions": [
+        "Complete mesh jobs out of revision order and prove only the current canonical revision installs."
+      ],
+      "path": null,
+      "checkCount": 5,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "stale-mesh-rejection",
+        "surface": "viewport",
+        "tags": [
+          "residency",
+          "revision-fence",
+          "worker-meshing"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-renderer-playcanvas/material-matrix",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Material matrix",
+      "level": "Renderer",
+      "summary": "Install the five closed renderer material passes together and inspect bounded sharing and pass evidence.",
+      "instructions": [
+        "Install the five closed renderer material passes together and inspect bounded sharing and pass evidence."
+      ],
+      "path": null,
+      "checkCount": 7,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "material-matrix",
+        "surface": "viewport",
+        "tags": [
+          "materials",
+          "render-passes",
+          "resource-sharing"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-renderer-playcanvas/environment-profile",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Environment profiles",
+      "level": "Renderer",
+      "summary": "Apply daylight, fog and emissive-night profiles and reject an unknown installed profile without GPU allocation.",
+      "instructions": [
+        "Apply daylight, fog and emissive-night profiles and reject an unknown installed profile without GPU allocation."
+      ],
+      "path": null,
+      "checkCount": 6,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "environment-profile",
+        "surface": "viewport",
+        "tags": [
+          "environment",
+          "fog",
+          "emissive"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-viewport-playcanvas/playable-world",
+      "toolsetId": "alumbra-viewport-playcanvas",
+      "title": "Playable packaged world",
+      "level": "Integration",
+      "summary": "Run one canonical world through a reusable viewport session with explicit suspend, resume and disposal.",
+      "instructions": [
+        "Run one canonical world through a reusable viewport session with explicit suspend, resume and disposal."
+      ],
+      "path": null,
+      "checkCount": 5,
+      "metadata": {
+        "package": "@greenways/alumbra-viewport-playcanvas",
+        "demo": "playable-world",
+        "surface": "viewport",
+        "tags": [
+          "viewport",
+          "playcanvas",
+          "playable-lab"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-viewport-playcanvas/two-sessions",
+      "toolsetId": "alumbra-viewport-playcanvas",
+      "title": "Two independent sessions",
+      "level": "Integration",
+      "summary": "Run two viewport sessions without sharing world state, player clocks or renderer resources.",
+      "instructions": [
+        "Run two viewport sessions without sharing world state, player clocks or renderer resources."
+      ],
+      "path": null,
+      "checkCount": 7,
+      "metadata": {
+        "package": "@greenways/alumbra-viewport-playcanvas",
+        "demo": "two-sessions",
+        "surface": "viewport",
+        "tags": [
+          "viewport",
+          "sessions",
+          "playable-lab"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
       "id": "alumbra-hodos/renderer-catalog",
       "toolsetId": "alumbra-hodos",
       "title": "Playable renderer Catalog",
@@ -255,6 +429,35 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
           "height": 760
         }
       }
+    },
+    {
+      "id": "alumbra-hodos/renderer-workspace",
+      "toolsetId": "alumbra-hodos",
+      "title": "Integrated renderer Workspace",
+      "level": "Integration",
+      "summary": "Switch installed renderer activities, preserve model-only engine identity and suspend hidden World surfaces.",
+      "instructions": [
+        "Switch installed renderer activities, preserve model-only engine identity and suspend hidden World surfaces."
+      ],
+      "path": null,
+      "checkCount": 10,
+      "metadata": {
+        "package": "@greenways/alumbra-hodos",
+        "demo": "renderer-workspace",
+        "surface": "world",
+        "tags": [
+          "workspace",
+          "catalog",
+          "lifecycle",
+          "dev-surfaces",
+          "playable-lab"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        }
+      }
     }
   ],
   "selectedToolsetId": "alumbra-hodos",
@@ -274,8 +477,8 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "package": "@greenways/alumbra-hara",
     "demo": "packaged-height-field",
     "project": "packages/hara/showcase/packaged-height-field",
-    "surface": "preview",
-    "host": "showcase-project"
+    "surface": "viewport",
+    "host": "playable-lab"
   },
   "alumbra-core/palette-backed-chunk": {
     "package": "@greenways/alumbra-core",
@@ -312,11 +515,60 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "surface": "viewport",
     "host": "showcase-project"
   },
+  "alumbra-renderer-playcanvas/chunk-residency": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "chunk-residency",
+    "project": "packages/renderer-playcanvas/showcase/chunk-residency",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-renderer-playcanvas/stale-mesh-rejection": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "stale-mesh-rejection",
+    "project": "packages/renderer-playcanvas/showcase/stale-mesh-rejection",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-renderer-playcanvas/material-matrix": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "material-matrix",
+    "project": "packages/renderer-playcanvas/showcase/material-matrix",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-renderer-playcanvas/environment-profile": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "environment-profile",
+    "project": "packages/renderer-playcanvas/showcase/environment-profile",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-viewport-playcanvas/playable-world": {
+    "package": "@greenways/alumbra-viewport-playcanvas",
+    "demo": "playable-world",
+    "project": "packages/viewport-playcanvas/showcase/playable-world",
+    "surface": "viewport",
+    "host": "playable-lab"
+  },
+  "alumbra-viewport-playcanvas/two-sessions": {
+    "package": "@greenways/alumbra-viewport-playcanvas",
+    "demo": "two-sessions",
+    "project": "packages/viewport-playcanvas/showcase/two-sessions",
+    "surface": "viewport",
+    "host": "playable-lab"
+  },
   "alumbra-hodos/renderer-catalog": {
     "package": "@greenways/alumbra-hodos",
     "demo": "renderer-catalog",
     "project": "packages/hodos/showcase/renderer-catalog",
     "surface": "viewport",
+    "host": "playable-lab"
+  },
+  "alumbra-hodos/renderer-workspace": {
+    "package": "@greenways/alumbra-hodos",
+    "demo": "renderer-workspace",
+    "project": "packages/hodos/showcase/renderer-workspace",
+    "surface": "world",
     "host": "playable-lab"
   }
 });

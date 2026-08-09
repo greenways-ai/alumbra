@@ -1,0 +1,10 @@
+(ns showcase.alumbra-renderer-playcanvas.environment-profile)
+
+(def environments
+  {:format "alumbra.environment-evidence/1"
+   :profiles ["alumbra/daylight" "alumbra/fog" "alumbra/emissive-night"]
+   :unknown-profile {:status "rejected"
+                     :code "renderer/material-profile-not-installed"
+                     :allocation-baseline true}})
+
+environments
