@@ -1,0 +1,11 @@
+{:residency/state :residency/stale-mesh
+ :residency/chunk [0 0 0]
+ :residency/completion-order [2 1]
+ :residency/current-revision 2
+ :residency/installed-revision 2
+ :residency/evidence
+ {:desired-chunks 1
+  :resident-chunks 1
+  :mesh-installs 1
+  :discarded-stale-jobs 1
+  :evicted-resources 0}}

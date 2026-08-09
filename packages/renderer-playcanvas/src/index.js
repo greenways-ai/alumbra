@@ -4,3 +4,7 @@ export * from "./visibility.js";
 export * from "./resource-pool.js";
 export * from "./playcanvas-renderer.js";
 export * from "./first-person.js";
+export * from "./job-queue.js";
+export * from "./mesh-worker.js";
+export * from "./residency-evidence.js";
+export * from "./residency.js";

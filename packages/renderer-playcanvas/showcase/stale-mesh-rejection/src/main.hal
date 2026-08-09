@@ -1,0 +1,19 @@
+(ns showcase.alumbra-renderer-playcanvas.stale-mesh-rejection)
+
+(def stale-mesh-evidence
+  {:format "alumbra.residency-evidence/1"
+   :status "active"
+   :desired-chunks 1
+   :resident-chunks 1
+   :pending-generation 0
+   :running-generation 0
+   :pending-meshes 0
+   :running-meshes 0
+   :mesh-installs 1
+   :discarded-stale-jobs 1
+   :evicted-resources 0
+   :failed-jobs 0
+   :current-revision 2
+   :installed-revision 2})
+
+stale-mesh-evidence

@@ -1,0 +1,13 @@
+{:hara/type :project
+ :hara/version "1.0.0"
+ :project/id showcase.alumbra-renderer-playcanvas.stale-mesh-rejection
+ :project/version "0.1.0"
+ :project/source-paths ["src"]
+ :project/test-paths []
+ :project/extension-paths []
+ :project/main showcase.alumbra-renderer-playcanvas.stale-mesh-rejection
+ :project/capabilities #{:graphics/scene :studio/eval}
+ :project/dependencies
+ {"hara:greenways/alumbra-core" {:version "0.1.0"}
+  "hara:greenways/alumbra-renderer-playcanvas" {:version "0.1.0"}
+  "hara:greenways/alumbra-viewport-playcanvas" {:version "0.1.0"}}}

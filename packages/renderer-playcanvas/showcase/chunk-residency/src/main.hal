@@ -1,0 +1,17 @@
+(ns showcase.alumbra-renderer-playcanvas.chunk-residency)
+
+(def residency-evidence
+  {:format "alumbra.residency-evidence/1"
+   :status "active"
+   :desired-chunks 5
+   :resident-chunks 5
+   :pending-generation 0
+   :running-generation 0
+   :pending-meshes 0
+   :running-meshes 0
+   :mesh-installs 8
+   :discarded-stale-jobs 0
+   :evicted-resources 3
+   :failed-jobs 0})
+
+residency-evidence

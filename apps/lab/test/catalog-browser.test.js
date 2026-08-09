@@ -59,10 +59,10 @@ const find = (node, predicate) => {
 
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
-test("generated Catalog projection contains viewport identities but no project paths", () => {
+test("generated Catalog projection contains viewport and residency identities but no project paths", () => {
   assert.equal(ALUMBRA_RENDERER_CATALOG.id, "catalog/alumbra-renderer");
   assert.equal(ALUMBRA_RENDERER_CATALOG.toolsets.length, 6);
-  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 7);
+  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 9);
   assert.ok(ALUMBRA_RENDERER_CATALOG.activities.every((activity) => activity.path === null));
   assert.equal(
     ALUMBRA_RENDERER_CATALOG.selectedActivityId,
@@ -75,6 +75,16 @@ test("generated Catalog projection contains viewport identities but no project p
     [
       "alumbra-viewport-playcanvas/playable-world",
       "alumbra-viewport-playcanvas/two-sessions",
+    ],
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_CATALOG.activities
+      .filter((activity) => activity.toolsetId === "alumbra-renderer-playcanvas")
+      .map((activity) => activity.id),
+    [
+      "alumbra-renderer-playcanvas/greedy-meshing",
+      "alumbra-renderer-playcanvas/chunk-residency",
+      "alumbra-renderer-playcanvas/stale-mesh-rejection",
     ],
   );
   const packagedHara = ALUMBRA_RENDERER_CATALOG.activities
@@ -92,6 +102,26 @@ test("generated Catalog projection contains viewport identities but no project p
   assert.equal(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/two-sessions"].host,
     "playable-lab",
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/chunk-residency"],
+    {
+      package: "@greenways/alumbra-renderer-playcanvas",
+      demo: "chunk-residency",
+      project: "packages/renderer-playcanvas/showcase/chunk-residency",
+      surface: "viewport",
+      host: "showcase-project",
+    },
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/stale-mesh-rejection"],
+    {
+      package: "@greenways/alumbra-renderer-playcanvas",
+      demo: "stale-mesh-rejection",
+      project: "packages/renderer-playcanvas/showcase/stale-mesh-rejection",
+      surface: "viewport",
+      host: "showcase-project",
+    },
   );
 });
 
@@ -146,6 +176,32 @@ test("Catalog opens viewport and packaged-Hara activities through installed sema
   assert.equal(opened[0].demo.project, "packages/viewport-playcanvas/showcase/two-sessions");
   assert.equal(opened[1].demo.project, "packages/hara/showcase/packaged-height-field");
   assert.ok(opened.every((request) => request.demo.host === "playable-lab"));
+  session.dispose();
+});
+
+test("Catalog resolves renderer residency activities through installed package projects", async () => {
+  const opened = [];
+  const session = createCatalogSession({
+    catalog: ALUMBRA_RENDERER_CATALOG,
+    installedDemos: ALUMBRA_RENDERER_INSTALLED_DEMOS,
+    openDemo: async (request) => opened.push(request),
+  });
+  for (const activityId of [
+    "alumbra-renderer-playcanvas/chunk-residency",
+    "alumbra-renderer-playcanvas/stale-mesh-rejection",
+  ]) {
+    session.selectActivity(activityId);
+    await session.openActivity();
+  }
+  assert.equal(opened.length, 2);
+  assert.deepEqual(
+    opened.map((request) => request.demo.project),
+    [
+      "packages/renderer-playcanvas/showcase/chunk-residency",
+      "packages/renderer-playcanvas/showcase/stale-mesh-rejection",
+    ],
+  );
+  assert.ok(opened.every((request) => request.demo.host === "showcase-project"));
   session.dispose();
 });
 

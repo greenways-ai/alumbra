@@ -50,7 +50,7 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "id": "alumbra-renderer-playcanvas",
       "title": "PlayCanvas Renderer",
       "shortTitle": "PlayCanvas Renderer",
-      "description": "Voxel meshing, material grouping and picking projected from canonical Alumbra chunks.",
+      "description": "Voxel meshing, material grouping, picking and bounded dynamic residency projected from canonical Alumbra chunks.",
       "tools": [],
       "metadata": {
         "package": "@greenways/alumbra-renderer-playcanvas",
@@ -188,6 +188,59 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       }
     },
     {
+      "id": "alumbra-renderer-playcanvas/chunk-residency",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Dynamic chunk residency",
+      "level": "Renderer",
+      "summary": "Drive a bounded residency window across chunk boundaries and inspect count-only scheduling evidence.",
+      "instructions": [
+        "Drive a bounded residency window across chunk boundaries and inspect count-only scheduling evidence."
+      ],
+      "path": null,
+      "checkCount": 6,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "chunk-residency",
+        "surface": "viewport",
+        "tags": [
+          "residency",
+          "worker-meshing"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-renderer-playcanvas/stale-mesh-rejection",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Stale mesh rejection",
+      "level": "Renderer",
+      "summary": "Complete mesh jobs out of revision order and prove only the current canonical revision installs.",
+      "instructions": [
+        "Complete mesh jobs out of revision order and prove only the current canonical revision installs."
+      ],
+      "path": null,
+      "checkCount": 5,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "stale-mesh-rejection",
+        "surface": "viewport",
+        "tags": [
+          "residency",
+          "revision-fence",
+          "worker-meshing"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
       "id": "alumbra-viewport-playcanvas/playable-world",
       "toolsetId": "alumbra-viewport-playcanvas",
       "title": "Playable packaged world",
@@ -307,6 +360,20 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "package": "@greenways/alumbra-renderer-playcanvas",
     "demo": "greedy-meshing",
     "project": "packages/renderer-playcanvas/showcase/greedy-meshing",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-renderer-playcanvas/chunk-residency": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "chunk-residency",
+    "project": "packages/renderer-playcanvas/showcase/chunk-residency",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-renderer-playcanvas/stale-mesh-rejection": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "stale-mesh-rejection",
+    "project": "packages/renderer-playcanvas/showcase/stale-mesh-rejection",
     "surface": "viewport",
     "host": "showcase-project"
   },
