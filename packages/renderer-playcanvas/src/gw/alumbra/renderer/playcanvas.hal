@@ -4,6 +4,7 @@
 (def mesh-format "alumbra.chunk-mesh/1")
 (def mesh-light-snapshot-format "alumbra.mesh-light-snapshot/1")
 (def mesh-lighting-format "alumbra.mesh-lighting/1")
+(def mesh-light-color-format "alumbra.mesh-light-color-profile/1")
 (def capabilities #{:graphics/scene :input/pointer :input/keyboard})
 
 (defn descriptor []
@@ -12,8 +13,9 @@
    :renderer/mesh-lighting
    {:snapshot-format mesh-light-snapshot-format
     :evidence-format mesh-lighting-format
+    :color-profile-format mesh-light-color-format
     :levels [0 15]
-    :attributes [:sunlight :emitted]
+    :attributes [:sunlight :emitted :rgba]
     :authority :injected}
    :renderer/capabilities capabilities
    :renderer/state :host-owned})

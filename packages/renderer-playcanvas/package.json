@@ -13,6 +13,7 @@
     ".": "./src/index.js",
     "./mesh": "./src/mesh.js",
     "./mesh/light": "./src/mesh-light.js",
+    "./mesh/light-color": "./src/mesh-light-color.js",
     "./raycast": "./src/raycast.js",
     "./visibility": "./src/visibility.js",
     "./resources": "./src/resource-pool.js",

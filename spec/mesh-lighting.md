@@ -52,3 +52,24 @@ result leaves the worker boundary.
 
 The worker envelope contains no Engine object, callback, Hodos component,
 PlayCanvas object, storage handle or service capability.
+
+## PlayCanvas projection
+
+`alumbra.mesh-light-color-profile/1` maps bounded sunlight and emitted values to
+deterministic grayscale RGBA vertex colors. The default mapping has a small
+ambient floor and independently bounded sunlight and emitted scales. Values are
+clamped to one byte per channel and alpha is always opaque.
+
+The prebuilt adapter validates all mesh lighting evidence and attributes before
+allocating a PlayCanvas resource. It resolves every material profile and
+completes every color projection in the same pre-allocation pass, so an unknown
+profile or malformed light payload cannot leave a partial mesh, material or
+entity. Lit geometry receives packed vertex colors, and its material enables the
+diffuse vertex-color channel with gamma conversion disabled. Lit and unlit
+material resources remain separate.
+
+The mesh resource key contains the original lighting-sensitive mesh signature
+and the color-profile key. Identical geometry, light bytes and color profiles
+share GPU resources. A light change replaces the mesh resource even when voxel
+geometry is unchanged. Public render evidence contains only profile identities,
+vertex counts and bounded byte ranges.

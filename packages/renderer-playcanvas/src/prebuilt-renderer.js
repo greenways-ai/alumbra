@@ -1,6 +1,16 @@
 import { chunkKey } from "@greenways/alumbra-core/coordinates";
 import { CHUNK_MESH_FORMAT, meshGroupSignature } from "./mesh.js";
 import {
+  normalizeMeshLightingEvidence,
+  validateMeshLightGroup,
+} from "./mesh-light.js";
+import {
+  DEFAULT_MESH_LIGHT_COLOR_PROFILE,
+  describeMeshLightMaterial,
+  normalizeMeshLightColorProfile,
+  projectMeshLightColors,
+} from "./mesh-light-color.js";
+import {
   DEFAULT_MATERIAL_PROFILES,
   applyMaterialProfileToPlayCanvas,
   createMaterialProfileRegistry,
@@ -10,6 +20,7 @@ import { createReferencePool } from "./resource-pool.js";
 
 export const PREBUILT_RENDERER_FORMAT = "alumbra.playcanvas-prebuilt-renderer/1";
 export const MATERIAL_RENDER_EVIDENCE_FORMAT = "alumbra.material-render-evidence/1";
+export const MESH_LIGHT_RENDER_EVIDENCE_FORMAT = "alumbra.mesh-light-render-evidence/1";
 
 const MAX_MESH_GROUPS = 4096;
 
@@ -55,7 +66,7 @@ function validateChunk(chunk) {
   return chunk;
 }
 
-function validateMeshGroup(group, index, maxVertices) {
+function validateMeshGroup(group, index, maxVertices, lighting) {
   if (!group || typeof group !== "object" || Array.isArray(group)) {
     throw new TypeError(`Prebuilt mesh group ${index} must be an object`);
   }
@@ -101,7 +112,18 @@ function validateMeshGroup(group, index, maxVertices) {
   if (group.quads != null && !Array.isArray(group.quads)) {
     throw new TypeError(`Prebuilt mesh group ${index} quads must be an array`);
   }
-  return Object.freeze({ vertexCount, triangleCount, quadCount: group.quads?.length ?? 0 });
+  const light = validateMeshLightGroup(
+    group,
+    vertexCount,
+    lighting,
+    `Prebuilt mesh group ${index}`,
+  );
+  return Object.freeze({
+    vertexCount,
+    triangleCount,
+    quadCount: group.quads?.length ?? 0,
+    light,
+  });
 }
 
 export function validatePrebuiltChunkMesh({ chunk, mesh } = {}) {
@@ -118,6 +140,9 @@ export function validatePrebuiltChunkMesh({ chunk, mesh } = {}) {
   if (!sameVector(mesh.coord, canonical.coord) || !sameVector(mesh.shape, canonical.shape)) {
     throw new Error("Prebuilt chunk mesh coordinate or shape does not match its canonical chunk");
   }
+  const lighting = mesh.lighting == null
+    ? null
+    : normalizeMeshLightingEvidence(mesh.lighting, { chunk: canonical });
   if (!Array.isArray(mesh.groups) || mesh.groups.length > MAX_MESH_GROUPS) {
     throw new RangeError(`Prebuilt chunk mesh cannot exceed ${MAX_MESH_GROUPS} groups`);
   }
@@ -126,7 +151,7 @@ export function validatePrebuiltChunkMesh({ chunk, mesh } = {}) {
   let triangles = 0;
   let quads = 0;
   mesh.groups.forEach((group, index) => {
-    const counts = validateMeshGroup(group, index, maxVertices);
+    const counts = validateMeshGroup(group, index, maxVertices, lighting);
     vertices += counts.vertexCount;
     triangles += counts.triangleCount;
     quads += counts.quadCount;
@@ -142,15 +167,23 @@ export function validatePrebuiltChunkMesh({ chunk, mesh } = {}) {
 
 function createProfileMaterial(pc, descriptor) {
   const material = new pc.StandardMaterial();
-  return applyMaterialProfileToPlayCanvas({ pc, material, descriptor });
+  applyMaterialProfileToPlayCanvas({ pc, material, descriptor });
+  if (descriptor.vertexColors === true) {
+    material.diffuseVertexColor = true;
+    material.diffuseVertexColorChannel = "rgb";
+    material.vertexColorGamma = false;
+    material.update?.();
+  }
+  return material;
 }
 
-function createMesh(pc, device, group) {
+function createMesh(pc, device, prepared) {
   const geometry = new pc.Geometry();
-  geometry.positions = Array.from(group.positions);
-  geometry.normals = Array.from(group.normals);
-  geometry.uvs = Array.from(group.uvs);
-  geometry.indices = Array.from(group.indices);
+  geometry.positions = Array.from(prepared.group.positions);
+  geometry.normals = Array.from(prepared.group.normals);
+  geometry.uvs = Array.from(prepared.group.uvs);
+  geometry.indices = Array.from(prepared.group.indices);
+  if (prepared.projection) geometry.colors = prepared.projection.colors;
   return pc.Mesh.fromGeometry(device, geometry);
 }
 
@@ -184,7 +217,7 @@ function materialEvidence(records, meshPool, materialPool) {
   }
   const meshStats = meshPool.stats();
   const materialStats = materialPool.stats();
-  return Object.freeze({
+  const output = {
     format: MATERIAL_RENDER_EVIDENCE_FORMAT,
     materialGroupCount: resources.length,
     profileCount: profileIds.size,
@@ -200,7 +233,22 @@ function materialEvidence(records, meshPool, materialPool) {
       + Math.max(0, materialStats.references - materialStats.resources),
     materialResources: materialStats.resources,
     materialReferences: materialStats.references,
-  });
+  };
+  const lit = resources.filter((resource) => resource.lighted);
+  if (lit.length) {
+    output.lighting = Object.freeze({
+      format: MESH_LIGHT_RENDER_EVIDENCE_FORMAT,
+      litGroupCount: lit.length,
+      profileIds: Object.freeze([...new Set(lit.map((resource) => resource.meshLightingProfileId))].sort()),
+      colorProfileIds: Object.freeze([...new Set(lit.map((resource) => resource.meshLightColorProfileId))].sort()),
+      vertices: lit.reduce((sum, resource) => sum + resource.lightVertices, 0),
+      sunlightVertices: lit.reduce((sum, resource) => sum + resource.sunlightVertices, 0),
+      emittedVertices: lit.reduce((sum, resource) => sum + resource.emittedVertices, 0),
+      minimumByte: Math.min(...lit.map((resource) => resource.minimumByte)),
+      maximumByte: Math.max(...lit.map((resource) => resource.maximumByte)),
+    });
+  }
+  return Object.freeze(output);
 }
 
 export function createPlayCanvasPrebuiltMeshRenderer({
@@ -210,6 +258,7 @@ export function createPlayCanvasPrebuiltMeshRenderer({
   root = app?.root,
   createMaterial = null,
   materialProfiles = DEFAULT_MATERIAL_PROFILES,
+  meshLightColorProfile: meshLightColorProfileValue = DEFAULT_MESH_LIGHT_COLOR_PROFILE,
 } = {}) {
   assertPlayCanvas(pc, app);
   if (!registry) throw new TypeError("Alumbra prebuilt renderer requires a block registry");
@@ -220,13 +269,19 @@ export function createPlayCanvasPrebuiltMeshRenderer({
   const profileRegistry = materialProfiles?.get
     ? materialProfiles
     : createMaterialProfileRegistry(materialProfiles);
+  const meshLightColorProfile = normalizeMeshLightColorProfile(meshLightColorProfileValue);
   const records = new Map();
   let shape = null;
   let destroyed = false;
 
   const meshPool = createReferencePool({
-    keyOf: meshGroupSignature,
-    create: (group) => createMesh(pc, app.graphicsDevice, group),
+    keyOf: (prepared) => {
+      const signature = meshGroupSignature(prepared.group);
+      return prepared.projection
+        ? `${signature}|mesh-light-color:${meshLightColorProfile.resourceKey}`
+        : signature;
+    },
+    create: (prepared) => createMesh(pc, app.graphicsDevice, prepared),
     destroy: (mesh) => mesh.destroy?.(),
   });
   const materialPool = createReferencePool({
@@ -275,30 +330,52 @@ export function createPlayCanvasPrebuiltMeshRenderer({
       const canonical = validateChunk(chunk);
       const prebuilt = validatePrebuiltChunkMesh({ chunk: canonical, mesh });
       ensureShape(canonical);
+      const lighting = prebuilt.lighting == null
+        ? null
+        : normalizeMeshLightingEvidence(prebuilt.lighting, { chunk: canonical });
 
-      // Resolve every material profile before allocating a mesh, material or entity.
-      // An unknown profile therefore fails closed with no partial GPU allocation.
-      const preparedGroups = prebuilt.groups.map((group) => Object.freeze({
-        group,
-        descriptor: describeMaterialGroup({
+      // Resolve every material profile before allocating a mesh, material or entity; project lighting in the same pre-allocation pass.
+      // Unknown profiles or malformed lighting therefore fail with no partial GPU state.
+      const preparedGroups = prebuilt.groups.map((group) => {
+        const projection = lighting
+          ? projectMeshLightColors({
+            group,
+            lighting,
+            profile: meshLightColorProfile,
+          })
+          : null;
+        const baseDescriptor = describeMaterialGroup({
           profiles: profileRegistry,
           blockRegistry: registry,
           material: group.material,
           group,
-        }),
-      }));
+        });
+        const descriptor = lighting
+          ? describeMeshLightMaterial(baseDescriptor, lighting, meshLightColorProfile)
+          : baseDescriptor;
+        return Object.freeze({ group, projection, descriptor });
+      });
 
       const resources = [];
       const meshInstances = [];
       try {
         for (const prepared of preparedGroups) {
-          const meshResource = meshPool.acquire(prepared.group);
+          const meshResource = meshPool.acquire(prepared);
           const materialResource = materialPool.acquire(prepared.descriptor);
+          const lightEvidence = prepared.projection?.evidence ?? null;
           resources.push({
             meshKey: meshResource.key,
             materialKey: materialResource.key,
             profileId: prepared.descriptor.profileId,
             pass: prepared.descriptor.pass,
+            lighted: lightEvidence != null,
+            meshLightingProfileId: lightEvidence?.profileId ?? null,
+            meshLightColorProfileId: lightEvidence?.colorProfileId ?? null,
+            lightVertices: lightEvidence?.vertices ?? 0,
+            sunlightVertices: lightEvidence?.sunlightVertices ?? 0,
+            emittedVertices: lightEvidence?.emittedVertices ?? 0,
+            minimumByte: lightEvidence?.minimumByte ?? 0,
+            maximumByte: lightEvidence?.maximumByte ?? 0,
           });
           const instance = new pc.MeshInstance(meshResource.value, materialResource.value);
           instance.castShadow = prepared.descriptor.pass !== "overlay";
@@ -323,13 +400,30 @@ export function createPlayCanvasPrebuiltMeshRenderer({
       record.mesh = prebuilt;
       record.resources = resources;
       if ("renderNextFrame" in app) app.renderNextFrame = true;
-      return Object.freeze({
+      const installed = {
         key: canonical.key,
         revision: canonical.revision,
         groups: prebuilt.groups.length,
         quads: prebuilt.quadCount,
         triangles: prebuilt.triangleCount,
-      });
+      };
+      if (lighting) {
+        const projections = preparedGroups.map((prepared) => prepared.projection.evidence);
+        installed.lighting = Object.freeze({
+          format: MESH_LIGHT_RENDER_EVIDENCE_FORMAT,
+          profileId: lighting.profileId,
+          generation: lighting.generation,
+          epoch: lighting.epoch,
+          colorProfileId: meshLightColorProfile.id,
+          groups: projections.length,
+          vertices: projections.reduce((sum, evidence) => sum + evidence.vertices, 0),
+          sunlightVertices: projections.reduce((sum, evidence) => sum + evidence.sunlightVertices, 0),
+          emittedVertices: projections.reduce((sum, evidence) => sum + evidence.emittedVertices, 0),
+          minimumByte: Math.min(255, ...projections.map((evidence) => evidence.minimumByte)),
+          maximumByte: Math.max(0, ...projections.map((evidence) => evidence.maximumByte)),
+        });
+      }
+      return Object.freeze(installed);
     },
     removeChunk(coordOrKey) {
       if (destroyed) return Object.freeze({ removed: false, resources: 0 });
