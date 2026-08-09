@@ -6,6 +6,7 @@ const PROFILE_FIELDS = new Set(["format", "id", "label", "ambient", "clearColor"
 const FOG_FIELDS = new Set(["mode", "color", "start", "end", "density"]);
 const SUN_FIELDS = new Set(["color", "intensity", "euler", "castShadows"]);
 const FOG_MODES = new Set(["none", "linear", "exp", "exp2"]);
+const BASELINE_EPSILON = 1e-4;
 
 const deepFreeze = (value) => {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
@@ -278,21 +279,22 @@ export function createPlayCanvasEnvironmentController({
     if ("renderNextFrame" in app) app.renderNextFrame = true;
   };
 
-  const atBaseline = () => {
-    const same = (left, right) => left.length === right.length && left.every((entry, index) => Math.abs(entry - right[index]) < 1e-9);
-    return same(readColor(scene.ambientLight, []), baseline.ambient)
-      && same(readColor(scene.fogColor, []), baseline.fogColor)
-      && same(readColor(camera?.camera?.clearColor, []), baseline.clearColor)
-      && same(readColor(sun?.light?.color, []), baseline.sunColor)
-      && same(readEuler(sun, []), baseline.sunEuler)
-      && Number(scene.exposure) === baseline.exposure
-      && scene.fog === baseline.fog
-      && Number(scene.fogStart) === baseline.fogStart
-      && Number(scene.fogEnd) === baseline.fogEnd
-      && Number(scene.fogDensity) === baseline.fogDensity
-      && Number(sun?.light?.intensity ?? baseline.sunIntensity) === baseline.sunIntensity
-      && Boolean(sun?.light?.castShadows) === baseline.sunCastShadows;
-  };
+  const near = (left, right) => Math.abs(Number(left) - Number(right)) <= BASELINE_EPSILON;
+  const same = (left, right) => left.length === right.length
+    && left.every((entry, index) => near(entry, right[index]));
+
+  const atBaseline = () => same(readColor(scene.ambientLight, []), baseline.ambient)
+    && same(readColor(scene.fogColor, []), baseline.fogColor)
+    && same(readColor(camera?.camera?.clearColor, []), baseline.clearColor)
+    && same(readColor(sun?.light?.color, []), baseline.sunColor)
+    && same(readEuler(sun, []), baseline.sunEuler)
+    && near(scene.exposure, baseline.exposure)
+    && scene.fog === baseline.fog
+    && near(scene.fogStart, baseline.fogStart)
+    && near(scene.fogEnd, baseline.fogEnd)
+    && near(scene.fogDensity, baseline.fogDensity)
+    && near(sun?.light?.intensity ?? baseline.sunIntensity, baseline.sunIntensity)
+    && Boolean(sun?.light?.castShadows) === baseline.sunCastShadows;
 
   const evidence = () => boundedEvidence({
     status: destroyed ? "disposed" : active ? "active" : "idle",
