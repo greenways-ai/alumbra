@@ -1,0 +1,46 @@
+(ns showcase.alumbra-engine.build-intent-undo)
+
+(def place-intent
+  {:type "place"
+   :origin [4.5 3.62 4.5]
+   :reach 6
+   :hit {:voxel [4 1 4]
+         :face "up"
+         :previous [4 2 4]}
+   :block "alumbra/stone"})
+
+(def validation
+  {:within-reach true
+   :target-loaded true
+   :target-replaceable true
+   :intersects-player false})
+
+(def transaction
+  {:id "showcase/place-stone"
+   :expected-revision 11
+   :target [4 2 4]
+   :before "alumbra/air"
+   :after "alumbra/stone"})
+
+[:main {:class "preview-shell"}
+ [:article {:class "card"}
+  [:span {:class "eyebrow"} "ALUMBRA / ENGINE"]
+  [:h1 "Reach-safe build intent"]
+  [:p "A face-adjacent placement is validated before it becomes a canonical transaction. Undo remains a second, inspectable transaction."]
+  [:div {:class "workspace-showcase-grid"}
+   [:section
+    [:strong "1 · Target"]
+    [:p "hit [4 1 4] · face up"]
+    [:code "place at [4 2 4]"]]
+   [:section
+    [:strong "2 · Validate"]
+    [:p "within reach · loaded · replaceable"]
+    [:code "player collision: false"]]
+   [:section
+    [:strong "3 · Transact"]
+    [:p "air → stone"]
+    [:code "expected revision 11"]]
+   [:section
+    [:strong "4 · Undo"]
+    [:p "stone → air"]
+    [:code "expected revision 12"]]]]]

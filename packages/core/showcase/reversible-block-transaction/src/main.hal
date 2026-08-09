@@ -1,0 +1,40 @@
+(ns showcase.alumbra-core.reversible-block-transaction)
+
+(def transaction
+  {:format "alumbra.block-transaction/1"
+   :id "showcase/core-replace-grass"
+   :expected-revision 3
+   :target [0 0 0 1 0 1]
+   :before "alumbra/grass"
+   :after "alumbra/stone"})
+
+(def revision-receipt
+  {:chunk [0 0 0]
+   :before 3
+   :after 4})
+
+(def inverse
+  {:id "showcase/core-replace-grass-undo"
+   :inverse-of "showcase/core-replace-grass"
+   :expected-revision 4
+   :before "alumbra/stone"
+   :after "alumbra/grass"})
+
+[:main {:class "preview-shell"}
+ [:article {:class "card"}
+  [:span {:class "eyebrow"} "ALUMBRA / CORE"]
+  [:h1 "Reversible block transaction"]
+  [:p "One canonical change advances the chunk revision. Undo remains an explicit, separately identified transaction rather than a hidden mutable stack."]
+  [:div {:class "workspace-showcase-grid"}
+   [:section
+    [:strong "1 · Apply"]
+    [:p "grass → stone"]
+    [:code "expected revision 3"]]
+   [:section
+    [:strong "2 · Receipt"]
+    [:p "chunk [0 0 0]"]
+    [:code "revision 3 → 4"]]
+   [:section
+    [:strong "3 · Invert"]
+    [:p "stone → grass"]
+    [:code "inverseOf: showcase/core-replace-grass"]]]]]
