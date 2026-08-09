@@ -1,6 +1,7 @@
 import {
   createBlockRegistry,
   createChunk,
+  getBlock,
   patchChunk,
 } from "@greenways/alumbra-core";
 import {
@@ -16,12 +17,27 @@ import {
 } from "@greenways/alumbra-renderer-playcanvas";
 import {
   createLitPlayCanvasViewportSession,
+  routeAcceptedLightingTransaction,
 } from "@greenways/alumbra-viewport-playcanvas";
 
 export const LIT_WORLD_ACTIVITY = "alumbra-viewport-playcanvas/lit-world";
 export const LIT_WORLD_STORY_FORMAT = "alumbra.lit-world-story/1";
 export const LIT_WORLD_ID = "world:alumbra/lit-cave";
 export const LIT_WORLD_SHAPE = Object.freeze([16, 8, 8]);
+export const LIT_WORLD_STATE_IDS = Object.freeze({
+  live: "lighting/live",
+  removed: "lighting/lamp-removed",
+  restored: "lighting/lamp-restored",
+  stale: "lighting/stale-generation-rejected",
+});
+export const LIT_WORLD_DEFAULT_STATE = LIT_WORLD_STATE_IDS.live;
+export const LIT_WORLD_LAMP = Object.freeze({
+  chunk: Object.freeze([-1, 0, 0]),
+  local: Object.freeze([15, 2, 4]),
+  world: Object.freeze([-1, 2, 4]),
+  adjacentChunk: Object.freeze([0, 0, 0]),
+  adjacentLocal: Object.freeze([0, 2, 4]),
+});
 export const LIT_WORLD_PLAYER_BODY = Object.freeze({
   radius: 0.34,
   height: 1.8,
@@ -40,6 +56,8 @@ const LIT_BLOCK_IDS = Object.freeze([
   "lit/glass",
   "lit/lamp",
 ]);
+const STATE_IDS = new Set(Object.values(LIT_WORLD_STATE_IDS));
+const AFFECTED_BOUNDARY_KEYS = Object.freeze(["-1,0,0", "0,0,0"]);
 
 const deepFreeze = (value) => {
   if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
@@ -47,7 +65,56 @@ const deepFreeze = (value) => {
   return Object.freeze(value);
 };
 
-const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+const deferred = () => {
+  let resolve;
+  let reject;
+  const promise = new Promise((accept, decline) => {
+    resolve = accept;
+    reject = decline;
+  });
+  return { promise, resolve, reject };
+};
+
+function createLightingDelayGate() {
+  let armed = false;
+  let used = false;
+  let started = null;
+  let release = null;
+  let delayed = null;
+  return Object.freeze({
+    arm() {
+      if (armed) throw new Error("Lit-world lighting delay gate is already armed");
+      armed = true;
+      used = false;
+      started = deferred();
+      release = deferred();
+      delayed = null;
+      return Object.freeze({
+        started: started.promise,
+        release() { release.resolve(); },
+      });
+    },
+    async run(job) {
+      if (!armed || used) return job.run();
+      used = true;
+      delayed = deepFreeze({
+        generation: Number(job.generation ?? 0),
+        epoch: Number(job.epoch ?? 0),
+        sourceRevisions: (job.sourceRevisions ?? []).map((entry) => ({
+          key: String(entry.key),
+          revision: Number(entry.revision),
+        })),
+      });
+      started.resolve(delayed);
+      await release.promise;
+      armed = false;
+      return job.run();
+    },
+    evidence() {
+      return deepFreeze({ armed, used, delayed });
+    },
+  });
+}
 
 const fixtureUpdates = (coord) => {
   const updates = [];
@@ -75,7 +142,7 @@ const fixtureUpdates = (coord) => {
     updates.push({ local: [9, y, 5], value: "lit/stone" });
   }
   if (coord[0] < 0) {
-    updates.push({ local: [15, 2, 4], value: "lit/lamp" });
+    updates.push({ local: LIT_WORLD_LAMP.local, value: "lit/lamp" });
     updates.push({ local: [13, 1, 2], value: "lit/glass" });
     updates.push({ local: [13, 2, 2], value: "lit/glass" });
   } else {
@@ -102,11 +169,7 @@ export function createLitWorldRegistry() {
       metadata: {
         label: "Cave stone",
         physics: { solid: true, breakable: true, replaceable: false },
-        render: {
-          color: [0.18, 0.22, 0.28],
-          gloss: 0.16,
-          opaque: true,
-        },
+        render: { color: [0.18, 0.22, 0.28], gloss: 0.16, opaque: true },
         light: { opacity: 15, emission: 0 },
       },
     },
@@ -139,10 +202,7 @@ export function createLitWorldRegistry() {
         light: { opacity: 15, emission: 15 },
       },
     },
-  ], {
-    id: "alumbra/lit-world-blocks",
-    version: "0.1.0",
-  });
+  ], { id: "alumbra/lit-world-blocks", version: "0.1.0" });
 }
 
 export function createLitWorldChunks(registry) {
@@ -191,7 +251,8 @@ export function deriveLitWorldHeadlessEvidence({
     && group.emitted instanceof Uint8Array
     && group.sunlight.length === group.vertexCount
     && group.emitted.length === group.vertexCount);
-  const boundaryEmission = fields.getField([0, 0, 0]).emittedAt([0, 2, 4]);
+  const boundaryEmission = fields.getField(LIT_WORLD_LAMP.adjacentChunk)
+    .emittedAt(LIT_WORLD_LAMP.adjacentLocal);
   return deepFreeze({
     worldId: LIT_WORLD_ID,
     chunkKeys: chunks.map((chunk) => chunk.key),
@@ -210,11 +271,7 @@ function createApplication(pc, canvas) {
     throw new TypeError("Lit-world host requires the PlayCanvas Application and Entity APIs");
   }
   const app = new pc.Application(canvas, {
-    graphicsDeviceOptions: {
-      alpha: false,
-      antialias: true,
-      powerPreference: "high-performance",
-    },
+    graphicsDeviceOptions: { alpha: false, antialias: true, powerPreference: "high-performance" },
   });
   app.setCanvasFillMode?.(pc.FILLMODE_FILL_WINDOW);
   app.setCanvasResolution?.(pc.RESOLUTION_AUTO);
@@ -253,6 +310,7 @@ function lightingSummary(value) {
     status: String(value?.status ?? "idle"),
     profileId: String(value?.profileId ?? ""),
     suspended: value?.suspended === true,
+    requestVersion: Number(value?.requestVersion ?? 0),
     loadedChunks: Number(value?.loadedChunks ?? 0),
     dirtyChunks: Number(value?.dirtyChunks ?? 0),
     installedChunks: Number(value?.installedChunks ?? 0),
@@ -264,10 +322,18 @@ function lightingSummary(value) {
     resumeCount: Number(value?.resumeCount ?? 0),
     discardedLightingResults: Number(value?.discardedLightingResults ?? 0),
     discardedMeshResults: Number(value?.discardedMeshResults ?? 0),
+    lastAffectedKeys: [...(value?.lastAffectedKeys ?? [])],
     lastMesh: {
       groups: Number(value?.lastMesh?.groups ?? 0),
       vertices: Number(value?.lastMesh?.vertices ?? 0),
       triangles: Number(value?.lastMesh?.triangles ?? 0),
+    },
+    lighting: {
+      epoch: Number(value?.lighting?.epoch ?? 0),
+      requestedGeneration: Number(value?.lighting?.requestedGeneration ?? 0),
+      installedGeneration: Number(value?.lighting?.installedGeneration ?? 0),
+      rejectedStaleResults: Number(value?.lighting?.rejectedStaleResults ?? 0),
+      invalidatedChunks: Number(value?.lighting?.invalidatedChunks ?? 0),
     },
     renderer: {
       chunks: Number(value?.renderer?.chunks ?? 0),
@@ -292,56 +358,122 @@ function sessionSummary(value) {
   });
 }
 
+function receiptSummary(value) {
+  if (!value) return null;
+  return deepFreeze({
+    format: String(value.format),
+    transactionId: String(value.transactionId),
+    worldRevision: Number(value.worldRevision),
+    applied: value.applied === true,
+    changedKeys: [...value.changedKeys],
+    affectedKeys: [...value.affectedKeys],
+    revisions: value.revisions.map((entry) => ({
+      key: String(entry.key),
+      before: Number(entry.before),
+      after: Number(entry.after),
+    })),
+    before: {
+      requestVersion: Number(value.before.requestVersion),
+      requestedGeneration: Number(value.before.requestedGeneration),
+      installedGeneration: Number(value.before.installedGeneration),
+    },
+    after: {
+      requestVersion: Number(value.after.requestVersion),
+      requestedGeneration: Number(value.after.requestedGeneration),
+      installedGeneration: Number(value.after.installedGeneration),
+    },
+  });
+}
+
+function phaseSummary(runtime, id) {
+  const lighting = lightingSummary(runtime.session.snapshot().lighting);
+  const field = runtime.session.lighting.getField(LIT_WORLD_LAMP.adjacentChunk);
+  const boundaryEmission = field?.emittedAt?.(LIT_WORLD_LAMP.adjacentLocal) ?? 0;
+  const lampBlock = getBlock(runtime.world.getChunk(LIT_WORLD_LAMP.chunk), LIT_WORLD_LAMP.local);
+  const lampChunkRevision = runtime.world.getChunk(LIT_WORLD_LAMP.chunk).revision;
+  const installedFieldRevision = runtime.session.lighting.getField(LIT_WORLD_LAMP.chunk)?.sourceRevision ?? null;
+  return deepFreeze({
+    id,
+    lampPresent: lampBlock.id === "lit/lamp",
+    boundaryEmission,
+    worldRevision: runtime.world.revision,
+    lampChunkRevision,
+    installedFieldRevision,
+    requestVersion: lighting.requestVersion,
+    requestedGeneration: lighting.lighting.requestedGeneration,
+    installedGeneration: lighting.lighting.installedGeneration,
+    discardedLightingResults: lighting.discardedLightingResults,
+    meshInstalls: lighting.meshInstalls,
+  });
+}
+
+function expectedStateProof(stateId, phase) {
+  if (stateId === LIT_WORLD_STATE_IDS.removed) {
+    return phase.lampPresent === false && phase.boundaryEmission === 0;
+  }
+  return phase.lampPresent === true && phase.boundaryEmission > 0;
+}
+
 function runtimeScenario(runtime) {
   const snapshot = runtime.session.snapshot();
   const lighting = lightingSummary(snapshot.lighting);
   const materials = materialSummary(runtime.prebuilt);
-  const field = runtime.session.lighting.getField([0, 0, 0]);
-  const boundaryEmission = field?.emittedAt?.([0, 2, 4]) ?? 0;
+  const currentPhase = phaseSummary(runtime, runtime.activeState);
   const materialLighting = materials.lighting;
   const alignedVertexColors = materialLighting != null
     && materialLighting.litGroupCount > 0
     && materialLighting.vertices > 0
     && materialLighting.vertices === lighting.lastMesh.vertices;
   const session = sessionSummary(snapshot);
+  const receipts = runtime.transition.receipts.map(receiptSummary);
+  const stale = runtime.transition.stale;
   return deepFreeze({
     kind: "lit-world",
+    stateId: runtime.activeState,
     world: {
       id: LIT_WORLD_ID,
       chunks: 2,
       chunkKeys: ["-1,0,0", "0,0,0"],
       negativeToZero: true,
-      lamp: {
-        chunk: "-1,0,0",
-        local: [15, 2, 4],
-        adjacentChunk: "0,0,0",
-        adjacentLocal: [0, 2, 4],
-      },
+      lamp: LIT_WORLD_LAMP,
     },
     session,
     lighting,
     materials,
-    boundaryEmission,
+    boundaryEmission: currentPhase.boundaryEmission,
+    mutation: {
+      stateId: runtime.activeState,
+      phases: runtime.transition.phases,
+      receipts,
+      duplicateRejected: runtime.transition.duplicateRejected,
+      stale,
+      current: currentPhase,
+    },
     proofs: {
       ready: lighting.status === "ready"
         && lighting.loadedChunks === 2
         && lighting.installedChunks === 2,
-      crossChunkEmission: boundaryEmission > 0
+      expectedState: expectedStateProof(runtime.activeState, currentPhase),
+      boundedAffected: receipts.every((receipt) =>
+        JSON.stringify(receipt.affectedKeys) === JSON.stringify(AFFECTED_BOUNDARY_KEYS)),
+      staleGenerationRejected: runtime.activeState !== LIT_WORLD_STATE_IDS.stale
+        || (stale?.rejected === true
+          && stale.finalRequestedGeneration === stale.finalInstalledGeneration
+          && currentPhase.installedFieldRevision === currentPhase.lampChunkRevision),
+      crossChunkEmission: currentPhase.boundaryEmission > 0
         && lighting.maximumEmitted > 0,
       sunlightPresent: lighting.maximumSunlight > 0,
       alignedVertexColors,
       sameCanonicalSessionAfterResume: runtime.lifecycle.sameCanonicalSessionAfterResume === true,
+      duplicateActionRejected: runtime.activeState === LIT_WORLD_STATE_IDS.live
+        || runtime.transition.duplicateRejected === true,
       boundedEvidence: true,
     },
   });
 }
 
 async function disposeRuntime(runtime) {
-  if (!runtime) return deepFreeze({
-    lighting: null,
-    materials: null,
-    baseline: true,
-  });
+  if (!runtime) return deepFreeze({ lighting: null, materials: null, baseline: true });
   const lightingValue = await runtime.session.destroy();
   const lighting = lightingSummary(lightingValue);
   const materials = materialSummary(runtime.prebuilt);
@@ -354,6 +486,144 @@ async function disposeRuntime(runtime) {
   });
 }
 
+function lampTransaction(runtime, { id, before, after, action }) {
+  const chunk = runtime.world.getChunk(LIT_WORLD_LAMP.chunk);
+  const current = getBlock(chunk, LIT_WORLD_LAMP.local).id;
+  if (current !== before) {
+    const error = new Error(`Boundary lamp action ${action} requires ${before}, found ${current}`);
+    error.code = "lit-world/lamp-state";
+    throw error;
+  }
+  return {
+    id,
+    expectedRevisions: [{ chunk: chunk.coord, revision: chunk.revision }],
+    changes: [{
+      chunk: chunk.coord,
+      local: LIT_WORLD_LAMP.local,
+      before,
+      after,
+    }],
+    metadata: { action, state: runtime.activeState },
+  };
+}
+
+function routeAcceptance(runtime, acceptance) {
+  return routeAcceptedLightingTransaction({
+    acceptance,
+    getChunk: runtime.world.getChunk,
+    coordinator: runtime.session.lighting,
+  });
+}
+
+async function removeLamp(runtime) {
+  const acceptance = runtime.world.apply(lampTransaction(runtime, {
+    id: `lit-world/remove-boundary-lamp-${runtime.world.revision + 1}`,
+    before: "lit/lamp",
+    after: "lit/air",
+    action: "remove-boundary-lamp",
+  }));
+  const receipt = routeAcceptance(runtime, acceptance);
+  runtime.transition.receipts.push(receipt);
+  await runtime.session.drain();
+  runtime.transition.phases.push(phaseSummary(runtime, LIT_WORLD_STATE_IDS.removed));
+  return receipt;
+}
+
+async function restoreLamp(runtime) {
+  const chunk = runtime.world.getChunk(LIT_WORLD_LAMP.chunk);
+  const current = getBlock(chunk, LIT_WORLD_LAMP.local).id;
+  if (current !== "lit/air") {
+    const error = new Error(`Boundary lamp restore requires lit/air, found ${current}`);
+    error.code = "lit-world/lamp-state";
+    throw error;
+  }
+  const acceptance = runtime.world.undo({
+    id: `lit-world/restore-boundary-lamp-${runtime.world.revision + 1}`,
+  });
+  if (!acceptance) {
+    const error = new Error("Boundary lamp restore has no accepted inverse transaction");
+    error.code = "lit-world/no-inverse";
+    throw error;
+  }
+  const receipt = routeAcceptance(runtime, acceptance);
+  runtime.transition.receipts.push(receipt);
+  await runtime.session.drain();
+  runtime.transition.phases.push(phaseSummary(runtime, LIT_WORLD_STATE_IDS.restored));
+  return receipt;
+}
+
+async function rejectDuplicate(action) {
+  try {
+    await action();
+    return false;
+  } catch (error) {
+    if (error?.code !== "lit-world/lamp-state") throw error;
+    return true;
+  }
+}
+
+async function applyState(runtime, stateId) {
+  runtime.activeState = stateId;
+  runtime.transition.phases.push(phaseSummary(runtime, LIT_WORLD_STATE_IDS.live));
+  if (stateId === LIT_WORLD_STATE_IDS.live) return;
+  if (stateId === LIT_WORLD_STATE_IDS.removed) {
+    await removeLamp(runtime);
+    runtime.transition.duplicateRejected = await rejectDuplicate(() => removeLamp(runtime));
+    return;
+  }
+  if (stateId === LIT_WORLD_STATE_IDS.restored) {
+    await removeLamp(runtime);
+    await restoreLamp(runtime);
+    runtime.transition.duplicateRejected = await rejectDuplicate(() => restoreLamp(runtime));
+    return;
+  }
+
+  const before = lightingSummary(runtime.session.snapshot().lighting);
+  const gate = runtime.gate.arm();
+  const acceptance = runtime.world.apply(lampTransaction(runtime, {
+    id: `lit-world/remove-boundary-lamp-${runtime.world.revision + 1}`,
+    before: "lit/lamp",
+    after: "lit/air",
+    action: "stale-remove-boundary-lamp",
+  }));
+  runtime.transition.receipts.push(routeAcceptance(runtime, acceptance));
+  const projection = runtime.session.drain();
+  const delayed = await gate.started;
+  runtime.transition.phases.push(deepFreeze({
+    id: "lighting/delayed-generation",
+    lampPresent: false,
+    boundaryEmission: null,
+    worldRevision: runtime.world.revision,
+    lampChunkRevision: runtime.world.getChunk(LIT_WORLD_LAMP.chunk).revision,
+    installedFieldRevision: runtime.session.lighting.getField(LIT_WORLD_LAMP.chunk)?.sourceRevision ?? null,
+    requestVersion: runtime.session.lighting.evidence().requestVersion,
+    requestedGeneration: delayed.generation,
+    installedGeneration: before.lighting.installedGeneration,
+    discardedLightingResults: before.discardedLightingResults,
+    meshInstalls: before.meshInstalls,
+  }));
+
+  const restored = runtime.world.undo({
+    id: `lit-world/restore-boundary-lamp-${runtime.world.revision + 1}`,
+  });
+  runtime.transition.receipts.push(routeAcceptance(runtime, restored));
+  gate.release();
+  await projection;
+  await runtime.session.drain();
+  const after = lightingSummary(runtime.session.snapshot().lighting);
+  runtime.transition.phases.push(phaseSummary(runtime, LIT_WORLD_STATE_IDS.stale));
+  runtime.transition.stale = deepFreeze({
+    delayedGeneration: delayed.generation,
+    delayedEpoch: delayed.epoch,
+    discardedBefore: before.discardedLightingResults,
+    discardedAfter: after.discardedLightingResults,
+    finalRequestedGeneration: after.lighting.requestedGeneration,
+    finalInstalledGeneration: after.lighting.installedGeneration,
+    rejected: after.discardedLightingResults > before.discardedLightingResults,
+  });
+  runtime.transition.duplicateRejected = await rejectDuplicate(() => restoreLamp(runtime));
+}
+
 export function createLitWorldStoryHost({
   pc,
   canvas,
@@ -361,9 +631,7 @@ export function createLitWorldStoryHost({
   createPrebuiltRenderer = createPlayCanvasPrebuiltMeshRenderer,
   application = null,
 } = {}) {
-  if (!canvas?.addEventListener) {
-    throw new TypeError("Lit-world host requires a canvas-like event target");
-  }
+  if (!canvas?.addEventListener) throw new TypeError("Lit-world host requires a canvas-like event target");
   if (typeof createSession !== "function" || typeof createPrebuiltRenderer !== "function") {
     throw new TypeError("Lit-world host factories must be functions");
   }
@@ -371,6 +639,7 @@ export function createLitWorldStoryHost({
   const ownsApplication = application == null;
   let runtime = null;
   let activeActivity = null;
+  let activeState = null;
   let status = "idle";
   let scenario = null;
   let operation = Promise.resolve();
@@ -386,17 +655,11 @@ export function createLitWorldStoryHost({
     format: LIT_WORLD_STORY_FORMAT,
     hostReady: true,
     activeActivity,
+    activeState,
     status,
     scenario,
-    lifecycle: {
-      opens: openCount,
-      suspensions: suspensionCount,
-      resumes: resumeCount,
-    },
-    disposal: {
-      count: disposalCount,
-      baseline: disposalBaseline,
-    },
+    lifecycle: { opens: openCount, suspensions: suspensionCount, resumes: resumeCount },
+    disposal: { count: disposalCount, baseline: disposalBaseline },
   });
 
   const createRuntime = async (suffix) => {
@@ -416,6 +679,7 @@ export function createLitWorldStoryHost({
       isSolid: world.isSolidBlock,
       missingSolid: false,
     });
+    const gate = createLightingDelayGate();
     let prebuilt = null;
     const session = createSession({
       sessionId: `lit-world/${suffix}`,
@@ -441,6 +705,7 @@ export function createLitWorldStoryHost({
         shadowDistance: 60,
         euler: [55, 35, 0],
       },
+      lightingOptions: { runLighting: (job) => gate.run(job) },
       inputOptions: { requirePointerLock: false },
       autoResize: false,
       startApplication: false,
@@ -464,9 +729,15 @@ export function createLitWorldStoryHost({
       player,
       session,
       prebuilt,
-      lifecycle: {
-        sameCanonicalSessionAfterResume: false,
+      gate,
+      activeState: LIT_WORLD_DEFAULT_STATE,
+      transition: {
+        phases: [],
+        receipts: [],
+        duplicateRejected: false,
+        stale: null,
       },
+      lifecycle: { sameCanonicalSessionAfterResume: false },
     };
   };
 
@@ -483,7 +754,8 @@ export function createLitWorldStoryHost({
       && before.worldRevision === after.worldRevision
       && hidden.status === "suspended"
       && after.status === "active"
-      && after.lighting.installedChunks === before.lighting.installedChunks;
+      && after.lighting.installedChunks === before.lighting.installedChunks
+      && after.lighting.dirtyChunks === 0;
   };
 
   const disposeCurrent = async () => {
@@ -513,20 +785,30 @@ export function createLitWorldStoryHost({
 
   return Object.freeze({
     snapshot,
-    open(activityId = LIT_WORLD_ACTIVITY) {
+    open(activityId = LIT_WORLD_ACTIVITY, options = {}) {
       return enqueue(async () => {
         if (destroyed) throw new Error("Lit-world host has been destroyed");
         if (String(activityId) !== LIT_WORLD_ACTIVITY) {
           throw new Error(`Unsupported lit-world activity: ${activityId}`);
         }
-        if (activeActivity === LIT_WORLD_ACTIVITY && status === "ready") return snapshot();
+        const requestedState = typeof options === "string"
+          ? options
+          : options?.stateId ?? LIT_WORLD_DEFAULT_STATE;
+        if (!STATE_IDS.has(requestedState)) {
+          throw new Error(`Unsupported lit-world state: ${requestedState}`);
+        }
+        if (activeActivity === LIT_WORLD_ACTIVITY
+          && activeState === requestedState
+          && status === "ready") return snapshot();
         status = "opening";
         scenario = null;
         await disposeCurrent();
         await runDisposalProbe();
         runtime = await createRuntime(`open-${openCount + 1}`);
+        await applyState(runtime, requestedState);
         await runLifecycleProbe(runtime);
         activeActivity = LIT_WORLD_ACTIVITY;
+        activeState = requestedState;
         openCount += 1;
         scenario = runtimeScenario(runtime);
         status = "ready";
@@ -543,6 +825,7 @@ export function createLitWorldStoryHost({
         status = String(reason);
         await disposeCurrent();
         activeActivity = null;
+        activeState = null;
         scenario = null;
         canvas.hidden = true;
         if ("autoRender" in app) app.autoRender = false;
@@ -583,6 +866,7 @@ export function createLitWorldStoryHost({
         destroyed = true;
         await disposeCurrent();
         activeActivity = null;
+        activeState = null;
         scenario = null;
         status = "disposed";
         canvas.hidden = true;

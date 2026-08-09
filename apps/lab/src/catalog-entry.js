@@ -4,6 +4,7 @@ import {
 } from "@greenways/alumbra-hodos/catalog";
 import {
   buildCatalogChecks,
+  LIT_WORLD_STATE_IDS,
   MATERIAL_STATE_IDS,
   WORKSPACE_STATE_IDS,
 } from "./catalog-checks.js";
@@ -51,6 +52,7 @@ const query = () => new URL(window.location.href).searchParams;
 const requestedHaraState = () => query().get("state") ?? DEFAULT_HARA_STATE;
 const requestedMaterialState = () => query().get("state") ?? MATERIAL_STATE_IDS.daylight;
 const requestedWorkspaceState = () => query().get("state") ?? WORKSPACE_STATE_IDS.wide;
+const requestedLitWorldState = () => query().get("state") ?? LIT_WORLD_STATE_IDS.live;
 const eventLog = [];
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 const describe = (activityId) => ALUMBRA_RENDERER_CATALOG.activities
@@ -58,6 +60,7 @@ const describe = (activityId) => ALUMBRA_RENDERER_CATALOG.activities
 const openDetail = (activityId) => ({
   activityId,
   ...(activityId === IDS.packagedHara ? { stateId: requestedHaraState() } : {}),
+  ...(activityId === IDS.litWorld ? { stateId: requestedLitWorldState() } : {}),
   ...(activityId === IDS.environmentProfile ? { stateId: requestedMaterialState() } : {}),
   ...(activityId === IDS.rendererWorkspace ? { stateId: requestedWorkspaceState() } : {}),
 });
@@ -86,12 +89,14 @@ const waitForMaterials = (activityId, stateId = null) => waitForContribution(
     && (stateId == null || value.activeState === stateId),
   `Alumbra material activity ${activityId}${stateId ? ` / ${stateId}` : ""}`,
 );
-const waitForLitWorld = () => waitForContribution(
+const waitForLitWorld = (stateId) => waitForContribution(
   "litWorld",
   (value) => value.activeActivity === IDS.litWorld
+    && value.activeState === stateId
     && value.status === "ready"
-    && value.scenario?.kind === "lit-world",
-  "Alumbra live lit-world viewport",
+    && value.scenario?.kind === "lit-world"
+    && value.scenario?.stateId === stateId,
+  `Alumbra live lit-world viewport / ${stateId}`,
 );
 const waitForWorkspace = (stateId) => waitForContribution(
   "workspace",
@@ -111,7 +116,7 @@ const waitForResidencyMove = (moves) => waitForContribution(
 );
 
 async function waitForActivity(activityId) {
-  if (activityId === IDS.litWorld) return waitForLitWorld();
+  if (activityId === IDS.litWorld) return waitForLitWorld(requestedLitWorldState());
   if (activityId === IDS.rendererWorkspace) return waitForWorkspace(requestedWorkspaceState());
   if (IDS.residencyActivities.has(activityId)) return waitForResidency(activityId);
   if (IDS.materialActivities.has(activityId)) {
@@ -168,6 +173,7 @@ const catalogHost = createCatalogHost({
       requestedHaraState: requestedHaraState(),
       requestedMaterialState: requestedMaterialState(),
       requestedWorkspaceState: requestedWorkspaceState(),
+      requestedLitWorldState: requestedLitWorldState(),
     });
   },
 });
@@ -209,15 +215,28 @@ async function openBrowserStory() {
   }
   if (requested === IDS.litWorld) {
     const litWorld = evidence.litWorld;
+    const scenario = litWorld?.scenario;
+    const mutation = scenario?.mutation;
+    const stateId = requestedLitWorldState();
     data.browserLitWorld = litWorld?.activeActivity === requested
+      && litWorld.activeState === stateId
       && litWorld.status === "ready" ? "passed" : "failed";
-    data.browserLitBoundary = litWorld?.scenario?.proofs?.crossChunkEmission === true
-      && litWorld.scenario?.boundaryEmission > 0 ? "passed" : "failed";
-    data.browserLitColors = litWorld?.scenario?.proofs?.alignedVertexColors === true
+    data.browserState = litWorld?.activeState ?? "none";
+    data.browserLitBoundary = scenario?.proofs?.expectedState === true
+      && scenario?.proofs?.boundedAffected === true ? "passed" : "failed";
+    data.browserLitColors = scenario?.proofs?.alignedVertexColors === true
       ? "passed" : "failed";
-    data.browserLitVisibility = litWorld?.scenario?.proofs?.sameCanonicalSessionAfterResume === true
+    data.browserLitVisibility = scenario?.proofs?.sameCanonicalSessionAfterResume === true
       && litWorld.lifecycle?.suspensions >= 1
       && litWorld.lifecycle?.resumes >= 1 ? "passed" : "failed";
+    data.browserLitMutation = stateId === LIT_WORLD_STATE_IDS.live
+      ? mutation?.receipts?.length === 0 ? "passed" : "failed"
+      : mutation?.receipts?.length >= 1
+        && scenario?.proofs?.duplicateActionRejected === true ? "passed" : "failed";
+    data.browserLitStale = stateId !== LIT_WORLD_STATE_IDS.stale
+      ? "passed"
+      : scenario?.proofs?.staleGenerationRejected === true
+        && mutation?.stale?.rejected === true ? "passed" : "failed";
     data.browserDisposal = litWorld?.disposal?.baseline ? "passed" : "failed";
   }
   if (IDS.residencyActivities.has(requested)) {

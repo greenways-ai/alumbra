@@ -1,0 +1,6 @@
+{:lighting/state :lighting/live
+ :lighting/world "world:alumbra/lit-cave"
+ :lighting/chunks ["-1,0,0" "0,0,0"]
+ :lighting/lamp {:chunk "-1,0,0" :local [15 2 4] :present true}
+ :lighting/boundary-emission 14
+ :lighting/status :ready}

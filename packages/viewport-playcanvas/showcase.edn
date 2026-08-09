@@ -26,10 +26,22 @@
    :state/title "Two sessions"
    :state/summary "Two separately owned worlds and lifecycle counters projected together."
    :state/file "showcase/states/two-sessions.edn"}
-  {:state/id :viewport/lit-world
-   :state/title "Live lit world"
-   :state/summary "Two canonical chunks, cross-boundary emitted light, aligned vertex colours and exact lifecycle evidence."
-   :state/file "showcase/states/lit-world.edn"}]
+  {:state/id :lighting/live
+   :state/title "Live boundary lamp"
+   :state/summary "The current canonical lamp revision emits across the negative-to-zero chunk boundary."
+   :state/file "showcase/states/lit-world-live.edn"}
+  {:state/id :lighting/lamp-removed
+   :state/title "Boundary lamp removed"
+   :state/summary "A revision-checked Core transaction removes the lamp and darkens only the bounded affected projections."
+   :state/file "showcase/states/lit-world-lamp-removed.edn"}
+  {:state/id :lighting/lamp-restored
+   :state/title "Boundary lamp restored"
+   :state/summary "The accepted inverse transaction restores the lamp and current cross-boundary lighting."
+   :state/file "showcase/states/lit-world-lamp-restored.edn"}
+  {:state/id :lighting/stale-generation-rejected
+   :state/title "Stale lighting generation rejected"
+   :state/summary "An obsolete delayed generation loses to the newer restored canonical revision."
+   :state/file "showcase/states/lit-world-stale-generation.edn"}]
 
  :showcase/demos
  [{:demo/id :playable-world
@@ -56,9 +68,9 @@
    :demo/viewport {:viewport/width 1180 :viewport/height 760}}
   {:demo/id :lit-world
    :demo/title "Live lit-world viewport"
-   :demo/summary "Open a two-chunk cave whose boundary lamp travels through Engine fields, light-aware meshes and PlayCanvas vertex colours."
+   :demo/summary "Remove and restore a cross-boundary lamp through accepted Core transactions while obsolete lighting generations remain fenced."
    :demo/view :lit-world
-   :demo/state :viewport/lit-world
+   :demo/state :lighting/live
    :demo/project "showcase/lit-world"
    :demo/surface :viewport
    :demo/docs "showcase/lit-world/README.md"
