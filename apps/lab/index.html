@@ -38,6 +38,7 @@
   <link rel="stylesheet" href="./src/catalog.css">
   <link rel="stylesheet" href="./src/packaged-hara.css">
   <link rel="stylesheet" href="./src/residency.css">
+  <link rel="stylesheet" href="./src/material.css">
   <script type="importmap">
   {
     "imports": {
@@ -66,6 +67,7 @@
       <canvas id="alumbra-canvas-secondary" data-viewport-session="secondary" aria-label="Secondary independent Alumbra voxel world" hidden></canvas>
       <canvas id="alumbra-canvas-hara" data-viewport-session="hara" aria-label="Package-pinned Hara voxel world" hidden></canvas>
       <canvas id="alumbra-canvas-residency" data-viewport-session="residency" aria-label="Dynamic renderer residency story" tabindex="0" hidden></canvas>
+      <canvas id="alumbra-canvas-materials" data-viewport-session="materials" aria-label="Material and environment profile story" hidden></canvas>
       <section class="lab-world-error" data-packaged-world-error aria-live="polite" hidden>
         <p class="lab-world-error-eyebrow">ALUMBRA / EXACT PACKAGE LOCK</p>
         <h2 data-packaged-world-error-title>Package mismatch</h2>
@@ -84,6 +86,19 @@
         <div><dt>Stale</dt><dd data-residency-stat="stale">0</dd></div>
         <div><dt>Evicted</dt><dd data-residency-stat="evicted">0</dd></div>
         <div><dt>GPU</dt><dd data-residency-stat="gpu">0</dd></div>
+      </dl>
+    </aside>
+    <aside class="material-evidence" data-material-panel aria-live="polite" hidden>
+      <p>ALUMBRA / MATERIAL PIPELINE</p>
+      <h2 data-material-title>Material matrix</h2>
+      <p class="material-summary" data-material-summary>Opaque · cutout · transparent · emissive · selection overlay</p>
+      <dl>
+        <div><dt>Groups</dt><dd data-material-stat="groups">0</dd></div>
+        <div><dt>Profiles</dt><dd data-material-stat="profiles">0</dd></div>
+        <div><dt>Shared</dt><dd data-material-stat="shared">0</dd></div>
+        <div><dt>Transparent</dt><dd data-material-stat="transparent">0</dd></div>
+        <div class="material-stat-wide"><dt>Environment</dt><dd data-material-stat="environment">—</dd></div>
+        <div><dt>Disposal</dt><dd data-material-stat="disposal">0</dd></div>
       </dl>
     </aside>
     <section class="lab-panel" aria-live="polite">
@@ -107,5 +122,6 @@
   <script type="module" src="./src/catalog-entry.js"></script>
   <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/residency-entry.js"></script>
+  <script type="module" src="./src/material-entry.js"></script>
 </body>
 </html>

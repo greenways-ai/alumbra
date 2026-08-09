@@ -2,84 +2,93 @@ import {
   ALUMBRA_RENDERER_CATALOG,
   ALUMBRA_RENDERER_INSTALLED_DEMOS,
 } from "@greenways/alumbra-hodos/catalog";
+import { buildCatalogChecks, MATERIAL_STATE_IDS } from "./catalog-checks.js";
 import { createCatalogHost } from "./catalog-host.js";
-import {readViewportEvidence} from "./viewport-evidence.js";
+import { readViewportEvidence } from "./viewport-evidence.js";
 
-const PLAYABLE_WORLD_ACTIVITY = "alumbra-viewport-playcanvas/playable-world";
-const TWO_SESSIONS_ACTIVITY = "alumbra-viewport-playcanvas/two-sessions";
-const PACKAGED_HARA_ACTIVITY = "alumbra-hara/packaged-height-field";
-const CHUNK_RESIDENCY_ACTIVITY = "alumbra-renderer-playcanvas/chunk-residency";
-const STALE_MESH_ACTIVITY = "alumbra-renderer-playcanvas/stale-mesh-rejection";
-const CATALOG_ACTIVITY = "alumbra-hodos/renderer-catalog";
-const RESIDENCY_STORY_FORMAT = "alumbra.residency-story/1";
-const RESIDENCY_EVIDENCE_FORMAT = "alumbra.residency-evidence/1";
-const DEFAULT_SEED_STATE = "world/default-seed";
-const NEGATIVE_COORDINATE_STATE = "world/negative-coordinate";
-const PACKAGE_MISMATCH_STATE = "world/package-mismatch";
-const FIXTURE_PACKAGE = "hara:greenways/alumbra-hara";
-const FIXTURE_GENERATOR = "alumbra/fixture-height-field";
+const ACTIVITY_IDS = {
+  playableWorld: "alumbra-viewport-playcanvas/playable-world",
+  twoSessions: "alumbra-viewport-playcanvas/two-sessions",
+  packagedHara: "alumbra-hara/packaged-height-field",
+  chunkResidency: "alumbra-renderer-playcanvas/chunk-residency",
+  staleMesh: "alumbra-renderer-playcanvas/stale-mesh-rejection",
+  materialMatrix: "alumbra-renderer-playcanvas/material-matrix",
+  environmentProfile: "alumbra-renderer-playcanvas/environment-profile",
+  catalog: "alumbra-hodos/renderer-catalog",
+};
+const IDS = Object.freeze({
+  ...ACTIVITY_IDS,
+  residencyActivities: new Set([ACTIVITY_IDS.chunkResidency, ACTIVITY_IDS.staleMesh]),
+  materialActivities: new Set([ACTIVITY_IDS.materialMatrix, ACTIVITY_IDS.environmentProfile]),
+});
 
-const RESIDENCY_ACTIVITIES = new Set([
-  CHUNK_RESIDENCY_ACTIVITY,
-  STALE_MESH_ACTIVITY,
-]);
-
+const DEFAULT_HARA_STATE = "world/default-seed";
 const container = document.querySelector("[data-renderer-catalog]");
 const labStatus = document.querySelector("[data-status]");
-const primaryCanvas = document.querySelector("#alumbra-canvas");
-const secondaryCanvas = document.querySelector("#alumbra-canvas-secondary");
-const haraCanvas = document.querySelector("#alumbra-canvas-hara");
-const residencyCanvas = document.querySelector("#alumbra-canvas-residency");
-const residencyPanel = document.querySelector("[data-residency-panel]");
-const packagedWorldError = document.querySelector("[data-packaged-world-error]");
-
+const elements = Object.freeze({
+  primaryCanvas: document.querySelector("#alumbra-canvas"),
+  secondaryCanvas: document.querySelector("#alumbra-canvas-secondary"),
+  haraCanvas: document.querySelector("#alumbra-canvas-hara"),
+  residencyCanvas: document.querySelector("#alumbra-canvas-residency"),
+  residencyPanel: document.querySelector("[data-residency-panel]"),
+  materialCanvas: document.querySelector("#alumbra-canvas-materials"),
+  materialPanel: document.querySelector("[data-material-panel]"),
+  packagedWorldError: document.querySelector("[data-packaged-world-error]"),
+});
 if (!container) throw new Error("Alumbra lab is missing the Renderer Catalog mount");
 
-const requestedState = () => new URL(window.location.href).searchParams.get("state")
-  ?? DEFAULT_SEED_STATE;
+const query = () => new URL(window.location.href).searchParams;
+const requestedHaraState = () => query().get("state") ?? DEFAULT_HARA_STATE;
+const requestedMaterialState = () => query().get("state") ?? MATERIAL_STATE_IDS.daylight;
 const eventLog = [];
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 const describe = (activityId) => ALUMBRA_RENDERER_CATALOG.activities
   .find((activity) => activity.id === activityId);
-const passed = (id, label, condition) => ({
-  id,
-  label,
-  status: condition ? "passed" : "failed",
-});
 const openDetail = (activityId) => ({
   activityId,
-  ...(activityId === PACKAGED_HARA_ACTIVITY ? {stateId: requestedState()} : {}),
+  ...(activityId === IDS.packagedHara ? { stateId: requestedHaraState() } : {}),
+  ...(activityId === IDS.environmentProfile ? { stateId: requestedMaterialState() } : {}),
 });
 
-const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
-
-async function waitForResidencyActivity(activityId) {
-  for (let attempt = 0; attempt < 400; attempt += 1) {
-    const residency = readViewportEvidence().residency;
-    if (
-      residency?.activeActivity === activityId
-      && residency.status === "ready"
-      && residency.scenario
-    ) {
-      return residency;
-    }
+async function waitForContribution(id, predicate, label) {
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const contribution = readViewportEvidence()[id];
+    if (contribution && predicate(contribution)) return contribution;
     await sleep(25);
   }
-  throw new Error(`Alumbra residency activity did not become ready: ${activityId}`);
+  throw new Error(`${label} did not become ready`);
 }
+const waitForResidency = (activityId) => waitForContribution(
+  "residency",
+  (value) => value.activeActivity === activityId && value.status === "ready" && value.scenario,
+  `Alumbra residency activity ${activityId}`,
+);
+const waitForMaterials = (activityId, stateId = null) => waitForContribution(
+  "materials",
+  (value) => value.activeActivity === activityId
+    && value.status === "ready"
+    && value.scenario
+    && (stateId == null || value.activeState === stateId),
+  `Alumbra material activity ${activityId}${stateId ? ` / ${stateId}` : ""}`,
+);
+const waitForResidencyMove = (moves) => waitForContribution(
+  "residency",
+  (value) => value.activeActivity === IDS.chunkResidency
+    && value.status === "ready"
+    && value.scenario?.viewpoint?.moves >= moves,
+  `Alumbra residency viewpoint move ${moves}`,
+);
 
-async function waitForResidencyMove(minimumMoves) {
-  for (let attempt = 0; attempt < 400; attempt += 1) {
-    const residency = readViewportEvidence().residency;
-    if (
-      residency?.activeActivity === CHUNK_RESIDENCY_ACTIVITY
-      && residency.status === "ready"
-      && residency.scenario?.viewpoint?.moves >= minimumMoves
-    ) {
-      return residency;
-    }
-    await sleep(25);
+async function waitForActivity(activityId) {
+  if (IDS.residencyActivities.has(activityId)) return waitForResidency(activityId);
+  if (IDS.materialActivities.has(activityId)) {
+    return waitForMaterials(
+      activityId,
+      activityId === IDS.environmentProfile ? requestedMaterialState() : null,
+    );
   }
-  throw new Error(`Alumbra residency viewpoint did not reach move ${minimumMoves}`);
+  await Promise.resolve();
+  return null;
 }
 
 const catalogHost = createCatalogHost({
@@ -95,284 +104,91 @@ const catalogHost = createCatalogHost({
   async openDemo({ activityId, demo }) {
     const activity = describe(activityId);
     document.body.dataset.catalogActivity = activityId;
-    window.dispatchEvent(new CustomEvent("alumbra:open-demo", {
-      detail: openDetail(activityId),
-    }));
-    if (RESIDENCY_ACTIVITIES.has(activityId)) {
-      await waitForResidencyActivity(activityId);
-      if (labStatus) {
-        labStatus.textContent = `${activity.title} opened through the live renderer residency host.`;
-      }
-      return;
-    }
-    if (demo.host === "playable-lab") {
-      if (labStatus) labStatus.textContent = `${activity.title} opened through the installed Renderer Catalog identity.`;
-      return;
-    }
-    if (labStatus) {
+    window.dispatchEvent(new CustomEvent("alumbra:open-demo", { detail: openDetail(activityId) }));
+    await waitForActivity(activityId);
+    if (!labStatus) return;
+    if (IDS.residencyActivities.has(activityId)) {
+      labStatus.textContent = `${activity.title} opened through the live renderer residency host.`;
+    } else if (IDS.materialActivities.has(activityId)) {
+      labStatus.textContent = `${activity.title} opened through the live renderer material host.`;
+    } else if (demo.host === "playable-lab") {
+      labStatus.textContent = `${activity.title} opened through the installed Renderer Catalog identity.`;
+    } else {
       labStatus.textContent = `${activity.title} selected. Its complete package project is installed for the Workspace host.`;
     }
   },
   async runChecks({ activityId, demo }) {
-    const activity = describe(activityId);
-    const checks = [
-      passed(
-        "catalog/identity",
-        "Activity resolves through the installed semantic identity registry",
-        Boolean(demo && activity),
-      ),
-      passed(
-        "catalog/projection",
-        "Projected Catalog activity exposes no project path",
-        activity?.path == null,
-      ),
-      passed(
-        "catalog/event-boundary",
-        "Catalog events contain identities but no installed project path",
-        eventLog.every((event) => !Object.hasOwn(event.detail, "project")),
-      ),
-    ];
-
-    window.dispatchEvent(new CustomEvent("alumbra:open-demo", {
-      detail: openDetail(activityId),
-    }));
-    if (RESIDENCY_ACTIVITIES.has(activityId)) {
-      await waitForResidencyActivity(activityId);
-    } else {
-      await Promise.resolve();
-    }
-    const evidence = readViewportEvidence();
-
-    if (activityId === CHUNK_RESIDENCY_ACTIVITY) {
-      const residency = evidence.residency;
-      const scenario = residency?.scenario;
-      const initial = scenario?.initial;
-      const current = scenario?.current;
-      checks.push(
-        passed(
-          "residency/live-surface",
-          "The live prebuilt-mesh residency surface is mounted through its semantic identity",
-          residency?.format === RESIDENCY_STORY_FORMAT
-            && residency.activeActivity === activityId
-            && residency.status === "ready"
-            && scenario?.kind === "cross-boundary"
-            && Boolean(residencyCanvas && !residencyCanvas.hidden)
-            && Boolean(residencyPanel && !residencyPanel.hidden),
-        ),
-        passed(
-          "residency/cross-boundary",
-          "Crossing one chunk boundary replaces the bounded window and evicts resources behind it",
-          initial?.format === RESIDENCY_EVIDENCE_FORMAT
-            && current?.format === RESIDENCY_EVIDENCE_FORMAT
-            && initial.residentChunks === initial.desiredChunks
-            && current.residentChunks === current.desiredChunks
-            && current.meshInstalls > initial.meshInstalls
-            && current.evictedResources > initial.evictedResources
-            && scenario.crossed === true
-            && scenario.viewpoint?.moves >= 1
-            && scenario.viewpoint?.chunk?.[0] === 1,
-        ),
-        passed(
-          "residency/prebuilt-disposal",
-          "Worker meshes install without recomputation and a GPU disposal probe returns to baseline",
-          scenario?.renderer?.chunks === current?.residentChunks
-            && scenario.renderer.meshResources > 0
-            && scenario.renderer.materialResources > 0
-            && residency.disposal?.baseline === true
-            && residency.disposal.count >= 1,
-        ),
-      );
-    } else if (activityId === STALE_MESH_ACTIVITY) {
-      const residency = evidence.residency;
-      const scenario = residency?.scenario;
-      const current = scenario?.current;
-      checks.push(
-        passed(
-          "residency/current-revision",
-          "The prebuilt renderer contains only the current canonical chunk revision",
-          residency?.format === RESIDENCY_STORY_FORMAT
-            && residency.activeActivity === activityId
-            && residency.status === "ready"
-            && scenario?.kind === "stale-mesh-rejection"
-            && scenario.installedRevision === 2
-            && scenario.renderer?.chunks === 1
-            && Boolean(residencyCanvas && !residencyCanvas.hidden)
-            && Boolean(residencyPanel && !residencyPanel.hidden),
-        ),
-        passed(
-          "residency/stale-rejection",
-          "A later completion for the older revision is discarded and disposal remains exact",
-          current?.format === RESIDENCY_EVIDENCE_FORMAT
-            && current.meshInstalls === 1
-            && current.discardedStaleJobs === 1
-            && scenario.rejected === true
-            && residency.disposal?.baseline === true,
-        ),
-      );
-    } else if (activityId === PACKAGED_HARA_ACTIVITY) {
-      const packaged = evidence.packagedWorld;
-      const defaultWorld = packaged?.states?.[DEFAULT_SEED_STATE];
-      const negativeWorld = packaged?.states?.[NEGATIVE_COORDINATE_STATE];
-      const mismatch = packaged?.states?.[PACKAGE_MISMATCH_STATE];
-      const negativeSnapshot = negativeWorld?.snapshots?.[0];
-      checks.push(
-        passed(
-          "hara/package-identity",
-          "The exact Hara package identity is pinned and mismatches fail closed",
-          defaultWorld?.package?.coordinate === FIXTURE_PACKAGE
-            && defaultWorld.package.matched === true
-            && mismatch?.status === "rejected"
-            && mismatch.error?.code === "hara/package-version-mismatch",
-        ),
-        passed(
-          "hara/generator-identity",
-          "The packaged generator identity is preserved across named states",
-          defaultWorld?.generator?.id === FIXTURE_GENERATOR
-            && defaultWorld.generator.matched === true
-            && negativeWorld?.generator?.id === FIXTURE_GENERATOR
-            && negativeWorld.generator.matched === true,
-        ),
-        passed(
-          "hara/snapshot-digest",
-          "Core materialization matches the immutable default snapshot digest",
-          defaultWorld?.snapshots?.length === 1
-            && defaultWorld.snapshots[0].matched === true
-            && defaultWorld.snapshots[0].digest === defaultWorld.snapshots[0].expectedDigest,
-        ),
-        passed(
-          "hara/negative-coordinate-parity",
-          "Negative-coordinate generation matches the pinned snapshot evidence",
-          negativeWorld?.negativeCoordinateParity === true
-            && negativeSnapshot?.matched === true
-            && negativeSnapshot.coord.some((entry) => entry < 0),
-        ),
-        passed(
-          "hara/disposal-baseline",
-          "A packaged-world viewport returns renderer resources to baseline on disposal",
-          packaged?.disposal?.baseline === true
-            && packaged.disposal.count >= 1,
-        ),
-      );
-    } else if (demo.host === "playable-lab") {
-      checks.push(passed(
-        "viewport/canvas",
-        "The installed PlayCanvas viewport surface is mounted",
-        Boolean(primaryCanvas),
-      ));
-
-      if (activityId === PLAYABLE_WORLD_ACTIVITY) {
-        const primary = evidence.sessions.find((session) => session.sessionId === "primary");
-        checks.push(passed(
-          "viewport/canonical-session",
-          "One active viewport retains its canonical world identity",
-          evidence.activeActivity === activityId
-            && evidence.mode === "single"
-            && primary?.status === "active"
-            && typeof primary.worldId === "string",
-        ));
-      }
-
-      if (activityId === TWO_SESSIONS_ACTIVITY) {
-        const sessions = evidence.sessions.filter((session) => session.status === "active");
-        checks.push(
-          passed(
-            "viewport/session-count",
-            "Two active viewport sessions are projected together",
-            evidence.activeActivity === activityId
-              && evidence.mode === "two"
-              && sessions.length === 2
-              && Boolean(secondaryCanvas && !secondaryCanvas.hidden),
-          ),
-          passed(
-            "viewport/session-identity",
-            "Viewport session identities remain distinct",
-            new Set(sessions.map((session) => session.sessionId)).size === 2,
-          ),
-          passed(
-            "viewport/world-identity",
-            "Canonical world identities remain independent",
-            new Set(sessions.map((session) => session.worldId)).size === 2,
-          ),
-        );
-      }
-
-      if (activityId === CATALOG_ACTIVITY) {
-        // The Catalog story checks the mount only; viewport lifecycle belongs to package stories.
-      }
-    }
-
-    if (activityId === PACKAGED_HARA_ACTIVITY) {
-      const state = evidence.packagedWorld?.activeState;
-      const active = evidence.packagedWorld?.active;
-      checks.push(passed(
-        "hara/active-state",
-        "The requested named state is projected without leaking runtime handles",
-        state === requestedState()
-          && (
-            active?.status === "ready"
-              ? Boolean(haraCanvas && !haraCanvas.hidden)
-              : active?.status === "rejected"
-                && Boolean(packagedWorldError && !packagedWorldError.hidden)
-          ),
-      ));
-    }
-
-    return {
-      status: checks.every((check) => check.status === "passed") ? "passed" : "failed",
-      message: `${checks.filter((check) => check.status === "passed").length}/${checks.length} activity checks passed`,
-      checks,
-    };
+    window.dispatchEvent(new CustomEvent("alumbra:open-demo", { detail: openDetail(activityId) }));
+    await waitForActivity(activityId);
+    return buildCatalogChecks({
+      activityId,
+      activity: describe(activityId),
+      demo,
+      eventLog,
+      evidence: readViewportEvidence(),
+      elements,
+      ids: IDS,
+      requestedHaraState: requestedHaraState(),
+      requestedMaterialState: requestedMaterialState(),
+    });
   },
 });
 
-async function waitForViewportHost() {
-  for (let attempt = 0; attempt < 300; attempt += 1) {
+async function waitForHosts() {
+  for (let attempt = 0; attempt < 400; attempt += 1) {
     const evidence = readViewportEvidence();
-    if (
-      evidence.sessions.length > 0
+    if (evidence.sessions.length > 0
       && evidence.packagedWorld?.states
       && evidence.residency?.hostReady === true
-    ) {
-      return evidence;
-    }
+      && evidence.materials?.hostReady === true) return evidence;
     await sleep(50);
   }
-  throw new Error("Alumbra viewport and residency hosts did not become ready");
+  throw new Error("Alumbra viewport, residency and material hosts did not become ready");
 }
 
 async function openBrowserStory() {
-  await waitForViewportHost();
-  const requested = new URL(window.location.href).searchParams.get("activity")
-    ?? catalogHost.session.snapshot().selectedActivityId;
+  await waitForHosts();
+  const requested = query().get("activity") ?? catalogHost.session.snapshot().selectedActivityId;
   catalogHost.session.selectActivity(requested);
   await catalogHost.session.openActivity(requested);
   const run = await catalogHost.session.checkActivity(requested);
   let evidence = readViewportEvidence();
-  document.documentElement.dataset.browserActivity = requested;
-  document.documentElement.dataset.browserCheck = run.status;
-  document.documentElement.dataset.browserCheckCount = String(run.checks.length);
-  if (requested === PACKAGED_HARA_ACTIVITY) {
-    document.documentElement.dataset.browserState = evidence.packagedWorld?.activeState ?? "none";
-    document.documentElement.dataset.browserWorldStatus = evidence.packagedWorld?.status ?? "missing";
-    document.documentElement.dataset.browserDisposal = evidence.packagedWorld?.disposal?.baseline ? "passed" : "failed";
+  const data = document.documentElement.dataset;
+  data.browserActivity = requested;
+  data.browserCheck = run.status;
+  data.browserCheckCount = String(run.checks.length);
+
+  if (requested === IDS.packagedHara) {
+    data.browserState = evidence.packagedWorld?.activeState ?? "none";
+    data.browserWorldStatus = evidence.packagedWorld?.status ?? "missing";
+    data.browserDisposal = evidence.packagedWorld?.disposal?.baseline ? "passed" : "failed";
   }
-  if (RESIDENCY_ACTIVITIES.has(requested)) {
+  if (IDS.residencyActivities.has(requested)) {
     let residency = evidence.residency;
-    document.documentElement.dataset.browserResidency = residency?.activeActivity === requested
-      && residency.status === "ready"
-      ? "passed"
-      : "failed";
-    document.documentElement.dataset.browserDisposal = residency?.disposal?.baseline ? "passed" : "failed";
-    if (requested === CHUNK_RESIDENCY_ACTIVITY) {
-      const beforeMoves = residency?.scenario?.viewpoint?.moves ?? 0;
+    data.browserResidency = residency?.activeActivity === requested && residency.status === "ready"
+      ? "passed" : "failed";
+    data.browserDisposal = residency?.disposal?.baseline ? "passed" : "failed";
+    if (requested === IDS.chunkResidency) {
+      const before = residency?.scenario?.viewpoint?.moves ?? 0;
       window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
-      residency = await waitForResidencyMove(beforeMoves + 1);
+      residency = await waitForResidencyMove(before + 1);
       evidence = readViewportEvidence();
-      document.documentElement.dataset.browserResidencyMove = residency.scenario?.viewpoint?.moves === beforeMoves + 1
+      data.browserResidencyMove = residency.scenario?.viewpoint?.moves === before + 1
         && residency.scenario?.viewpoint?.chunk?.[0] === 2
         && residency.scenario?.current?.residentChunks === residency.scenario?.current?.desiredChunks
-        ? "passed"
-        : "failed";
+        ? "passed" : "failed";
+    }
+  }
+  if (IDS.materialActivities.has(requested)) {
+    const materials = evidence.materials;
+    data.browserMaterial = materials?.activeActivity === requested && materials.status === "ready"
+      ? "passed" : "failed";
+    data.browserState = materials?.activeState ?? "none";
+    data.browserDisposal = materials?.disposal?.baseline ? "passed" : "failed";
+    if (requested === IDS.environmentProfile && requestedMaterialState() === MATERIAL_STATE_IDS.unknown) {
+      const unknown = materials.states?.[MATERIAL_STATE_IDS.unknown];
+      data.browserMaterialError = unknown?.error?.code === "renderer/material-profile-not-installed"
+        && unknown.allocationBaseline === true ? "passed" : "failed";
     }
   }
   if (run.status !== "passed") {
@@ -381,11 +197,8 @@ async function openBrowserStory() {
   if (window.__ALUMBRA_PAGE_ERRORS__?.length) {
     throw new Error(`Browser story recorded ${window.__ALUMBRA_PAGE_ERRORS__.length} page errors`);
   }
-  document.documentElement.dataset.labReady = "true";
+  data.labReady = "true";
 }
 
-void openBrowserStory().catch((error) => {
-  console.error("Alumbra browser story failed", error);
-});
-
+void openBrowserStory().catch((error) => console.error("Alumbra browser story failed", error));
 window.addEventListener("pagehide", () => catalogHost.dispose(), { once: true });
