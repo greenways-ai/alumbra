@@ -108,7 +108,7 @@ run_activity() {
       echo "The lit-world host did not open named state ${state}." >&2
       return 1
     fi
-    for proof in lit-boundary lit-colors lit-visibility lit-mutation lit-stale disposal; do
+    for proof in lit-boundary lit-colors lit-visibility lit-mutation lit-stale lit-ordinary disposal; do
       if ! grep -Fq "data-browser-${proof}=\"passed\"" "$dom"; then
         cat "$dom" >&2
         echo "The lit-world browser proof ${proof} did not pass." >&2
@@ -212,6 +212,10 @@ run_activity "alumbra-viewport-playcanvas/lit-world" "lighting/live"
 run_activity "alumbra-viewport-playcanvas/lit-world" "lighting/lamp-removed"
 run_activity "alumbra-viewport-playcanvas/lit-world" "lighting/lamp-restored"
 run_activity "alumbra-viewport-playcanvas/lit-world" "lighting/stale-generation-rejected"
+run_activity "alumbra-viewport-playcanvas/lit-world" "world/edit-roof-open"
+run_activity "alumbra-viewport-playcanvas/lit-world" "world/edit-lamp-place"
+run_activity "alumbra-viewport-playcanvas/lit-world" "world/edit-lamp-remove"
+run_activity "alumbra-viewport-playcanvas/lit-world" "world/edit-stale-rebuild-rejected"
 run_activity "alumbra-renderer-playcanvas/chunk-residency"
 run_activity "alumbra-renderer-playcanvas/stale-mesh-rejection"
 run_activity "alumbra-renderer-playcanvas/material-matrix"

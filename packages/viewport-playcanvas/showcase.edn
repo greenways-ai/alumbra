@@ -41,7 +41,23 @@
   {:state/id :lighting/stale-generation-rejected
    :state/title "Stale lighting generation rejected"
    :state/summary "An obsolete delayed generation loses to the newer restored canonical revision."
-   :state/file "showcase/states/lit-world-stale-generation.edn"}]
+   :state/file "showcase/states/lit-world-stale-generation.edn"}
+  {:state/id :world/edit-roof-open
+   :state/title "Ordinary roof break admits sunlight"
+   :state/summary "The player controller breaks one revision-checked roof block and incrementally lights the shaft."
+   :state/file "showcase/states/lit-world-edit-roof-open.edn"}
+  {:state/id :world/edit-lamp-place
+   :state/title "Ordinary lamp placement emits"
+   :state/summary "The player controller places one negative-coordinate lamp and reprojects only the bounded affected chunks."
+   :state/file "showcase/states/lit-world-edit-lamp-place.edn"}
+  {:state/id :world/edit-lamp-remove
+   :state/title "Ordinary lamp removal clears"
+   :state/summary "The player controller removes the placed lamp and restores the prior emitted-light baseline."
+   :state/file "showcase/states/lit-world-edit-lamp-remove.edn"}
+  {:state/id :world/edit-stale-rebuild-rejected
+   :state/title "Stale ordinary rebuild rejected"
+   :state/summary "An older delayed lamp-placement rebuild cannot replace the newer canonical removal."
+   :state/file "showcase/states/lit-world-edit-stale-rebuild.edn"}]
 
  :showcase/demos
  [{:demo/id :playable-world
@@ -68,12 +84,12 @@
    :demo/viewport {:viewport/width 1180 :viewport/height 760}}
   {:demo/id :lit-world
    :demo/title "Live lit-world viewport"
-   :demo/summary "Remove and restore a cross-boundary lamp through accepted Core transactions while obsolete lighting generations remain fenced."
+   :demo/summary "Run direct and ordinary player-authored edits through one accepted Core transaction and revision-fenced lighting path."
    :demo/view :lit-world
    :demo/state :lighting/live
    :demo/project "showcase/lit-world"
    :demo/surface :viewport
    :demo/docs "showcase/lit-world/README.md"
-   :demo/tags ["viewport" "lighting" "chunk-boundary" "playable-lab" "level:integration" "checks:8"]
+   :demo/tags ["viewport" "lighting" "ordinary-edits" "chunk-boundary" "playable-lab" "level:integration" "checks:10"]
    :demo/theme :dark
    :demo/viewport {:viewport/width 1180 :viewport/height 760}}]}

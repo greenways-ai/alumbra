@@ -520,12 +520,12 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "toolsetId": "alumbra-viewport-playcanvas",
       "title": "Live lit-world viewport",
       "level": "Integration",
-      "summary": "Remove and restore a cross-boundary lamp through accepted Core transactions while obsolete lighting generations remain fenced.",
+      "summary": "Run direct and ordinary player-authored edits through one accepted Core transaction and revision-fenced lighting path.",
       "instructions": [
-        "Remove and restore a cross-boundary lamp through accepted Core transactions while obsolete lighting generations remain fenced."
+        "Run direct and ordinary player-authored edits through one accepted Core transaction and revision-fenced lighting path."
       ],
       "path": null,
-      "checkCount": 8,
+      "checkCount": 10,
       "metadata": {
         "package": "@greenways/alumbra-viewport-playcanvas",
         "demo": "lit-world",
@@ -533,6 +533,7 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
         "tags": [
           "viewport",
           "lighting",
+          "ordinary-edits",
           "chunk-boundary",
           "playable-lab"
         ],

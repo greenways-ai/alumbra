@@ -84,3 +84,11 @@ mutation; duplicate delivery of the exact current post-state is idempotent.
 The live lit-world Showcase exercises four installed states: `lighting/live`,
 `lighting/lamp-removed`, `lighting/lamp-restored`, and
 `lighting/stale-generation-rejected`.
+
+### Ordinary accepted edits
+
+A lit renderer exposes a synchronous `routeAcceptedTransaction(acceptance, getChunk)` boundary. `createPlayableWorldController` uses it when present, so ordinary player break/place and undo operations reuse the accepted Core receipt, bounded lighting invalidation and stale-generation fences established by AR-12. Non-lit renderers retain the existing direct `setChunk` fallback.
+
+### Exact projection retention
+
+Before rebuilding an affected candidate, the coordinator compares the candidate's canonical revision, full target light bytes, sampled cardinal-neighbour light bytes, and sampled face-touching block values with the installed projection input. Equal inputs retain the installed renderer handle and resources; only candidates whose exact geometry or sampled light input changed are meshed and installed again.

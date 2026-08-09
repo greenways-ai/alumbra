@@ -20,3 +20,7 @@ The Hara source and state values remain descriptive. They contain semantic
 identities, revisions, bounded counters and expected outcomes only—never chunks,
 dense light fields, vertex channels, callbacks, PlayCanvas objects, project paths
 or storage capabilities.
+
+## Ordinary edit relighting
+
+AR-13 adds four pathless named states that call the same playable controller used by normal break/place input. The controller validates the Engine intent, applies one revision-checked Core transaction, receives the closed viewport-lighting receipt, and lets the existing coordinator reproject only the bounded affected chunks. A rejected duplicate edit leaves the world revision, controller sequence and lighting request version unchanged.

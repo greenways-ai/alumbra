@@ -1,0 +1,5 @@
+{:world/state :world/edit-lamp-remove
+ :world/edit {:sequence [:place :break] :chunk "-1,0,0" :local [8 1 4]}
+ :world/lighting {:emitted :baseline-restored}
+ :world/affected ["-1,0,0" "0,0,0"]
+ :world/status :ready}

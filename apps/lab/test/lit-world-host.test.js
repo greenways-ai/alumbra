@@ -3,6 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 import { getBlock } from "@greenways/alumbra-core";
 import {
+  LIT_WORLD_EDIT,
   LIT_WORLD_ID,
   LIT_WORLD_LAMP,
   LIT_WORLD_SHAPE,
@@ -25,6 +26,9 @@ test("lit-world fixture spans the negative-to-zero boundary with a lamp and open
   const right = chunks[1];
   assert.equal(getBlock(left, LIT_WORLD_LAMP.local).id, "lit/lamp");
   assert.equal(getBlock(right, LIT_WORLD_LAMP.adjacentLocal).id, "lit/air");
+  assert.equal(getBlock(right, LIT_WORLD_EDIT.roof.local).id, "lit/stone");
+  assert.equal(getBlock(left, LIT_WORLD_EDIT.lamp.local).id, "lit/air");
+  assert.equal(getBlock(left, [8, 0, 4]).id, "lit/stone");
   assert.equal(getBlock(left, [8, 0, 4]).id, "lit/stone");
   assert.equal(getBlock(right, [8, 7, 4]).id, "lit/air");
 });
@@ -35,6 +39,8 @@ test("the real headless lighting and meshing path crosses the boundary with alig
   assert.equal(evidence.worldId, LIT_WORLD_ID);
   assert.equal(evidence.negativeToZero, true);
   assert.equal(evidence.boundaryEmission, 14);
+  assert.ok(evidence.roofSunlight < 15);
+  assert.ok(evidence.editLampEmission < 15);
   assert.equal(evidence.maximumSunlight, 15);
   assert.equal(evidence.maximumEmitted, 15);
   assert.ok(evidence.meshGroups > 0);
@@ -54,18 +60,26 @@ test("the real headless lighting and meshing path crosses the boundary with alig
   }
 });
 
-test("AR-12 keeps four deterministic states on the accepted Core transaction path", () => {
+test("AR-12 and AR-13 keep deterministic direct and ordinary-edit states on one lighting path", () => {
   assert.deepEqual(LIT_WORLD_STATE_IDS, {
     live: "lighting/live",
     removed: "lighting/lamp-removed",
     restored: "lighting/lamp-restored",
     stale: "lighting/stale-generation-rejected",
+    roofOpen: "world/edit-roof-open",
+    lampPlaced: "world/edit-lamp-place",
+    lampRemoved: "world/edit-lamp-remove",
+    editStale: "world/edit-stale-rebuild-rejected",
   });
-  assert.match(source, /world\.apply\(lampTransaction/);
-  assert.match(source, /world\.undo/);
+  assert.ok(source.includes("world.apply(lampTransaction"));
   assert.match(source, /routeAcceptedLightingTransaction/);
-  assert.match(source, /gate\.arm\(\)/);
+  assert.match(source, /createPlayableWorldController/);
+  assert.ok(source.includes("session.controller.applyAction"));
+  assert.match(source, /viewportReceipt/);
+  assert.match(source, /roofBreakIntent/);
+  assert.match(source, /editLampPlaceIntent/);
+  assert.ok(source.includes("gate.arm()"));
   assert.match(source, /discardedLightingResults/);
-  assert.match(source, /duplicateRejected/);
+  assert.match(source, /rejectedEditUnchanged/);
   assert.doesNotMatch(source, /localStorage|indexedDB|Hestia|Ignatius|Tahto/);
 });

@@ -79,6 +79,10 @@ const stateMessage = (stateId) => ({
   [LIT_WORLD_STATE_IDS.removed]: "A revision-checked Core transaction removed the lamp and only the bounded affected projections were relit dark.",
   [LIT_WORLD_STATE_IDS.restored]: "The accepted inverse transaction restored the lamp and the current boundary lighting generation.",
   [LIT_WORLD_STATE_IDS.stale]: "An obsolete delayed lighting generation was fenced; only the restored canonical revision reached PlayCanvas.",
+  [LIT_WORLD_STATE_IDS.roofOpen]: "An ordinary player break opened the roof and incrementally projected sunlight into the dark shaft.",
+  [LIT_WORLD_STATE_IDS.lampPlaced]: "An ordinary player place installed a negative-coordinate lamp and increased local emitted light.",
+  [LIT_WORLD_STATE_IDS.lampRemoved]: "An ordinary player break removed the placed lamp and returned emission to its baseline.",
+  [LIT_WORLD_STATE_IDS.editStale]: "A delayed rebuild from an older ordinary edit was fenced by the newer canonical lamp removal.",
 }[stateId] ?? `Lit-world state ${stateId} is ready.`);
 
 async function openLitWorld(stateId = LIT_WORLD_DEFAULT_STATE) {

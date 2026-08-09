@@ -4,6 +4,8 @@ import {
 } from "@greenways/alumbra-core";
 import {createBuildTransaction} from "@greenways/alumbra-engine";
 
+const isThenable = (value) => value != null && typeof value.then === "function";
+
 const nonNegativeInteger = (value, label) => {
   if (!Number.isSafeInteger(value) || value < 0) throw new RangeError(`${label} must be a non-negative safe integer`);
   return value;
@@ -48,12 +50,20 @@ export function createPlayableWorldController({
   const ensureActive = () => {
     if (disposed) throw new Error("Playable world controller has been destroyed");
   };
-  const sync = (affected) => {
-    for (const key of affected) {
+  const sync = (acceptance) => {
+    if (typeof renderer.routeAcceptedTransaction === "function") {
+      const receipt = renderer.routeAcceptedTransaction(acceptance, world.getChunk);
+      if (isThenable(receipt)) {
+        throw new TypeError("Playable renderer transaction routing must be synchronous");
+      }
+      return receipt ?? null;
+    }
+    for (const key of acceptance.affected) {
       const chunk = world.getChunk(key);
       if (!chunk) throw new Error(`Accepted transaction removed or omitted affected chunk ${key}`);
       renderer.setChunk(chunk);
     }
+    return null;
   };
   const candidateId = (kind) => `build/${sequence + 1}/${kind}`;
 
@@ -87,8 +97,13 @@ export function createPlayableWorldController({
       revision += 1;
       acceptedJournal.push(result.transaction);
       acceptedUndoStack.push(result.transaction);
-      sync(result.affected);
-      return Object.freeze({...result, transactionSequence: sequence, worldRevision: revision});
+      const viewportReceipt = sync(result);
+      return Object.freeze({
+        ...result,
+        ...(viewportReceipt == null ? {} : { viewportReceipt }),
+        transactionSequence: sequence,
+        worldRevision: revision,
+      });
     },
     undo({id = null, metadata = {}} = {}) {
       ensureActive();
@@ -108,9 +123,10 @@ export function createPlayableWorldController({
       revision += 1;
       acceptedJournal.push(result.transaction);
       acceptedUndoStack.pop();
-      sync(result.affected);
+      const viewportReceipt = sync(result);
       return Object.freeze({
         ...result,
+        ...(viewportReceipt == null ? {} : { viewportReceipt }),
         undone: original.id,
         transactionSequence: sequence,
         worldRevision: revision,

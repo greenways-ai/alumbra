@@ -1,0 +1,5 @@
+{:world/state :world/edit-stale-rebuild-rejected
+ :world/edit {:sequence [:place :break] :chunk "-1,0,0" :local [8 1 4]}
+ :world/fence :coordinator-request-version
+ :world/final-authority :newest-canonical-revision
+ :world/status :ready}
