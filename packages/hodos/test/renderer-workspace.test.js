@@ -131,9 +131,20 @@ test("workspace evidence is closed data and rejects uninstalled or path-shaped i
   assert.ok(Object.isFrozen(evidence.visibleSurfaceIds));
   assert.ok(Object.isFrozen(evidence.authorityIds));
   const serialized = JSON.stringify(evidence);
-  for (const forbidden of ["project", "shader", "source", "callback", "host", "PlayCanvas"]) {
+  for (const forbidden of [
+    "projectPath",
+    "shaderSource",
+    "sourceExpression",
+    "callback",
+    "viewportFactory",
+    "PlayCanvas",
+    "meshBuffer",
+    "chunkArray",
+  ]) {
     assert.equal(serialized.includes(forbidden), false, `evidence leaked ${forbidden}`);
   }
+  assert.equal(typeof evidence.createdHosts, "number");
+  assert.equal(typeof evidence.destroyedHosts, "number");
   await assert.rejects(session.openActivity("../../outside", model()), /semantic package\/activity identity/);
   await assert.rejects(session.openActivity("alumbra-renderer-playcanvas/not-installed", model()), /not installed/);
   await session.destroy();
