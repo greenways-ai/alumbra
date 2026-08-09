@@ -1,0 +1,36 @@
+(ns showcase.alumbra-renderer-playcanvas.light-aware-meshing)
+
+(def equal-light
+  {:sunlight [8 8]
+   :emitted [2 2]
+   :quads 6
+   :vertices 24})
+
+(def split-light
+  {:sunlight [4 10]
+   :emitted [1 3]
+   :quads 10
+   :vertices 40})
+
+[:main {:class "preview-shell"}
+ [:article {:class "card"}
+  [:span {:class "eyebrow"} "ALUMBRA / MESH LIGHTING"]
+  [:h1 "Light changes greedy topology"]
+  [:p "Copied sunlight and emitted-light bytes become deterministic mesh attributes and part of greedy merge compatibility."]
+  [:div {:class "workspace-showcase-grid"}
+   [:section
+    [:strong "1 · Equal light"]
+    [:p "6 quads · 24 vertices"]
+    [:code "sun 8 · emitted 2"]]
+   [:section
+    [:strong "2 · Split light"]
+    [:p "10 quads · 40 vertices"]
+    [:code "sun 4/10 · emitted 1/3"]]
+   [:section
+    [:strong "3 · Attributes"]
+    [:p "one byte per vertex"]
+    [:code "levels 0–15"]]
+   [:section
+    [:strong "4 · Identity"]
+    [:p "lighting changes signature"]
+    [:code "same input stays deterministic"]]]]]

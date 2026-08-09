@@ -1,0 +1,32 @@
+(ns showcase.alumbra-renderer-playcanvas.light-field-handoff)
+
+(def target
+  {:coord [-1 0 0]
+   :east {:sunlight 13 :emitted 4}
+   :west {:sunlight 2 :emitted 1}})
+
+(def fences
+  [:target-revision :cardinal-neighbour :profile :generation :epoch :worker-result])
+
+[:main {:class "preview-shell"}
+ [:article {:class "card"}
+  [:span {:class "eyebrow"} "ALUMBRA / LIGHT HANDOFF"]
+  [:h1 "Exact light evidence crosses the worker boundary"]
+  [:p "A negative-coordinate target samples one loaded cardinal neighbour while stale or substituted snapshots fail before a mesh result is accepted."]
+  [:div {:class "workspace-showcase-grid"}
+   [:section
+    [:strong "1 · Target"]
+    [:p "chunk -1,0,0"]
+    [:code "west 2 / 1"]]
+   [:section
+    [:strong "2 · Neighbour"]
+    [:p "chunk 0,0,0"]
+    [:code "east 13 / 4"]]
+   [:section
+    [:strong "3 · Evidence"]
+    [:p "profile · generation · epoch"]
+    [:code "ordered source revisions"]]
+   [:section
+    [:strong "4 · Reject"]
+    [:p "stale · non-cardinal · substituted"]
+    [:code "unlit shape remains compatible"]]]]]

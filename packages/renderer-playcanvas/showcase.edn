@@ -4,7 +4,7 @@
  :showcase/version "0.1.0"
  :showcase/title "PlayCanvas Renderer"
  :showcase/summary
- "Voxel meshing, material and environment profiles, picking and bounded dynamic residency projected from canonical Alumbra chunks."
+ "Voxel meshing, light-aware attributes, material and environment profiles, picking and bounded dynamic residency projected from canonical Alumbra chunks."
 
  :showcase/views
  [{:view/id :greedy-meshing
@@ -21,7 +21,17 @@
    :view/summary "Render opaque, cutout, transparent, emissive and selection-overlay profiles together with bounded resource evidence."}
   {:view/id :environment-profile
    :view/title "Environment profiles"
-   :view/summary "Switch among daylight, fog and emissive-night environments and reject an unknown installed profile."}]
+   :view/summary "Switch among daylight, fog and emissive-night environments and reject an unknown installed profile."}
+  {:view/id :light-aware-meshing
+   :view/title "Light-aware greedy meshing"
+   :view/summary "Project copied sunlight and emitted-light fields into deterministic per-vertex bytes and lighting-sensitive merge keys."
+   :view/source "src/mesh-light.js"
+   :view/docs "README.md"}
+  {:view/id :light-field-handoff
+   :view/title "Light-field handoff"
+   :view/summary "Verify cardinal-neighbour sampling and exact target, profile, generation, epoch and worker-result evidence."
+   :view/source "src/mesh-worker.js"
+   :view/docs "README.md"}]
 
  :showcase/states
  [{:state/id :mesh/single-chunk
@@ -51,7 +61,15 @@
   {:state/id :materials/unknown-profile-error
    :state/title "Unknown profile rejection"
    :state/summary "An uninstalled material profile fails before any PlayCanvas resource is allocated."
-   :state/file "showcase/states/material-unknown-profile-error.edn"}]
+   :state/file "showcase/states/material-unknown-profile-error.edn"}
+  {:state/id :mesh/light-aware
+   :state/title "Split quads by projected light"
+   :state/summary "Equal face-light pairs retain six greedy quads; changed sunlight and emitted values split only the affected faces."
+   :state/file "showcase/states/light-aware-meshing.edn"}
+  {:state/id :mesh/light-field-handoff
+   :state/title "Cardinal light-field handoff"
+   :state/summary "A negative-coordinate target samples its loaded neighbour and rejects stale or substituted evidence before returning a mesh."
+   :state/file "showcase/states/light-field-handoff.edn"}]
 
  :showcase/demos
  [{:demo/id :greedy-meshing
@@ -107,5 +125,27 @@
    :demo/surface :viewport
    :demo/docs "showcase/environment-profile/README.md"
    :demo/tags ["environment" "fog" "emissive" "level:renderer" "checks:6"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :light-aware-meshing
+   :demo/title "Split greedy quads by light"
+   :demo/summary "Compare equal and different face-light pairs, per-vertex bytes and lighting-sensitive mesh signatures."
+   :demo/view :light-aware-meshing
+   :demo/state :mesh/light-aware
+   :demo/project "showcase/light-aware-meshing"
+   :demo/surface :viewport
+   :demo/docs "showcase/light-aware-meshing/README.md"
+   :demo/tags ["lighting" "meshing" "typed-attributes" "greedy-merge" "level:renderer" "checks:9"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :light-field-handoff
+   :demo/title "Verify the light-field handoff"
+   :demo/summary "Sample a loaded cardinal neighbour at a negative-coordinate face and reject stale or substituted lighting evidence."
+   :demo/view :light-field-handoff
+   :demo/state :mesh/light-field-handoff
+   :demo/project "showcase/light-field-handoff"
+   :demo/surface :viewport
+   :demo/docs "showcase/light-field-handoff/README.md"
+   :demo/tags ["lighting" "worker-meshing" "revision-fence" "chunk-boundary" "level:renderer" "checks:10"]
    :demo/theme :dark
    :demo/viewport {:viewport/width 1180 :viewport/height 760}}]}
