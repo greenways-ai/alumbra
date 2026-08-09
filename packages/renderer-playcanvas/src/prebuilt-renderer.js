@@ -334,7 +334,7 @@ export function createPlayCanvasPrebuiltMeshRenderer({
         ? null
         : normalizeMeshLightingEvidence(prebuilt.lighting, { chunk: canonical });
 
-      // Resolve and project every group before allocating a mesh, material or entity.
+      // Resolve every material profile before allocating a mesh, material or entity; project lighting in the same pre-allocation pass.
       // Unknown profiles or malformed lighting therefore fail with no partial GPU state.
       const preparedGroups = prebuilt.groups.map((group) => {
         const projection = lighting
