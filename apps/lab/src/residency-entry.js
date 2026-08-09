@@ -22,6 +22,7 @@ const hotbar = document.querySelector("[data-hotbar]");
 const status = document.querySelector("[data-status]");
 const panel = document.querySelector("[data-residency-panel]");
 const title = document.querySelector("[data-residency-title]");
+const controls = document.querySelector("[data-residency-controls]");
 const residencyStats = Object.fromEntries(
   [...document.querySelectorAll("[data-residency-stat]")]
     .map((node) => [node.dataset.residencyStat, node]),
@@ -67,6 +68,11 @@ function publishHud(snapshot) {
   if (residencyStats.gpu) {
     residencyStats.gpu.textContent = `${renderer?.meshResources ?? 0}M · ${renderer?.materialResources ?? 0}T`;
   }
+  if (controls) {
+    controls.textContent = scenario?.kind === "cross-boundary"
+      ? `WASD / arrows move one chunk · viewpoint ${scenario.viewpoint?.chunk?.join(",") ?? "—"} · ${scenario.viewpoint?.moves ?? 0} moves`
+      : "The older worker result is fenced from the installed revision.";
+  }
 }
 
 async function openResidency(activityId) {
@@ -80,8 +86,9 @@ async function openResidency(activityId) {
   hideOtherSurfaces();
   publishHud(snapshot);
   status.textContent = activityId === CHUNK_RESIDENCY_ACTIVITY
-    ? "The camera crossed a chunk boundary; new meshes installed and resources behind it were evicted."
+    ? "The viewpoint crossed a chunk boundary. Use WASD or the arrow keys to continue through the resident world."
     : "Revision 2 installed; the later revision-1 completion was rejected as stale.";
+  if (activityId === CHUNK_RESIDENCY_ACTIVITY) residencyCanvas.focus?.({preventScroll: true});
   return snapshot;
 }
 
@@ -107,6 +114,33 @@ const openDemo = (event) => {
 };
 window.addEventListener("alumbra:open-demo", openDemo);
 
+const VIEW_MOVEMENT = new Map([
+  ["KeyA", [-1, 0]],
+  ["ArrowLeft", [-1, 0]],
+  ["KeyD", [1, 0]],
+  ["ArrowRight", [1, 0]],
+  ["KeyW", [0, -1]],
+  ["ArrowUp", [0, -1]],
+  ["KeyS", [0, 1]],
+  ["ArrowDown", [0, 1]],
+]);
+
+const moveViewpoint = (event) => {
+  const delta = VIEW_MOVEMENT.get(event.code);
+  if (!delta || event.repeat || activeActivity !== CHUNK_RESIDENCY_ACTIVITY) return;
+  event.preventDefault();
+  status.textContent = "Crossing into the next chunk residency window…";
+  void host.moveView(delta).then((snapshot) => {
+    if (activeActivity !== CHUNK_RESIDENCY_ACTIVITY) return;
+    hideOtherSurfaces();
+    publishHud(snapshot);
+    status.textContent = `Viewpoint ${snapshot.scenario?.viewpoint?.chunk?.join(",") ?? "—"} is resident; old resources were evicted.`;
+  }).catch((error) => {
+    console.error("Alumbra residency viewpoint movement failed", error);
+  });
+};
+window.addEventListener("keydown", moveViewpoint);
+
 const visibility = () => {
   if (!activeActivity) return;
   if (document.visibilityState === "hidden") {
@@ -130,6 +164,7 @@ function destroy() {
   disposed = true;
   window.removeEventListener("alumbra:open-demo", openDemo);
   window.removeEventListener("resize", resize);
+  window.removeEventListener("keydown", moveViewpoint);
   document.removeEventListener("visibilitychange", visibility);
   clearEvidence();
   panel.hidden = true;

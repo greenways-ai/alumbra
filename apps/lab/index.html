@@ -65,7 +65,7 @@
       <canvas id="alumbra-canvas" data-viewport-session="primary" aria-label="Primary playable Alumbra voxel world"></canvas>
       <canvas id="alumbra-canvas-secondary" data-viewport-session="secondary" aria-label="Secondary independent Alumbra voxel world" hidden></canvas>
       <canvas id="alumbra-canvas-hara" data-viewport-session="hara" aria-label="Package-pinned Hara voxel world" hidden></canvas>
-      <canvas id="alumbra-canvas-residency" data-viewport-session="residency" aria-label="Dynamic renderer residency story" hidden></canvas>
+      <canvas id="alumbra-canvas-residency" data-viewport-session="residency" aria-label="Dynamic renderer residency story" tabindex="0" hidden></canvas>
       <section class="lab-world-error" data-packaged-world-error aria-live="polite" hidden>
         <p class="lab-world-error-eyebrow">ALUMBRA / EXACT PACKAGE LOCK</p>
         <h2 data-packaged-world-error-title>Package mismatch</h2>
@@ -76,6 +76,7 @@
     <aside class="residency-evidence" data-residency-panel aria-live="polite" hidden>
       <p>ALUMBRA / DYNAMIC RESIDENCY</p>
       <h2 data-residency-title>Residency</h2>
+      <p class="residency-controls" data-residency-controls>WASD / arrows move one chunk at a time.</p>
       <dl>
         <div><dt>Resident</dt><dd data-residency-stat="resident">0</dd></div>
         <div><dt>Desired</dt><dd data-residency-stat="desired">0</dd></div>

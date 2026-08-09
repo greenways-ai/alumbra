@@ -122,12 +122,46 @@ function createScene({ pc, app, registry }) {
   return { app, root, renderer, camera, sun };
 }
 
-function frameScene(scene, targetX = 24) {
-  scene.camera.setLocalPosition?.(targetX + 24, 26, 34);
-  if (typeof scene.camera.lookAt === "function") scene.camera.lookAt(targetX, 4, 8);
+function frameScene(scene, targetX = 24, targetZ = 8) {
+  scene.camera.setLocalPosition?.(targetX + 24, 26, targetZ + 26);
+  if (typeof scene.camera.lookAt === "function") scene.camera.lookAt(targetX, 4, targetZ);
   else scene.camera.setLocalEulerAngles?.(-24, 42, 0);
   scene.app.resizeCanvas?.();
   if ("renderNextFrame" in scene.app) scene.app.renderNextFrame = true;
+}
+
+function centerPosition([chunkX, chunkZ]) {
+  return Object.freeze([
+    chunkX * LAB_CHUNK_SHAPE[0] + LAB_CHUNK_SHAPE[0] / 2,
+    12,
+    chunkZ * LAB_CHUNK_SHAPE[2] + LAB_CHUNK_SHAPE[2] / 2,
+  ]);
+}
+
+const centerKey = ([chunkX, chunkZ]) => `${chunkX},0,${chunkZ}`;
+
+function crossBoundaryScenario({ scene, from, to, initial, current, moves }) {
+  const position = centerPosition(to);
+  frameScene(scene, position[0], position[2]);
+  return deepFreeze({
+    kind: "cross-boundary",
+    transition: {
+      from: centerKey(from),
+      to: centerKey(to),
+    },
+    viewpoint: {
+      chunk: [to[0], 0, to[1]],
+      position,
+      moves,
+      controls: ["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"],
+    },
+    initial,
+    current,
+    renderer: rendererEvidence(scene.renderer),
+    crossed: current.meshInstalls > initial.meshInstalls
+      && current.evictedResources > initial.evictedResources
+      && current.residentChunks === current.desiredChunks,
+  });
 }
 
 function createScheduler({
@@ -249,10 +283,12 @@ export function createResidencyStoryHost({
         return buildChunkMesh({ chunk, registry });
       },
     });
-    runtime = { scene, scheduler };
+    const from = [0, 0];
+    const to = [1, 0];
+    runtime = { scene, scheduler, kind: "cross-boundary", center: from, moves: 0 };
 
     scheduler.setView({
-      position: [8, 0, 8],
+      position: centerPosition(from),
       shape: LAB_CHUNK_SHAPE,
       horizontalDistance: 1,
       verticalDistance: 0,
@@ -260,26 +296,22 @@ export function createResidencyStoryHost({
     const initial = await scheduler.drain();
 
     scheduler.setView({
-      position: [24, 0, 8],
+      position: centerPosition(to),
       shape: LAB_CHUNK_SHAPE,
       horizontalDistance: 1,
       verticalDistance: 0,
     });
     const current = await scheduler.drain();
-    frameScene(scene, 24);
+    runtime.center = to;
+    runtime.moves = 1;
 
-    return deepFreeze({
-      kind: "cross-boundary",
-      transition: {
-        from: "0,0,0",
-        to: "1,0,0",
-      },
+    return crossBoundaryScenario({
+      scene,
+      from,
+      to,
       initial,
       current,
-      renderer: rendererEvidence(scene.renderer),
-      crossed: current.meshInstalls > initial.meshInstalls
-        && current.evictedResources > initial.evictedResources
-        && current.residentChunks === current.desiredChunks,
+      moves: runtime.moves,
     });
   };
 
@@ -352,6 +384,50 @@ export function createResidencyStoryHost({
           : await runStaleMesh();
         status = "ready";
         return snapshot();
+      });
+    },
+    moveView(delta = [0, 0]) {
+      return enqueue(async () => {
+        ensureActive();
+        if (activeActivity !== CHUNK_RESIDENCY_ACTIVITY || runtime?.kind !== "cross-boundary") {
+          throw new Error("Residency viewpoint movement requires the active chunk-residency story");
+        }
+        if (
+          !Array.isArray(delta)
+          || delta.length !== 2
+          || delta.some((entry) => !Number.isSafeInteger(entry) || entry < -1 || entry > 1)
+          || (delta[0] === 0 && delta[1] === 0)
+        ) {
+          throw new TypeError("Residency viewpoint delta must contain one bounded horizontal chunk step");
+        }
+        const from = [...runtime.center];
+        const to = [from[0] + delta[0], from[1] + delta[1]];
+        const initial = runtime.scheduler.evidence();
+        status = "moving";
+        try {
+          runtime.scheduler.setView({
+            position: centerPosition(to),
+            shape: LAB_CHUNK_SHAPE,
+            horizontalDistance: 1,
+            verticalDistance: 0,
+          });
+          const current = await runtime.scheduler.drain();
+          runtime.center = to;
+          runtime.moves += 1;
+          scenario = crossBoundaryScenario({
+            scene: runtime.scene,
+            from,
+            to,
+            initial,
+            current,
+            moves: runtime.moves,
+          });
+          status = "ready";
+          return snapshot();
+        } catch (error) {
+          status = "failed";
+          throw error;
+        }
       });
     },
     close(reason = "closed") {

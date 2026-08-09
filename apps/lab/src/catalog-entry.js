@@ -67,6 +67,21 @@ async function waitForResidencyActivity(activityId) {
   throw new Error(`Alumbra residency activity did not become ready: ${activityId}`);
 }
 
+async function waitForResidencyMove(minimumMoves) {
+  for (let attempt = 0; attempt < 400; attempt += 1) {
+    const residency = readViewportEvidence().residency;
+    if (
+      residency?.activeActivity === CHUNK_RESIDENCY_ACTIVITY
+      && residency.status === "ready"
+      && residency.scenario?.viewpoint?.moves >= minimumMoves
+    ) {
+      return residency;
+    }
+    await sleep(25);
+  }
+  throw new Error(`Alumbra residency viewpoint did not reach move ${minimumMoves}`);
+}
+
 const catalogHost = createCatalogHost({
   container,
   catalog: ALUMBRA_RENDERER_CATALOG,
@@ -153,7 +168,9 @@ const catalogHost = createCatalogHost({
             && current.residentChunks === current.desiredChunks
             && current.meshInstalls > initial.meshInstalls
             && current.evictedResources > initial.evictedResources
-            && scenario.crossed === true,
+            && scenario.crossed === true
+            && scenario.viewpoint?.moves >= 1
+            && scenario.viewpoint?.chunk?.[0] === 1,
         ),
         passed(
           "residency/prebuilt-disposal",
@@ -330,7 +347,7 @@ async function openBrowserStory() {
   catalogHost.session.selectActivity(requested);
   await catalogHost.session.openActivity(requested);
   const run = await catalogHost.session.checkActivity(requested);
-  const evidence = readViewportEvidence();
+  let evidence = readViewportEvidence();
   document.documentElement.dataset.browserActivity = requested;
   document.documentElement.dataset.browserCheck = run.status;
   document.documentElement.dataset.browserCheckCount = String(run.checks.length);
@@ -340,12 +357,23 @@ async function openBrowserStory() {
     document.documentElement.dataset.browserDisposal = evidence.packagedWorld?.disposal?.baseline ? "passed" : "failed";
   }
   if (RESIDENCY_ACTIVITIES.has(requested)) {
-    const residency = evidence.residency;
+    let residency = evidence.residency;
     document.documentElement.dataset.browserResidency = residency?.activeActivity === requested
       && residency.status === "ready"
       ? "passed"
       : "failed";
     document.documentElement.dataset.browserDisposal = residency?.disposal?.baseline ? "passed" : "failed";
+    if (requested === CHUNK_RESIDENCY_ACTIVITY) {
+      const beforeMoves = residency?.scenario?.viewpoint?.moves ?? 0;
+      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
+      residency = await waitForResidencyMove(beforeMoves + 1);
+      evidence = readViewportEvidence();
+      document.documentElement.dataset.browserResidencyMove = residency.scenario?.viewpoint?.moves === beforeMoves + 1
+        && residency.scenario?.viewpoint?.chunk?.[0] === 2
+        && residency.scenario?.current?.residentChunks === residency.scenario?.current?.desiredChunks
+        ? "passed"
+        : "failed";
+    }
   }
   if (run.status !== "passed") {
     throw new Error(`Catalog activity checks failed for ${requested}: ${run.message}`);

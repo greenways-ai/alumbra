@@ -109,6 +109,12 @@ run_activity() {
       echo "The residency GPU disposal probe did not return resources to baseline." >&2
       return 1
     fi
+    if [[ "$activity" == "alumbra-renderer-playcanvas/chunk-residency" ]] \
+      && ! grep -Fq 'data-browser-residency-move="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "The keyboard-controlled residency viewpoint did not cross the next chunk boundary." >&2
+      return 1
+    fi
   fi
 
   if [[ -n "$state" ]]; then

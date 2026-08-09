@@ -25,6 +25,9 @@ test("lab mounts both renderer residency stories through a separate live host", 
   assert.match(host, /buildChunkMesh/);
   assert.match(host, /discardedStaleJobs/);
   assert.match(host, /rendererAtBaseline/);
+  assert.match(host, /moveView/);
+  assert.match(entry, /KeyA/);
+  assert.match(entry, /ArrowRight/);
   assert.doesNotMatch(host, /@greenways\/hodos|localStorage|createWorldSave/);
 });
 
@@ -32,6 +35,8 @@ test("Catalog and Chromium gates exercise live residency without exposing render
   assert.match(catalog, /residency\/cross-boundary/);
   assert.match(catalog, /residency\/stale-rejection/);
   assert.match(catalog, /data\.browserResidency|browserResidency/);
+  assert.match(catalog, /KeyboardEvent/);
+  assert.match(catalog, /browserResidencyMove/);
   assert.match(browser, /alumbra-renderer-playcanvas\/chunk-residency/);
   assert.match(browser, /alumbra-renderer-playcanvas\/stale-mesh-rejection/);
   assert.match(browser, /data-browser-disposal="passed"/);

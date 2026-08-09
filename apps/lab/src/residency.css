@@ -38,9 +38,16 @@ body[data-viewport-mode="residency"] .lab-hotbar {
 }
 
 .residency-evidence h2 {
-  margin: 0 0 0.8rem;
+  margin: 0 0 0.45rem;
   font-size: 1.1rem;
   font-weight: 650;
+}
+
+.residency-controls {
+  margin: 0 0 0.8rem;
+  color: rgb(243 239 229 / 68%);
+  font-size: 0.68rem;
+  line-height: 1.45;
 }
 
 .residency-evidence dl {
