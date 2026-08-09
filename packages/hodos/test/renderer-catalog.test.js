@@ -16,7 +16,7 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
   assert.equal(model.catalogId, "catalog/alumbra-renderer");
   assert.equal(model.selectedActivityId, "alumbra-hodos/renderer-catalog");
   assert.equal(model.toolsets.length, 6);
-  assert.equal(model.activities.length, 9);
+  assert.equal(model.activities.length, 11);
   assert.ok(model.activities.every((activity) => activity.path === null));
   assert.deepEqual(
     model.activities
@@ -35,6 +35,8 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
       "alumbra-renderer-playcanvas/greedy-meshing",
       "alumbra-renderer-playcanvas/chunk-residency",
       "alumbra-renderer-playcanvas/stale-mesh-rejection",
+      "alumbra-renderer-playcanvas/material-matrix",
+      "alumbra-renderer-playcanvas/environment-profile",
     ],
   );
   assert.throws(
@@ -52,10 +54,15 @@ test("generated Catalog and installed-demo registry are deeply immutable", () =>
   assert.ok(Object.isFrozen(ALUMBRA_RENDERER_INSTALLED_DEMOS));
   assert.ok(Object.isFrozen(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/two-sessions"]));
   assert.ok(Object.isFrozen(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/chunk-residency"]));
+  assert.ok(Object.isFrozen(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/material-matrix"]));
+  assert.ok(Object.isFrozen(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/environment-profile"]));
   assert.throws(() => {
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/two-sessions"].project = "elsewhere";
   }, TypeError);
   assert.throws(() => {
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/chunk-residency"].project = "elsewhere";
+  }, TypeError);
+  assert.throws(() => {
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/material-matrix"].project = "elsewhere";
   }, TypeError);
 });

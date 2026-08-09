@@ -66,7 +66,7 @@ run_activity() {
     --enable-unsafe-swiftshader \
     --use-gl=angle \
     --use-angle=swiftshader \
-    --virtual-time-budget=25000 \
+    --virtual-time-budget=30000 \
     --dump-dom \
     "$url" >"$dom" 2>"$log"; then
     cat "$log" >&2
@@ -117,7 +117,32 @@ run_activity() {
     fi
   fi
 
-  if [[ -n "$state" ]]; then
+  if [[ "$activity" == "alumbra-renderer-playcanvas/material-matrix" \
+    || "$activity" == "alumbra-renderer-playcanvas/environment-profile" ]]; then
+    if ! grep -Fq 'data-browser-material="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "The live material host did not reach its requested activity." >&2
+      return 1
+    fi
+    if ! grep -Fq 'data-browser-disposal="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "The material/environment disposal probe did not return resources to baseline." >&2
+      return 1
+    fi
+    if [[ -n "$state" ]] && ! grep -Fq "data-browser-state=\"${state}\"" "$dom"; then
+      cat "$dom" >&2
+      echo "Material story did not open named state ${state}." >&2
+      return 1
+    fi
+    if [[ "$state" == "materials/unknown-profile-error" ]] \
+      && ! grep -Fq 'data-browser-material-error="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "Unknown material profile did not fail before GPU allocation." >&2
+      return 1
+    fi
+  fi
+
+  if [[ "$activity" == "alumbra-hara/packaged-height-field" ]]; then
     if ! grep -Fq "data-browser-state=\"${state}\"" "$dom"; then
       cat "$dom" >&2
       echo "Packaged Hara story did not open named state ${state}." >&2
@@ -138,6 +163,11 @@ run_activity "alumbra-viewport-playcanvas/playable-world"
 run_activity "alumbra-viewport-playcanvas/two-sessions"
 run_activity "alumbra-renderer-playcanvas/chunk-residency"
 run_activity "alumbra-renderer-playcanvas/stale-mesh-rejection"
+run_activity "alumbra-renderer-playcanvas/material-matrix"
+run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/daylight"
+run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/fog"
+run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/emissive"
+run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/unknown-profile-error"
 run_activity "alumbra-hara/packaged-height-field" "world/default-seed"
 run_activity "alumbra-hara/packaged-height-field" "world/negative-coordinate"
 run_activity "alumbra-hara/packaged-height-field" "world/package-mismatch"

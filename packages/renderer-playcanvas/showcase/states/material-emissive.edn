@@ -1,0 +1,6 @@
+{:material/state :materials/emissive
+ :material/profile "alumbra/material-emissive"
+ :material/pass "emissive"
+ :environment/profile "alumbra/emissive-night"
+ :environment/fog-mode "exp2"
+ :environment/exposure 1.35}
