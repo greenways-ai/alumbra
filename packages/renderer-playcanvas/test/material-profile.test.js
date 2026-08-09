@@ -8,7 +8,7 @@ import {
   describeMaterialGroup,
   inferMaterialProfileId,
   normalizeMaterialProfile,
-} from "./material-profile.js";
+} from "../src/material-profile.js";
 
 const registry = {
   values: new Map(),

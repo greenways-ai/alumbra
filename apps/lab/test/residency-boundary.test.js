@@ -5,7 +5,10 @@ import test from "node:test";
 const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const entry = fs.readFileSync(new URL("../src/residency-entry.js", import.meta.url), "utf8");
 const host = fs.readFileSync(new URL("../src/residency-host.js", import.meta.url), "utf8");
-const catalog = fs.readFileSync(new URL("../src/catalog-entry.js", import.meta.url), "utf8");
+const catalog = [
+  fs.readFileSync(new URL("../src/catalog-entry.js", import.meta.url), "utf8"),
+  fs.readFileSync(new URL("../src/catalog-checks.js", import.meta.url), "utf8"),
+].join("\n");
 const browser = fs.readFileSync(new URL("../../../scripts/check-lab-browser.sh", import.meta.url), "utf8");
 const prebuilt = fs.readFileSync(
   new URL("../../../packages/renderer-playcanvas/src/prebuilt-renderer.js", import.meta.url),

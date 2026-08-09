@@ -7,7 +7,7 @@ import {
   createEnvironmentProfileRegistry,
   createPlayCanvasEnvironmentController,
   normalizeEnvironmentProfile,
-} from "./environment-profile.js";
+} from "../src/environment-profile.js";
 
 class Color {
   constructor(r, g, b) { this.r = r; this.g = g; this.b = b; }
