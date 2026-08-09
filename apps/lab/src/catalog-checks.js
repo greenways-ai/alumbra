@@ -3,6 +3,8 @@ const RESIDENCY_EVIDENCE_FORMAT = "alumbra.residency-evidence/1";
 const MATERIAL_STORY_FORMAT = "alumbra.material-story/1";
 const MATERIAL_RENDER_EVIDENCE_FORMAT = "alumbra.material-render-evidence/1";
 const ENVIRONMENT_EVIDENCE_FORMAT = "alumbra.environment-evidence/1";
+const WORKSPACE_STORY_FORMAT = "alumbra.renderer-workspace-story/1";
+const WORKSPACE_EVIDENCE_FORMAT = "alumbra.renderer-workspace-evidence/1";
 
 const DEFAULT_SEED_STATE = "world/default-seed";
 const NEGATIVE_COORDINATE_STATE = "world/negative-coordinate";
@@ -11,6 +13,8 @@ const MATERIAL_DAYLIGHT_STATE = "materials/daylight";
 const MATERIAL_FOG_STATE = "materials/fog";
 const MATERIAL_EMISSIVE_STATE = "materials/emissive";
 const MATERIAL_UNKNOWN_STATE = "materials/unknown-profile-error";
+const WORKSPACE_WIDE_STATE = "workspace/wide";
+const WORKSPACE_COMPACT_STATE = "workspace/compact";
 const FIXTURE_PACKAGE = "hara:greenways/alumbra-hara";
 const FIXTURE_GENERATOR = "alumbra/fixture-height-field";
 
@@ -19,6 +23,11 @@ export const MATERIAL_STATE_IDS = Object.freeze({
   fog: MATERIAL_FOG_STATE,
   emissive: MATERIAL_EMISSIVE_STATE,
   unknown: MATERIAL_UNKNOWN_STATE,
+});
+
+export const WORKSPACE_STATE_IDS = Object.freeze({
+  wide: WORKSPACE_WIDE_STATE,
+  compact: WORKSPACE_COMPACT_STATE,
 });
 
 const passed = (id, label, condition) => ({
@@ -214,6 +223,79 @@ function environmentChecks({ activityId, evidence, elements, requestedMaterialSt
   ];
 }
 
+function workspaceChecks({ activityId, evidence, elements, requestedWorkspaceState }) {
+  const story = evidence.workspace;
+  const lifecycle = story?.workspace;
+  const proofs = story?.proofs;
+  const expectedLayout = requestedWorkspaceState === WORKSPACE_COMPACT_STATE ? "compact" : "wide";
+  const expectedSurfaces = expectedLayout === "compact"
+    ? ["catalog", "world", "code", "execution", "problems"]
+    : ["catalog", "world", "code", "execution", "problems", "repl"];
+  const serialized = JSON.stringify(story ?? {});
+  return [
+    passed(
+      "workspace/live-surface",
+      "The integrated Hodos renderer Workspace opens through its installed identity",
+      story?.format === WORKSPACE_STORY_FORMAT
+        && story.activeActivity === activityId
+        && story.activeState === requestedWorkspaceState
+        && story.status === "ready"
+        && lifecycle?.format === WORKSPACE_EVIDENCE_FORMAT
+        && lifecycle.layout === expectedLayout
+        && lifecycle.activeSurfaceId === "world"
+        && Boolean(elements.workspaceShell && !elements.workspaceShell.hidden)
+        && Boolean(elements.workspaceCanvas && !elements.workspaceCanvas.hidden),
+    ),
+    passed(
+      "workspace/model-reuse",
+      "Ordinary model changes preserve the same engine, session and canonical world",
+      proofs?.modelUpdatePreserved === true
+        && lifecycle.modelUpdates === 1
+        && lifecycle.createdHosts === 2,
+    ),
+    passed(
+      "workspace/hidden-suspends",
+      "Hiding the World surface suspends the active viewport host",
+      proofs?.hiddenWorldSuspended === true
+        && lifecycle.suspendedHosts >= 1,
+    ),
+    passed(
+      "workspace/return-resumes",
+      "Returning to World resumes the same canonical world and engine",
+      proofs?.resumedSameWorld === true
+        && lifecycle.resumedHosts >= 1
+        && lifecycle.viewportStatus === "active",
+    ),
+    passed(
+      "workspace/activity-disposal",
+      "Switching installed activities destroys the previous viewport before creating the next",
+      proofs?.activitySwitchDisposedPrevious === true
+        && lifecycle.activitySwitches === 1
+        && lifecycle.destroyedHosts === 1
+        && story.disposal?.baseline === true,
+    ),
+    passed(
+      "workspace/separate-authorities",
+      "Catalog, World, Code, Execution, Problems and REPL remain separate bounded authorities",
+      proofs?.separateAuthorities === true
+        && lifecycle.authorityIds?.length === 6
+        && new Set(lifecycle.authorityIds).size === 6
+        && JSON.stringify(lifecycle.visibleSurfaceIds) === JSON.stringify(expectedSurfaces)
+        && proofs?.requestedLayoutProjected === true,
+    ),
+    passed(
+      "workspace/bounded-evidence",
+      "Workspace evidence contains identities and lifecycle counts but no renderer or project authority",
+      proofs?.boundedEvidence === true
+        && !serialized.includes("projectPath")
+        && !serialized.includes("shaderSource")
+        && !serialized.includes("meshBuffer")
+        && !serialized.includes("callback")
+        && !serialized.includes("PlayCanvas"),
+    ),
+  ];
+}
+
 function haraChecks({ evidence, elements, requestedHaraState }) {
   const packaged = evidence.packagedWorld;
   const defaultWorld = packaged?.states?.[DEFAULT_SEED_STATE];
@@ -321,9 +403,12 @@ export function buildCatalogChecks({
   ids,
   requestedHaraState,
   requestedMaterialState,
+  requestedWorkspaceState,
 }) {
   const checks = commonChecks({ activity, demo, eventLog });
-  if (ids.residencyActivities.has(activityId)) {
+  if (activityId === ids.rendererWorkspace) {
+    checks.push(...workspaceChecks({ activityId, evidence, elements, requestedWorkspaceState }));
+  } else if (ids.residencyActivities.has(activityId)) {
     checks.push(...residencyChecks({ activityId, evidence, elements, ids }));
   } else if (activityId === ids.materialMatrix) {
     checks.push(...materialMatrixChecks({ activityId, evidence, elements }));
