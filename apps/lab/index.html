@@ -37,6 +37,7 @@
   <link rel="stylesheet" href="./src/style.css">
   <link rel="stylesheet" href="./src/catalog.css">
   <link rel="stylesheet" href="./src/packaged-hara.css">
+  <link rel="stylesheet" href="./src/residency.css">
   <script type="importmap">
   {
     "imports": {
@@ -64,6 +65,7 @@
       <canvas id="alumbra-canvas" data-viewport-session="primary" aria-label="Primary playable Alumbra voxel world"></canvas>
       <canvas id="alumbra-canvas-secondary" data-viewport-session="secondary" aria-label="Secondary independent Alumbra voxel world" hidden></canvas>
       <canvas id="alumbra-canvas-hara" data-viewport-session="hara" aria-label="Package-pinned Hara voxel world" hidden></canvas>
+      <canvas id="alumbra-canvas-residency" data-viewport-session="residency" aria-label="Dynamic renderer residency story" hidden></canvas>
       <section class="lab-world-error" data-packaged-world-error aria-live="polite" hidden>
         <p class="lab-world-error-eyebrow">ALUMBRA / EXACT PACKAGE LOCK</p>
         <h2 data-packaged-world-error-title>Package mismatch</h2>
@@ -71,6 +73,18 @@
         <code>hara/package-version-mismatch</code>
       </section>
     </section>
+    <aside class="residency-evidence" data-residency-panel aria-live="polite" hidden>
+      <p>ALUMBRA / DYNAMIC RESIDENCY</p>
+      <h2 data-residency-title>Residency</h2>
+      <dl>
+        <div><dt>Resident</dt><dd data-residency-stat="resident">0</dd></div>
+        <div><dt>Desired</dt><dd data-residency-stat="desired">0</dd></div>
+        <div><dt>Installs</dt><dd data-residency-stat="installs">0</dd></div>
+        <div><dt>Stale</dt><dd data-residency-stat="stale">0</dd></div>
+        <div><dt>Evicted</dt><dd data-residency-stat="evicted">0</dd></div>
+        <div><dt>GPU</dt><dd data-residency-stat="gpu">0</dd></div>
+      </dl>
+    </aside>
     <section class="lab-panel" aria-live="polite">
       <p class="lab-eyebrow">ALUMBRA / PLAYABLE LAB</p>
       <h1>Canonical blocks.<br>Package-pinned worlds.</h1>
@@ -91,5 +105,6 @@
   </main>
   <script type="module" src="./src/catalog-entry.js"></script>
   <script type="module" src="./src/main.js"></script>
+  <script type="module" src="./src/residency-entry.js"></script>
 </body>
 </html>
