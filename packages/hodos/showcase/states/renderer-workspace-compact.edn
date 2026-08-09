@@ -1,0 +1,9 @@
+{:workspace/state :workspace/compact
+ :workspace/layout "compact"
+ :workspace/viewport-width 640
+ :workspace/active-surface "world"
+ :workspace/tabs ["catalog" "world" "code" "execution" "problems"]
+ :workspace/repl-hidden true
+ :workspace/lifecycle {:model-update-preserves-engine true
+                       :hidden-world-suspends true
+                       :activity-switch-destroys-previous true}}

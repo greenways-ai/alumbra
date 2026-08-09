@@ -1,0 +1,16 @@
+(ns showcase.alumbra-hodos.renderer-workspace)
+
+(def workspace-evidence
+  {:format "alumbra.renderer-workspace-evidence/1"
+   :layout "wide"
+   :authorities ["catalog/installed-identities"
+                 "viewport/engine-host"
+                 "code/document-metadata"
+                 "execution/bounded-events"
+                 "problems/bounded-diagnostics"
+                 "repl/session-status"]
+   :model-update-preserves-engine true
+   :hidden-world-suspends true
+   :activity-switch-destroys-previous true})
+
+workspace-evidence

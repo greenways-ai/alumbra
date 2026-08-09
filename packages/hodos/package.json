@@ -1,7 +1,7 @@
 {
   "name": "@greenways/alumbra-hodos",
   "version": "0.1.0",
-  "description": "Trusted Hodos Workspace component adapters for Alumbra",
+  "description": "Trusted Hodos Workspace component and renderer-workspace adapters for Alumbra",
   "type": "module",
   "license": "EPL-2.0",
   "repository": {
@@ -13,6 +13,7 @@
     ".": "./src/index.js",
     "./model": "./src/model.js",
     "./host": "./src/host.js",
+    "./workspace": "./src/renderer-workspace.js",
     "./catalog": "./generated/renderer-catalog.js",
     "./hara/*": "./src/gw/alumbra/*.hal"
   },

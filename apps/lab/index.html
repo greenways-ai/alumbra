@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="./src/packaged-hara.css">
   <link rel="stylesheet" href="./src/residency.css">
   <link rel="stylesheet" href="./src/material.css">
+  <link rel="stylesheet" href="./src/workspace.css">
   <script type="importmap">
   {
     "imports": {
@@ -50,6 +51,8 @@
       "@greenways/alumbra-viewport-playcanvas": "../../packages/viewport-playcanvas/src/index.js",
       "@greenways/alumbra-viewport-playcanvas/input": "../../packages/viewport-playcanvas/src/input.js",
       "@greenways/alumbra-viewport-playcanvas/world": "../../packages/viewport-playcanvas/src/world-controller.js",
+      "@greenways/alumbra-hodos": "../../packages/hodos/src/index.js",
+      "@greenways/alumbra-hodos/workspace": "../../packages/hodos/src/renderer-workspace.js",
       "@greenways/alumbra-hodos/catalog": "../../packages/hodos/generated/renderer-catalog.js",
       "@greenways/alumbra-core/blocks": "../../packages/core/src/block-registry.js",
       "@greenways/alumbra-core/chunks": "../../packages/core/src/chunk.js",
@@ -62,6 +65,75 @@
 <body data-viewport-mode="single">
   <main class="lab-shell">
     <aside class="renderer-catalog" data-renderer-catalog aria-label="Alumbra Renderer Catalog"></aside>
+
+    <section class="renderer-workspace" data-renderer-workspace data-layout="wide" data-surface="world" hidden>
+      <nav class="workspace-tabs" aria-label="Compact renderer Workspace surfaces">
+        <button type="button" data-workspace-surface="catalog">Catalog</button>
+        <button type="button" data-workspace-surface="world" data-selected="true">World</button>
+        <button type="button" data-workspace-surface="code">Code</button>
+        <button type="button" data-workspace-surface="execution">Execution</button>
+        <button type="button" data-workspace-surface="problems">Problems</button>
+      </nav>
+      <div class="workspace-left">
+        <section class="workspace-area" data-workspace-area="catalog">
+          <header class="workspace-area-header">
+            <div>
+              <p class="workspace-kicker">HODOS / INSTALLED ACTIVITIES</p>
+              <h2>Renderer Catalog</h2>
+            </div>
+          </header>
+          <ul class="workspace-catalog-list">
+            <li><button type="button" data-workspace-activity="alumbra-renderer-playcanvas/material-matrix">Material matrix</button></li>
+            <li><button type="button" data-workspace-activity="alumbra-renderer-playcanvas/environment-profile">Environment profiles</button></li>
+            <li><button type="button" data-workspace-activity="alumbra-renderer-playcanvas/chunk-residency" data-selected="true">Dynamic chunk residency</button></li>
+          </ul>
+        </section>
+        <section class="workspace-area" data-workspace-area="code">
+          <header class="workspace-area-header">
+            <div>
+              <p class="workspace-area-label">CODE AUTHORITY</p>
+              <h3>Package document</h3>
+            </div>
+          </header>
+          <div class="workspace-code">
+            <span>package: @greenways/alumbra-renderer-playcanvas</span>
+            <span>entry: installed semantic identity</span>
+            <span>source: metadata only · no executable expression</span>
+          </div>
+        </section>
+      </div>
+      <section class="workspace-world" data-workspace-area="world">
+        <canvas id="alumbra-canvas-workspace" data-viewport-session="workspace" aria-label="Integrated Hodos Alumbra renderer Workspace"></canvas>
+        <aside class="workspace-world-evidence" aria-live="polite">
+          <p class="workspace-area-label">WORLD AUTHORITY</p>
+          <dl>
+            <div><dt>Status</dt><dd data-workspace-status>idle</dd></div>
+            <div><dt>Layout</dt><dd data-workspace-layout>wide</dd></div>
+            <div><dt>Engine</dt><dd data-workspace-engine>—</dd></div>
+            <div><dt>World</dt><dd data-workspace-world>—</dd></div>
+            <div><dt>Lifecycle</dt><dd data-workspace-lifecycle>0 create</dd></div>
+          </dl>
+        </aside>
+      </section>
+      <div class="workspace-dev-row">
+        <section class="workspace-area" data-workspace-area="problems">
+          <p class="workspace-area-label">PROBLEMS AUTHORITY</p>
+          <h3>Problems</h3>
+          <p class="workspace-dev-copy" data-workspace-problems>0 bounded problems</p>
+        </section>
+        <section class="workspace-area" data-workspace-area="execution">
+          <p class="workspace-area-label">EXECUTION AUTHORITY</p>
+          <h3>Execution</h3>
+          <p class="workspace-dev-copy" data-workspace-execution>0 switches</p>
+        </section>
+        <section class="workspace-area" data-workspace-area="repl">
+          <p class="workspace-area-label">REPL AUTHORITY</p>
+          <h3>Hara REPL</h3>
+          <p class="workspace-dev-copy" data-workspace-repl>session idle · input authority withheld</p>
+        </section>
+      </div>
+    </section>
+
     <section class="lab-viewport-grid" data-viewport-grid data-mode="single" aria-label="Alumbra viewport sessions">
       <canvas id="alumbra-canvas" data-viewport-session="primary" aria-label="Primary playable Alumbra voxel world"></canvas>
       <canvas id="alumbra-canvas-secondary" data-viewport-session="secondary" aria-label="Secondary independent Alumbra voxel world" hidden></canvas>
@@ -123,5 +195,6 @@
   <script type="module" src="./src/main.js"></script>
   <script type="module" src="./src/residency-entry.js"></script>
   <script type="module" src="./src/material-entry.js"></script>
+  <script type="module" src="./src/workspace-entry.js"></script>
 </body>
 </html>
