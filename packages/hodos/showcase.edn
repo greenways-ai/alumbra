@@ -47,7 +47,7 @@
    :demo/view :renderer-workspace
    :demo/state :workspace/wide
    :demo/project "showcase/renderer-workspace"
-   :demo/surface :workspace
+   :demo/surface :world
    :demo/docs "showcase/renderer-workspace/README.md"
    :demo/tags ["workspace" "catalog" "lifecycle" "dev-surfaces" "playable-lab" "level:integration" "checks:10"]
    :demo/theme :dark
