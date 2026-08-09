@@ -48,7 +48,7 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
 test("generated Catalog projection contains the complete pathless renderer train", () => {
   assert.equal(ALUMBRA_RENDERER_CATALOG.id, "catalog/alumbra-renderer");
   assert.equal(ALUMBRA_RENDERER_CATALOG.toolsets.length, 6);
-  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 14);
+  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 18);
   assert.ok(ALUMBRA_RENDERER_CATALOG.activities.every((activity) => activity.path === null));
   assert.equal(ALUMBRA_RENDERER_CATALOG.selectedActivityId, "alumbra-hodos/renderer-catalog");
   assert.deepEqual(
@@ -67,6 +67,8 @@ test("generated Catalog projection contains the complete pathless renderer train
     [
       "alumbra-engine/walk-collide-jump",
       "alumbra-engine/build-intent-undo",
+      "alumbra-engine/voxel-light-fields",
+      "alumbra-engine/lighting-runtime-fences",
     ],
   );
   assert.deepEqual(
@@ -79,6 +81,8 @@ test("generated Catalog projection contains the complete pathless renderer train
       "alumbra-renderer-playcanvas/stale-mesh-rejection",
       "alumbra-renderer-playcanvas/material-matrix",
       "alumbra-renderer-playcanvas/environment-profile",
+      "alumbra-renderer-playcanvas/light-aware-meshing",
+      "alumbra-renderer-playcanvas/light-field-handoff",
     ],
   );
   assert.deepEqual(
@@ -103,10 +107,18 @@ test("generated Catalog projection contains the complete pathless renderer train
     .find((activity) => activity.id === "alumbra-hara/packaged-height-field");
   const workspace = ALUMBRA_RENDERER_CATALOG.activities
     .find((activity) => activity.id === "alumbra-hodos/renderer-workspace");
+  const voxelLighting = ALUMBRA_RENDERER_CATALOG.activities
+    .find((activity) => activity.id === "alumbra-engine/voxel-light-fields");
+  const lightHandoff = ALUMBRA_RENDERER_CATALOG.activities
+    .find((activity) => activity.id === "alumbra-renderer-playcanvas/light-field-handoff");
   assert.equal(packagedHara.metadata.surface, "viewport");
   assert.equal(packagedHara.checkCount, 9);
   assert.equal(workspace.metadata.surface, "world");
   assert.equal(workspace.checkCount, 10);
+  assert.equal(voxelLighting.metadata.surface, "preview");
+  assert.equal(voxelLighting.checkCount, 9);
+  assert.equal(lightHandoff.metadata.surface, "viewport");
+  assert.equal(lightHandoff.checkCount, 10);
   assert.equal(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-core/reversible-block-transaction"].project,
     "packages/core/showcase/reversible-block-transaction",
@@ -114,6 +126,26 @@ test("generated Catalog projection contains the complete pathless renderer train
   assert.equal(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-engine/build-intent-undo"].project,
     "packages/engine/showcase/build-intent-undo",
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-engine/voxel-light-fields"],
+    {
+      package: "@greenways/alumbra-engine",
+      demo: "voxel-light-fields",
+      project: "packages/engine/showcase/voxel-light-fields",
+      surface: "preview",
+      host: "showcase-project",
+    },
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/light-field-handoff"],
+    {
+      package: "@greenways/alumbra-renderer-playcanvas",
+      demo: "light-field-handoff",
+      project: "packages/renderer-playcanvas/showcase/light-field-handoff",
+      surface: "viewport",
+      host: "showcase-project",
+    },
   );
   assert.deepEqual(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hodos/renderer-workspace"],
@@ -209,7 +241,7 @@ test("Catalog opens viewport, packaged-Hara and Workspace activities through ins
   session.dispose();
 });
 
-test("Catalog resolves renderer residency and material activities through installed projects", async () => {
+test("Catalog resolves renderer residency, material and lighting activities through installed projects", async () => {
   const opened = [];
   const session = createCatalogSession({
     catalog: ALUMBRA_RENDERER_CATALOG,
@@ -221,6 +253,8 @@ test("Catalog resolves renderer residency and material activities through instal
     "alumbra-renderer-playcanvas/stale-mesh-rejection",
     "alumbra-renderer-playcanvas/material-matrix",
     "alumbra-renderer-playcanvas/environment-profile",
+    "alumbra-renderer-playcanvas/light-aware-meshing",
+    "alumbra-renderer-playcanvas/light-field-handoff",
   ];
   for (const activityId of activityIds) {
     session.selectActivity(activityId);
@@ -233,6 +267,8 @@ test("Catalog resolves renderer residency and material activities through instal
       "packages/renderer-playcanvas/showcase/stale-mesh-rejection",
       "packages/renderer-playcanvas/showcase/material-matrix",
       "packages/renderer-playcanvas/showcase/environment-profile",
+      "packages/renderer-playcanvas/showcase/light-aware-meshing",
+      "packages/renderer-playcanvas/showcase/light-field-handoff",
     ],
   );
   assert.ok(opened.every((request) => request.demo.host === "showcase-project"));
