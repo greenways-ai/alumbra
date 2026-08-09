@@ -97,6 +97,26 @@ run_activity() {
     return 1
   fi
 
+  if [[ "$activity" == "alumbra-renderer-playcanvas/chunk-residency" \
+    || "$activity" == "alumbra-renderer-playcanvas/stale-mesh-rejection" ]]; then
+    if ! grep -Fq 'data-browser-residency="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "The live renderer residency host did not reach its requested activity." >&2
+      return 1
+    fi
+    if ! grep -Fq 'data-browser-disposal="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "The residency GPU disposal probe did not return resources to baseline." >&2
+      return 1
+    fi
+    if [[ "$activity" == "alumbra-renderer-playcanvas/chunk-residency" ]] \
+      && ! grep -Fq 'data-browser-residency-move="passed"' "$dom"; then
+      cat "$dom" >&2
+      echo "The keyboard-controlled residency viewpoint did not cross the next chunk boundary." >&2
+      return 1
+    fi
+  fi
+
   if [[ -n "$state" ]]; then
     if ! grep -Fq "data-browser-state=\"${state}\"" "$dom"; then
       cat "$dom" >&2
@@ -116,6 +136,8 @@ run_activity() {
 run_activity "alumbra-hodos/renderer-catalog"
 run_activity "alumbra-viewport-playcanvas/playable-world"
 run_activity "alumbra-viewport-playcanvas/two-sessions"
+run_activity "alumbra-renderer-playcanvas/chunk-residency"
+run_activity "alumbra-renderer-playcanvas/stale-mesh-rejection"
 run_activity "alumbra-hara/packaged-height-field" "world/default-seed"
 run_activity "alumbra-hara/packaged-height-field" "world/negative-coordinate"
 run_activity "alumbra-hara/packaged-height-field" "world/package-mismatch"

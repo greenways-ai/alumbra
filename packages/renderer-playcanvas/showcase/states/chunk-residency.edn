@@ -3,6 +3,10 @@
  :residency/next-center [1 0 0]
  :residency/horizontal-distance 1
  :residency/vertical-distance 0
+ :residency/viewpoint
+ {:chunk [1 0 0]
+  :moves 1
+  :controls ["KeyW" "KeyA" "KeyS" "KeyD" "ArrowUp" "ArrowLeft" "ArrowDown" "ArrowRight"]}
  :residency/evidence
  {:desired-chunks 5
   :resident-chunks 5

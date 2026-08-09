@@ -8,18 +8,29 @@ import {readViewportEvidence} from "./viewport-evidence.js";
 const PLAYABLE_WORLD_ACTIVITY = "alumbra-viewport-playcanvas/playable-world";
 const TWO_SESSIONS_ACTIVITY = "alumbra-viewport-playcanvas/two-sessions";
 const PACKAGED_HARA_ACTIVITY = "alumbra-hara/packaged-height-field";
+const CHUNK_RESIDENCY_ACTIVITY = "alumbra-renderer-playcanvas/chunk-residency";
+const STALE_MESH_ACTIVITY = "alumbra-renderer-playcanvas/stale-mesh-rejection";
 const CATALOG_ACTIVITY = "alumbra-hodos/renderer-catalog";
+const RESIDENCY_STORY_FORMAT = "alumbra.residency-story/1";
+const RESIDENCY_EVIDENCE_FORMAT = "alumbra.residency-evidence/1";
 const DEFAULT_SEED_STATE = "world/default-seed";
 const NEGATIVE_COORDINATE_STATE = "world/negative-coordinate";
 const PACKAGE_MISMATCH_STATE = "world/package-mismatch";
 const FIXTURE_PACKAGE = "hara:greenways/alumbra-hara";
 const FIXTURE_GENERATOR = "alumbra/fixture-height-field";
 
+const RESIDENCY_ACTIVITIES = new Set([
+  CHUNK_RESIDENCY_ACTIVITY,
+  STALE_MESH_ACTIVITY,
+]);
+
 const container = document.querySelector("[data-renderer-catalog]");
 const labStatus = document.querySelector("[data-status]");
 const primaryCanvas = document.querySelector("#alumbra-canvas");
 const secondaryCanvas = document.querySelector("#alumbra-canvas-secondary");
 const haraCanvas = document.querySelector("#alumbra-canvas-hara");
+const residencyCanvas = document.querySelector("#alumbra-canvas-residency");
+const residencyPanel = document.querySelector("[data-residency-panel]");
 const packagedWorldError = document.querySelector("[data-packaged-world-error]");
 
 if (!container) throw new Error("Alumbra lab is missing the Renderer Catalog mount");
@@ -39,6 +50,38 @@ const openDetail = (activityId) => ({
   ...(activityId === PACKAGED_HARA_ACTIVITY ? {stateId: requestedState()} : {}),
 });
 
+const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function waitForResidencyActivity(activityId) {
+  for (let attempt = 0; attempt < 400; attempt += 1) {
+    const residency = readViewportEvidence().residency;
+    if (
+      residency?.activeActivity === activityId
+      && residency.status === "ready"
+      && residency.scenario
+    ) {
+      return residency;
+    }
+    await sleep(25);
+  }
+  throw new Error(`Alumbra residency activity did not become ready: ${activityId}`);
+}
+
+async function waitForResidencyMove(minimumMoves) {
+  for (let attempt = 0; attempt < 400; attempt += 1) {
+    const residency = readViewportEvidence().residency;
+    if (
+      residency?.activeActivity === CHUNK_RESIDENCY_ACTIVITY
+      && residency.status === "ready"
+      && residency.scenario?.viewpoint?.moves >= minimumMoves
+    ) {
+      return residency;
+    }
+    await sleep(25);
+  }
+  throw new Error(`Alumbra residency viewpoint did not reach move ${minimumMoves}`);
+}
+
 const catalogHost = createCatalogHost({
   container,
   catalog: ALUMBRA_RENDERER_CATALOG,
@@ -55,6 +98,13 @@ const catalogHost = createCatalogHost({
     window.dispatchEvent(new CustomEvent("alumbra:open-demo", {
       detail: openDetail(activityId),
     }));
+    if (RESIDENCY_ACTIVITIES.has(activityId)) {
+      await waitForResidencyActivity(activityId);
+      if (labStatus) {
+        labStatus.textContent = `${activity.title} opened through the live renderer residency host.`;
+      }
+      return;
+    }
     if (demo.host === "playable-lab") {
       if (labStatus) labStatus.textContent = `${activity.title} opened through the installed Renderer Catalog identity.`;
       return;
@@ -86,10 +136,80 @@ const catalogHost = createCatalogHost({
     window.dispatchEvent(new CustomEvent("alumbra:open-demo", {
       detail: openDetail(activityId),
     }));
-    await Promise.resolve();
+    if (RESIDENCY_ACTIVITIES.has(activityId)) {
+      await waitForResidencyActivity(activityId);
+    } else {
+      await Promise.resolve();
+    }
     const evidence = readViewportEvidence();
 
-    if (activityId === PACKAGED_HARA_ACTIVITY) {
+    if (activityId === CHUNK_RESIDENCY_ACTIVITY) {
+      const residency = evidence.residency;
+      const scenario = residency?.scenario;
+      const initial = scenario?.initial;
+      const current = scenario?.current;
+      checks.push(
+        passed(
+          "residency/live-surface",
+          "The live prebuilt-mesh residency surface is mounted through its semantic identity",
+          residency?.format === RESIDENCY_STORY_FORMAT
+            && residency.activeActivity === activityId
+            && residency.status === "ready"
+            && scenario?.kind === "cross-boundary"
+            && Boolean(residencyCanvas && !residencyCanvas.hidden)
+            && Boolean(residencyPanel && !residencyPanel.hidden),
+        ),
+        passed(
+          "residency/cross-boundary",
+          "Crossing one chunk boundary replaces the bounded window and evicts resources behind it",
+          initial?.format === RESIDENCY_EVIDENCE_FORMAT
+            && current?.format === RESIDENCY_EVIDENCE_FORMAT
+            && initial.residentChunks === initial.desiredChunks
+            && current.residentChunks === current.desiredChunks
+            && current.meshInstalls > initial.meshInstalls
+            && current.evictedResources > initial.evictedResources
+            && scenario.crossed === true
+            && scenario.viewpoint?.moves >= 1
+            && scenario.viewpoint?.chunk?.[0] === 1,
+        ),
+        passed(
+          "residency/prebuilt-disposal",
+          "Worker meshes install without recomputation and a GPU disposal probe returns to baseline",
+          scenario?.renderer?.chunks === current?.residentChunks
+            && scenario.renderer.meshResources > 0
+            && scenario.renderer.materialResources > 0
+            && residency.disposal?.baseline === true
+            && residency.disposal.count >= 1,
+        ),
+      );
+    } else if (activityId === STALE_MESH_ACTIVITY) {
+      const residency = evidence.residency;
+      const scenario = residency?.scenario;
+      const current = scenario?.current;
+      checks.push(
+        passed(
+          "residency/current-revision",
+          "The prebuilt renderer contains only the current canonical chunk revision",
+          residency?.format === RESIDENCY_STORY_FORMAT
+            && residency.activeActivity === activityId
+            && residency.status === "ready"
+            && scenario?.kind === "stale-mesh-rejection"
+            && scenario.installedRevision === 2
+            && scenario.renderer?.chunks === 1
+            && Boolean(residencyCanvas && !residencyCanvas.hidden)
+            && Boolean(residencyPanel && !residencyPanel.hidden),
+        ),
+        passed(
+          "residency/stale-rejection",
+          "A later completion for the older revision is discarded and disposal remains exact",
+          current?.format === RESIDENCY_EVIDENCE_FORMAT
+            && current.meshInstalls === 1
+            && current.discardedStaleJobs === 1
+            && scenario.rejected === true
+            && residency.disposal?.baseline === true,
+        ),
+      );
+    } else if (activityId === PACKAGED_HARA_ACTIVITY) {
       const packaged = evidence.packagedWorld;
       const defaultWorld = packaged?.states?.[DEFAULT_SEED_STATE];
       const negativeWorld = packaged?.states?.[NEGATIVE_COORDINATE_STATE];
@@ -205,15 +325,19 @@ const catalogHost = createCatalogHost({
   },
 });
 
-const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
-
 async function waitForViewportHost() {
   for (let attempt = 0; attempt < 300; attempt += 1) {
     const evidence = readViewportEvidence();
-    if (evidence.sessions.length > 0 && evidence.packagedWorld?.states) return evidence;
+    if (
+      evidence.sessions.length > 0
+      && evidence.packagedWorld?.states
+      && evidence.residency?.hostReady === true
+    ) {
+      return evidence;
+    }
     await sleep(50);
   }
-  throw new Error("Alumbra viewport host did not become ready");
+  throw new Error("Alumbra viewport and residency hosts did not become ready");
 }
 
 async function openBrowserStory() {
@@ -223,7 +347,7 @@ async function openBrowserStory() {
   catalogHost.session.selectActivity(requested);
   await catalogHost.session.openActivity(requested);
   const run = await catalogHost.session.checkActivity(requested);
-  const evidence = readViewportEvidence();
+  let evidence = readViewportEvidence();
   document.documentElement.dataset.browserActivity = requested;
   document.documentElement.dataset.browserCheck = run.status;
   document.documentElement.dataset.browserCheckCount = String(run.checks.length);
@@ -231,6 +355,25 @@ async function openBrowserStory() {
     document.documentElement.dataset.browserState = evidence.packagedWorld?.activeState ?? "none";
     document.documentElement.dataset.browserWorldStatus = evidence.packagedWorld?.status ?? "missing";
     document.documentElement.dataset.browserDisposal = evidence.packagedWorld?.disposal?.baseline ? "passed" : "failed";
+  }
+  if (RESIDENCY_ACTIVITIES.has(requested)) {
+    let residency = evidence.residency;
+    document.documentElement.dataset.browserResidency = residency?.activeActivity === requested
+      && residency.status === "ready"
+      ? "passed"
+      : "failed";
+    document.documentElement.dataset.browserDisposal = residency?.disposal?.baseline ? "passed" : "failed";
+    if (requested === CHUNK_RESIDENCY_ACTIVITY) {
+      const beforeMoves = residency?.scenario?.viewpoint?.moves ?? 0;
+      window.dispatchEvent(new KeyboardEvent("keydown", { code: "KeyD" }));
+      residency = await waitForResidencyMove(beforeMoves + 1);
+      evidence = readViewportEvidence();
+      document.documentElement.dataset.browserResidencyMove = residency.scenario?.viewpoint?.moves === beforeMoves + 1
+        && residency.scenario?.viewpoint?.chunk?.[0] === 2
+        && residency.scenario?.current?.residentChunks === residency.scenario?.current?.desiredChunks
+        ? "passed"
+        : "failed";
+    }
   }
   if (run.status !== "passed") {
     throw new Error(`Catalog activity checks failed for ${requested}: ${run.message}`);
