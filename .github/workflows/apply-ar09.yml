@@ -1,39 +1,10 @@
-name: Apply AR-09 renderer light projection
+name: AR-09 payload staging
 
 on:
-  push:
-    branches:
-      - agent/light-aware-mesh-attributes
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
-  apply:
-    if: github.actor != 'github-actions[bot]'
+  staged:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - name: Verify and materialize the incremental AR-09 slice
-        run: |
-          cat .github/ar09-v3.part* | base64 --decode > /tmp/ar09-v3.bundle
-          echo "40e6b33d1497d3104c47c8000d6d11e24bbb7deb7556fcb198e9760382b98ab9  /tmp/ar09-v3.bundle" | sha256sum -c -
-          tar -xzf /tmp/ar09-v3.bundle -C .
-          node .github/ar09-v2.mjs
-      - name: Validate renderer and repository gates
-        run: |
-          npm run check
-          npm run pack:check
-      - name: Commit the renderer projection slice
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm -f .github/ar09.bundle.chunk* .github/ar09.bundle.part* .github/ar09-v2.chunk* .github/ar09-v3.part* .github/ar09-wire.mjs .github/ar09-v2.mjs .github/workflows/apply-ar09.yml
-          git add packages/renderer-playcanvas spec/lighting.md
-          git commit -m "Project voxel light fields through PlayCanvas residency"
-          git push origin HEAD:agent/light-aware-mesh-attributes
+      - run: echo "AR-09 payload is being replaced"
