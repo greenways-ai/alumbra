@@ -1,0 +1,36 @@
+(ns showcase.alumbra-engine.voxel-light-fields)
+
+(def profile
+  {:maximum 15
+   :sunlight-attenuation 1
+   :emitted-attenuation 1
+   :missing-neighbour-policy :opaque})
+
+(def lamp
+  {:chunk [-1 0 0]
+   :local [3 1 1]
+   :level 15
+   :across-boundary 14})
+
+[:main {:class "preview-shell"}
+ [:article {:class "card"}
+  [:span {:class "eyebrow"} "ALUMBRA / ENGINE LIGHTING"]
+  [:h1 "Sunlight and emitted light"]
+  [:p "Two deterministic 0–15 fields cross loaded voxel and chunk boundaries while dense arrays remain private Engine state."]
+  [:div {:class "workspace-showcase-grid"}
+   [:section
+    [:strong "1 · Loaded sky"]
+    [:p "top 15 · lower 12"]
+    [:code "attenuation 1"]]
+   [:section
+    [:strong "2 · Missing segment"]
+    [:p "opaque 0 · open 15"]
+    [:code "policy is explicit"]]
+   [:section
+    [:strong "3 · Lamp"]
+    [:p "[-1 0 0] → [0 0 0]"]
+    [:code "15 → 14 → 13"]]
+   [:section
+    [:strong "4 · Public boundary"]
+    [:p "sample · copy · evidence"]
+    [:code "dense fields stay private"]]]]]

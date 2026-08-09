@@ -4,7 +4,7 @@
  :showcase/version "0.1.0"
  :showcase/title "Engine"
  :showcase/summary
- "Deterministic movement, collision and reach-safe world intents over canonical state."
+ "Deterministic movement, collision, build intents and bounded voxel-lighting fields over canonical state."
 
  :showcase/views
  [{:view/id :movement-loop
@@ -14,6 +14,16 @@
    :view/title "Build intents"
    :view/summary "Inspect reach-safe break and place requests before they become conflict-checked Core transactions."
    :view/source "src/build.js"
+   :view/docs "README.md"}
+  {:view/id :voxel-light-fields
+   :view/title "Voxel light fields"
+   :view/summary "Compare loaded-sky sunlight, missing-neighbour policy and deterministic emitted-light propagation across chunk boundaries."
+   :view/source "src/lighting.js"
+   :view/docs "README.md"}
+  {:view/id :lighting-runtime
+   :view/title "Lighting runtime fences"
+   :view/summary "Inspect bounded invalidation, preserved unaffected fields and stale revision, generation and epoch rejection."
+   :view/source "src/lighting-runtime.js"
    :view/docs "README.md"}]
 
  :showcase/states
@@ -24,7 +34,15 @@
   {:state/id :build/place-and-undo
    :state/title "Place intent with undo"
    :state/summary "A face-adjacent placement, its reach and collision evidence, and the inverse transaction."
-   :state/file "showcase/states/build-intent-undo.edn"}]
+   :state/file "showcase/states/build-intent-undo.edn"}
+  {:state/id :lighting/propagation
+   :state/title "Sunlight and emitted light"
+   :state/summary "Loaded-sky attenuation, explicit missing-neighbour policy and a lamp crossing the negative-zero chunk boundary."
+   :state/file "showcase/states/voxel-light-fields.edn"}
+  {:state/id :lighting/runtime-fences
+   :state/title "Stale lighting jobs"
+   :state/summary "One bounded invalidation preserves an unrelated field while revision, generation and epoch drift fail closed."
+   :state/file "showcase/states/lighting-runtime-fences.edn"}]
 
  :showcase/demos
  [{:demo/id :walk-collide-jump
@@ -47,5 +65,27 @@
    :demo/surface :preview
    :demo/docs "showcase/build-intent-undo/README.md"
    :demo/tags ["build" "reach" "collision" "undo" "level:runtime" "checks:4"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :voxel-light-fields
+   :demo/title "Propagate sunlight and emitted light"
+   :demo/summary "Follow bounded 0–15 sunlight and lamp fields across loaded chunks, policy gaps and negative coordinates."
+   :demo/view :voxel-light-fields
+   :demo/state :lighting/propagation
+   :demo/project "showcase/voxel-light-fields"
+   :demo/surface :preview
+   :demo/docs "showcase/voxel-light-fields/README.md"
+   :demo/tags ["lighting" "sunlight" "emission" "chunk-boundary" "level:runtime" "checks:9"]
+   :demo/theme :dark
+   :demo/viewport {:viewport/width 1180 :viewport/height 760}}
+  {:demo/id :lighting-runtime-fences
+   :demo/title "Fence stale lighting jobs"
+   :demo/summary "Invalidate only the bounded propagation radius, retain unrelated fields and reject stale revision, generation and epoch results."
+   :demo/view :lighting-runtime
+   :demo/state :lighting/runtime-fences
+   :demo/project "showcase/lighting-runtime-fences"
+   :demo/surface :preview
+   :demo/docs "showcase/lighting-runtime-fences/README.md"
+   :demo/tags ["lighting" "invalidation" "revision-fence" "runtime" "level:runtime" "checks:8"]
    :demo/theme :dark
    :demo/viewport {:viewport/width 1180 :viewport/height 760}}]}
