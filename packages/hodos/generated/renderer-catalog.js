@@ -50,7 +50,7 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "id": "alumbra-renderer-playcanvas",
       "title": "PlayCanvas Renderer",
       "shortTitle": "PlayCanvas Renderer",
-      "description": "Voxel meshing, material grouping, picking and bounded dynamic residency projected from canonical Alumbra chunks.",
+      "description": "Voxel meshing, material and environment profiles, picking and bounded dynamic residency projected from canonical Alumbra chunks.",
       "tools": [],
       "metadata": {
         "package": "@greenways/alumbra-renderer-playcanvas",
@@ -241,6 +241,60 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       }
     },
     {
+      "id": "alumbra-renderer-playcanvas/material-matrix",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Material matrix",
+      "level": "Renderer",
+      "summary": "Install the five closed renderer material passes together and inspect bounded sharing and pass evidence.",
+      "instructions": [
+        "Install the five closed renderer material passes together and inspect bounded sharing and pass evidence."
+      ],
+      "path": null,
+      "checkCount": 7,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "material-matrix",
+        "surface": "viewport",
+        "tags": [
+          "materials",
+          "render-passes",
+          "resource-sharing"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-renderer-playcanvas/environment-profile",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Environment profiles",
+      "level": "Renderer",
+      "summary": "Apply daylight, fog and emissive-night profiles and reject an unknown installed profile without GPU allocation.",
+      "instructions": [
+        "Apply daylight, fog and emissive-night profiles and reject an unknown installed profile without GPU allocation."
+      ],
+      "path": null,
+      "checkCount": 6,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "environment-profile",
+        "surface": "viewport",
+        "tags": [
+          "environment",
+          "fog",
+          "emissive"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
       "id": "alumbra-viewport-playcanvas/playable-world",
       "toolsetId": "alumbra-viewport-playcanvas",
       "title": "Playable packaged world",
@@ -374,6 +428,20 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "package": "@greenways/alumbra-renderer-playcanvas",
     "demo": "stale-mesh-rejection",
     "project": "packages/renderer-playcanvas/showcase/stale-mesh-rejection",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-renderer-playcanvas/material-matrix": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "material-matrix",
+    "project": "packages/renderer-playcanvas/showcase/material-matrix",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-renderer-playcanvas/environment-profile": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "environment-profile",
+    "project": "packages/renderer-playcanvas/showcase/environment-profile",
     "surface": "viewport",
     "host": "showcase-project"
   },

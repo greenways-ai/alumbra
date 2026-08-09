@@ -1,0 +1,11 @@
+(ns showcase.alumbra-renderer-playcanvas.material-matrix)
+
+(def material-matrix
+  {:format "alumbra.material-profile-evidence/1"
+   :status "ready"
+   :profiles ["opaque" "cutout" "transparent" "emissive" "overlay"]
+   :profile-count 5
+   :shared-resources true
+   :environment "alumbra/daylight"})
+
+material-matrix

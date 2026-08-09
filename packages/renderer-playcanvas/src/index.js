@@ -2,6 +2,8 @@ export * from "./mesh.js";
 export * from "./raycast.js";
 export * from "./visibility.js";
 export * from "./resource-pool.js";
+export * from "./material-profile.js";
+export * from "./environment-profile.js";
 export * from "./playcanvas-renderer.js";
 export * from "./prebuilt-renderer.js";
 export * from "./first-person.js";

@@ -1,8 +1,15 @@
 import { chunkKey } from "@greenways/alumbra-core/coordinates";
 import { CHUNK_MESH_FORMAT, meshGroupSignature } from "./mesh.js";
+import {
+  DEFAULT_MATERIAL_PROFILES,
+  applyMaterialProfileToPlayCanvas,
+  createMaterialProfileRegistry,
+  describeMaterialGroup,
+} from "./material-profile.js";
 import { createReferencePool } from "./resource-pool.js";
 
 export const PREBUILT_RENDERER_FORMAT = "alumbra.playcanvas-prebuilt-renderer/1";
+export const MATERIAL_RENDER_EVIDENCE_FORMAT = "alumbra.material-render-evidence/1";
 
 const MAX_MESH_GROUPS = 4096;
 
@@ -133,44 +140,9 @@ export function validatePrebuiltChunkMesh({ chunk, mesh } = {}) {
   return mesh;
 }
 
-function materialDescription(registry, key, group) {
-  const definition = registry.has(key) ? registry.get(key) : null;
-  const render = definition?.metadata?.render && typeof definition.metadata.render === "object"
-    ? definition.metadata.render
-    : {};
-  return {
-    color: Array.isArray(render.color) ? render.color : group.color,
-    emissive: Array.isArray(render.emissive) ? render.emissive : null,
-    opacity: Number.isFinite(Number(render.opacity)) ? Math.max(0, Math.min(1, Number(render.opacity))) : 1,
-    metalness: Number.isFinite(Number(render.metalness)) ? Math.max(0, Math.min(1, Number(render.metalness))) : 0,
-    gloss: Number.isFinite(Number(render.gloss)) ? Math.max(0, Math.min(1, Number(render.gloss))) : 0.25,
-  };
-}
-
-function pcColor(pc, value, fallback = [1, 1, 1]) {
-  const source = Array.isArray(value) || typedArray(value) ? value : fallback;
-  return new pc.Color(
-    Number.isFinite(Number(source[0])) ? Number(source[0]) : fallback[0],
-    Number.isFinite(Number(source[1])) ? Number(source[1]) : fallback[1],
-    Number.isFinite(Number(source[2])) ? Number(source[2]) : fallback[2],
-  );
-}
-
-function createDefaultMaterial(pc, registry, input) {
-  const descriptor = materialDescription(registry, input.key, input.group);
+function createProfileMaterial(pc, descriptor) {
   const material = new pc.StandardMaterial();
-  material.name = `Alumbra ${input.key}`;
-  material.diffuse = pcColor(pc, descriptor.color, [0.62, 0.67, 0.72]);
-  if (descriptor.emissive) material.emissive = pcColor(pc, descriptor.emissive, [0, 0, 0]);
-  material.opacity = descriptor.opacity;
-  material.metalness = descriptor.metalness;
-  material.gloss = descriptor.gloss;
-  if (descriptor.opacity < 1) {
-    if (pc.BLEND_NORMAL != null) material.blendType = pc.BLEND_NORMAL;
-    material.depthWrite = false;
-  }
-  material.update?.();
-  return material;
+  return applyMaterialProfileToPlayCanvas({ pc, material, descriptor });
 }
 
 function createMesh(pc, device, group) {
@@ -196,12 +168,48 @@ function releaseResources(record, meshPool, materialPool) {
   return released;
 }
 
+function materialEvidence(records, meshPool, materialPool) {
+  const resources = [...records.values()].flatMap((record) => record.resources);
+  const passCounts = {
+    opaque: 0,
+    cutout: 0,
+    transparent: 0,
+    emissive: 0,
+    overlay: 0,
+  };
+  const profileIds = new Set();
+  for (const resource of resources) {
+    if (Object.hasOwn(passCounts, resource.pass)) passCounts[resource.pass] += 1;
+    profileIds.add(resource.profileId);
+  }
+  const meshStats = meshPool.stats();
+  const materialStats = materialPool.stats();
+  return Object.freeze({
+    format: MATERIAL_RENDER_EVIDENCE_FORMAT,
+    materialGroupCount: resources.length,
+    profileCount: profileIds.size,
+    profileIds: Object.freeze([...profileIds].sort()),
+    opaquePassCount: passCounts.opaque,
+    cutoutPassCount: passCounts.cutout,
+    transparentPassCount: passCounts.transparent,
+    emissivePassCount: passCounts.emissive,
+    overlayPassCount: passCounts.overlay,
+    sharedMeshResources: Math.max(0, meshStats.references - meshStats.resources),
+    sharedMaterialResources: Math.max(0, materialStats.references - materialStats.resources),
+    sharedResourceCount: Math.max(0, meshStats.references - meshStats.resources)
+      + Math.max(0, materialStats.references - materialStats.resources),
+    materialResources: materialStats.resources,
+    materialReferences: materialStats.references,
+  });
+}
+
 export function createPlayCanvasPrebuiltMeshRenderer({
   pc,
   app,
   registry,
   root = app?.root,
   createMaterial = null,
+  materialProfiles = DEFAULT_MATERIAL_PROFILES,
 } = {}) {
   assertPlayCanvas(pc, app);
   if (!registry) throw new TypeError("Alumbra prebuilt renderer requires a block registry");
@@ -209,6 +217,9 @@ export function createPlayCanvasPrebuiltMeshRenderer({
     throw new TypeError("Prebuilt renderer root must be a PlayCanvas graph node");
   }
 
+  const profileRegistry = materialProfiles?.get
+    ? materialProfiles
+    : createMaterialProfileRegistry(materialProfiles);
   const records = new Map();
   let shape = null;
   let destroyed = false;
@@ -219,10 +230,17 @@ export function createPlayCanvasPrebuiltMeshRenderer({
     destroy: (mesh) => mesh.destroy?.(),
   });
   const materialPool = createReferencePool({
-    keyOf: (input) => input.key,
-    create: (input) => (createMaterial
-      ? createMaterial({ pc, app, registry, material: input.key, group: input.group })
-      : createDefaultMaterial(pc, registry, input)),
+    keyOf: (descriptor) => descriptor.resourceKey,
+    create: (descriptor) => (createMaterial
+      ? createMaterial({
+        pc,
+        app,
+        registry,
+        material: descriptor.material,
+        profile: profileRegistry.get(descriptor.profileId),
+        descriptor,
+      })
+      : createProfileMaterial(pc, descriptor)),
     destroy: (material) => material.destroy?.(),
   });
 
@@ -258,19 +276,36 @@ export function createPlayCanvasPrebuiltMeshRenderer({
       const prebuilt = validatePrebuiltChunkMesh({ chunk: canonical, mesh });
       ensureShape(canonical);
 
+      // Resolve every material profile before allocating a mesh, material or entity.
+      // An unknown profile therefore fails closed with no partial GPU allocation.
+      const preparedGroups = prebuilt.groups.map((group) => Object.freeze({
+        group,
+        descriptor: describeMaterialGroup({
+          profiles: profileRegistry,
+          blockRegistry: registry,
+          material: group.material,
+          group,
+        }),
+      }));
+
       const resources = [];
       const meshInstances = [];
       try {
-        for (const group of prebuilt.groups) {
-          const meshResource = meshPool.acquire(group);
-          const materialResource = materialPool.acquire({ key: group.material, group });
+        for (const prepared of preparedGroups) {
+          const meshResource = meshPool.acquire(prepared.group);
+          const materialResource = materialPool.acquire(prepared.descriptor);
           resources.push({
             meshKey: meshResource.key,
             materialKey: materialResource.key,
+            profileId: prepared.descriptor.profileId,
+            pass: prepared.descriptor.pass,
           });
           const instance = new pc.MeshInstance(meshResource.value, materialResource.value);
-          instance.castShadow = true;
-          instance.receiveShadow = true;
+          instance.castShadow = prepared.descriptor.pass !== "overlay";
+          instance.receiveShadow = prepared.descriptor.pass !== "overlay";
+          if (Number.isFinite(Number(prepared.descriptor.priority))) {
+            instance.drawOrder = prepared.descriptor.priority;
+          }
           meshInstances.push(instance);
         }
       } catch (error) {
@@ -313,6 +348,9 @@ export function createPlayCanvasPrebuiltMeshRenderer({
     getChunk(coordOrKey) {
       const key = Array.isArray(coordOrKey) ? chunkKey(coordOrKey) : String(coordOrKey);
       return records.get(key)?.chunk ?? null;
+    },
+    materialEvidence() {
+      return materialEvidence(records, meshPool, materialPool);
     },
     stats() {
       return Object.freeze({
