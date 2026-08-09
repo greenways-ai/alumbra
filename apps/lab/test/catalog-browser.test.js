@@ -62,7 +62,7 @@ const settle = () => new Promise((resolve) => setImmediate(resolve));
 test("generated Catalog projection contains identities but no project paths", () => {
   assert.equal(ALUMBRA_RENDERER_CATALOG.id, "catalog/alumbra-renderer");
   assert.equal(ALUMBRA_RENDERER_CATALOG.toolsets.length, 5);
-  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 5);
+  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 7);
   assert.ok(ALUMBRA_RENDERER_CATALOG.activities.every((activity) => activity.path === null));
   assert.equal(
     ALUMBRA_RENDERER_CATALOG.selectedActivityId,
@@ -71,6 +71,14 @@ test("generated Catalog projection contains identities but no project paths", ()
   assert.equal(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hodos/renderer-catalog"].host,
     "playable-lab",
+  );
+  assert.equal(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-core/reversible-block-transaction"].project,
+    "packages/core/showcase/reversible-block-transaction",
+  );
+  assert.equal(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-engine/build-intent-undo"].project,
+    "packages/engine/showcase/build-intent-undo",
   );
 });
 
