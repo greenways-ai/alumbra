@@ -14,10 +14,10 @@ class Color {
 }
 const pc = {
   Color,
-  FOG_NONE: 0,
-  FOG_LINEAR: 1,
-  FOG_EXP: 2,
-  FOG_EXP2: 3,
+  FOG_NONE: "none",
+  FOG_LINEAR: "linear",
+  FOG_EXP: "exp",
+  FOG_EXP2: "exp2",
 };
 const vector = (x, y, z) => ({ x, y, z });
 
@@ -34,15 +34,17 @@ test("environment profiles are closed, bounded and include daylight, fog and emi
   );
 });
 
-test("environment controller applies profiles and restores the exact baseline", () => {
+test("environment controller applies FogParams profiles and restores the exact baseline", () => {
   const scene = {
     ambientLight: new Color(0.1, 0.2, 0.3),
     exposure: 0.75,
-    fog: 0,
-    fogColor: new Color(0.02, 0.03, 0.04),
-    fogStart: 4,
-    fogEnd: 40,
-    fogDensity: 0.004,
+    fog: {
+      type: pc.FOG_NONE,
+      color: new Color(0.02, 0.03, 0.04),
+      start: 4,
+      end: 40,
+      density: 0.004,
+    },
   };
   const app = { scene, renderNextFrame: false };
   const camera = { camera: { clearColor: new Color(0.05, 0.06, 0.07) } };
@@ -56,8 +58,11 @@ test("environment controller applies profiles and restores the exact baseline", 
   const fog = controller.apply(ENVIRONMENT_PROFILE_IDS.fog);
   assert.equal(fog.profileId, ENVIRONMENT_PROFILE_IDS.fog);
   assert.equal(fog.fogMode, "linear");
-  assert.equal(scene.fog, pc.FOG_LINEAR);
+  assert.equal(scene.fog.type, pc.FOG_LINEAR);
+  assert.equal(scene.fog.start, 18);
+  assert.equal(scene.fog.end, 82);
   assert.equal(controller.apply(ENVIRONMENT_PROFILE_IDS.emissive).profileId, ENVIRONMENT_PROFILE_IDS.emissive);
+  assert.equal(scene.fog.type, pc.FOG_EXP2);
   assert.throws(
     () => controller.apply("test/not-installed"),
     (error) => error.code === "renderer/environment-profile-not-installed",
@@ -67,5 +72,20 @@ test("environment controller applies profiles and restores the exact baseline", 
   assert.equal(disposed.baseline, true);
   assert.deepEqual([scene.ambientLight.r, scene.ambientLight.g, scene.ambientLight.b], [0.1, 0.2, 0.3]);
   assert.deepEqual([camera.camera.clearColor.r, camera.camera.clearColor.g, camera.camera.clearColor.b], [0.05, 0.06, 0.07]);
+  assert.equal(scene.fog.type, pc.FOG_NONE);
+  assert.deepEqual([scene.fog.color.r, scene.fog.color.g, scene.fog.color.b], [0.02, 0.03, 0.04]);
+  assert.equal(scene.fog.start, 4);
+  assert.equal(scene.fog.end, 40);
+  assert.equal(scene.fog.density, 0.004);
   assert.equal(controller.destroy().baseline, true);
+});
+
+test("environment controller rejects a scene without the PlayCanvas FogParams boundary", () => {
+  assert.throws(
+    () => createPlayCanvasEnvironmentController({
+      pc,
+      app: { scene: { ambientLight: new Color(0, 0, 0), exposure: 1, fog: pc.FOG_NONE } },
+    }),
+    /scene\.fog must expose FogParams/,
+  );
 });

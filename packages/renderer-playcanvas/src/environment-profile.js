@@ -197,6 +197,14 @@ const fogConstant = (pc, mode) => ({
   exp2: pc.FOG_EXP2 ?? "exp2",
 }[mode]);
 
+const requireFogParams = (scene) => {
+  const fog = scene?.fog;
+  if (!fog || typeof fog !== "object" || Array.isArray(fog)) {
+    throw new TypeError("PlayCanvas scene.fog must expose FogParams");
+  }
+  return fog;
+};
+
 function boundedEvidence({ status, profile, applyCount, disposalCount, baseline }) {
   return deepFreeze({
     format: ENVIRONMENT_EVIDENCE_FORMAT,
@@ -224,14 +232,15 @@ export function createPlayCanvasEnvironmentController({
   if (!pc?.Color || !app?.scene) throw new TypeError("Environment controller requires PlayCanvas and a scene");
   const registry = profiles?.get ? profiles : createEnvironmentProfileRegistry(profiles);
   const scene = app.scene;
+  const fog = requireFogParams(scene);
   const baseline = {
     ambient: readColor(scene.ambientLight, [0, 0, 0]),
     exposure: Number.isFinite(Number(scene.exposure)) ? Number(scene.exposure) : 1,
-    fog: scene.fog,
-    fogColor: readColor(scene.fogColor, [0, 0, 0]),
-    fogStart: Number.isFinite(Number(scene.fogStart)) ? Number(scene.fogStart) : 0,
-    fogEnd: Number.isFinite(Number(scene.fogEnd)) ? Number(scene.fogEnd) : 0,
-    fogDensity: Number.isFinite(Number(scene.fogDensity)) ? Number(scene.fogDensity) : 0,
+    fogType: fog.type,
+    fogColor: readColor(fog.color, [0, 0, 0]),
+    fogStart: Number.isFinite(Number(fog.start)) ? Number(fog.start) : 1,
+    fogEnd: Number.isFinite(Number(fog.end)) ? Number(fog.end) : 1000,
+    fogDensity: Number.isFinite(Number(fog.density)) ? Number(fog.density) : 0,
     clearColor: readColor(camera?.camera?.clearColor, [0, 0, 0]),
     sunColor: readColor(sun?.light?.color, [1, 1, 1]),
     sunIntensity: Number.isFinite(Number(sun?.light?.intensity)) ? Number(sun.light.intensity) : 1,
@@ -246,11 +255,11 @@ export function createPlayCanvasEnvironmentController({
   const applyValues = (profile) => {
     scene.ambientLight = pcColor(pc, profile.ambient);
     scene.exposure = profile.exposure;
-    scene.fog = fogConstant(pc, profile.fog.mode);
-    scene.fogColor = pcColor(pc, profile.fog.color);
-    scene.fogStart = profile.fog.start;
-    scene.fogEnd = profile.fog.end;
-    scene.fogDensity = profile.fog.density;
+    fog.type = fogConstant(pc, profile.fog.mode);
+    fog.color = pcColor(pc, profile.fog.color);
+    fog.start = profile.fog.start;
+    fog.end = profile.fog.end;
+    fog.density = profile.fog.density;
     if (camera?.camera) camera.camera.clearColor = pcColor(pc, profile.clearColor);
     if (sun?.light) {
       sun.light.color = pcColor(pc, profile.sun.color);
@@ -264,11 +273,11 @@ export function createPlayCanvasEnvironmentController({
   const restore = () => {
     scene.ambientLight = pcColor(pc, baseline.ambient);
     scene.exposure = baseline.exposure;
-    scene.fog = baseline.fog;
-    scene.fogColor = pcColor(pc, baseline.fogColor);
-    scene.fogStart = baseline.fogStart;
-    scene.fogEnd = baseline.fogEnd;
-    scene.fogDensity = baseline.fogDensity;
+    fog.type = baseline.fogType;
+    fog.color = pcColor(pc, baseline.fogColor);
+    fog.start = baseline.fogStart;
+    fog.end = baseline.fogEnd;
+    fog.density = baseline.fogDensity;
     if (camera?.camera) camera.camera.clearColor = pcColor(pc, baseline.clearColor);
     if (sun?.light) {
       sun.light.color = pcColor(pc, baseline.sunColor);
@@ -282,17 +291,16 @@ export function createPlayCanvasEnvironmentController({
   const near = (left, right) => Math.abs(Number(left) - Number(right)) <= BASELINE_EPSILON;
   const same = (left, right) => left.length === right.length
     && left.every((entry, index) => near(entry, right[index]));
-
   const atBaseline = () => same(readColor(scene.ambientLight, []), baseline.ambient)
-    && same(readColor(scene.fogColor, []), baseline.fogColor)
+    && same(readColor(fog.color, []), baseline.fogColor)
     && same(readColor(camera?.camera?.clearColor, []), baseline.clearColor)
     && same(readColor(sun?.light?.color, []), baseline.sunColor)
     && same(readEuler(sun, []), baseline.sunEuler)
     && near(scene.exposure, baseline.exposure)
-    && scene.fog === baseline.fog
-    && near(scene.fogStart, baseline.fogStart)
-    && near(scene.fogEnd, baseline.fogEnd)
-    && near(scene.fogDensity, baseline.fogDensity)
+    && fog.type === baseline.fogType
+    && near(fog.start, baseline.fogStart)
+    && near(fog.end, baseline.fogEnd)
+    && near(fog.density, baseline.fogDensity)
     && near(sun?.light?.intensity ?? baseline.sunIntensity, baseline.sunIntensity)
     && Boolean(sun?.light?.castShadows) === baseline.sunCastShadows;
 
