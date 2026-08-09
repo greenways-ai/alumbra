@@ -159,22 +159,26 @@ const catalogHost = createCatalogHost({
   },
 });
 
-async function waitForHosts() {
+function selectedHostReady(activityId, evidence) {
+  if (activityId === IDS.packagedHara) return Boolean(evidence.packagedWorld?.states);
+  if (IDS.residencyActivities.has(activityId)) return evidence.residency?.hostReady === true;
+  if (IDS.materialActivities.has(activityId)) return evidence.materials?.hostReady === true;
+  if (activityId === IDS.rendererWorkspace) return evidence.workspace?.hostReady === true;
+  return evidence.sessions.length > 0;
+}
+
+async function waitForHosts(activityId) {
   for (let attempt = 0; attempt < 400; attempt += 1) {
     const evidence = readViewportEvidence();
-    if (evidence.sessions.length > 0
-      && evidence.packagedWorld?.states
-      && evidence.residency?.hostReady === true
-      && evidence.materials?.hostReady === true
-      && evidence.workspace?.hostReady === true) return evidence;
+    if (selectedHostReady(activityId, evidence)) return evidence;
     await sleep(50);
   }
-  throw new Error("Alumbra viewport, residency, material and Workspace hosts did not become ready");
+  throw new Error(`The selected Alumbra host did not become ready for ${activityId}`);
 }
 
 async function openBrowserStory() {
-  await waitForHosts();
   const requested = query().get("activity") ?? catalogHost.session.snapshot().selectedActivityId;
+  await waitForHosts(requested);
   catalogHost.session.selectActivity(requested);
   await catalogHost.session.openActivity(requested);
   const run = await catalogHost.session.checkActivity(requested);
