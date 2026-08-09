@@ -1,0 +1,37 @@
+name: Bootstrap content-addressed history store
+
+on:
+  push:
+    branches:
+      - agent/content-addressed-history-store
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Materialize package sources
+        run: |
+          mkdir -p packages/history-store
+          base64 --decode .github/ar07.bundle | tar -xzf - -C packages/history-store
+          mv packages/history-store/history-store-spec.md spec/history-store.md
+      - name: Wire package into repository gates
+        run: |
+          node .github/ar07-wire.mjs
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit AR-07 package
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/ar07.bundle .github/ar07-wire.mjs .github/ar07-bootstrap-trigger .github/workflows/bootstrap-history-store-v3.yml
+          git add packages/history-store spec/history-store.md package.json package-lock.json project.edn src/gw/alumbra/core.hal spec/README.md scripts/check-boundaries.js
+          git commit -m "Add content-addressed history archive storage"
+          git push origin HEAD:agent/content-addressed-history-store
