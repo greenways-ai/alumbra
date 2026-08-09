@@ -243,6 +243,7 @@ export function createRendererWorkspaceStoryHost({ pc, canvas } = {}) {
         if (destroyed) throw new Error("Renderer Workspace story host has been destroyed");
         const requested = String(stateId);
         if (!WORKSPACE_STATES.has(requested)) throw new Error(`Unsupported Renderer Workspace state: ${requested}`);
+        if (workspace && activeState === requested && status === "ready") return snapshot();
         status = "opening";
         if (workspace) await workspace.destroy();
         workspace = null;
