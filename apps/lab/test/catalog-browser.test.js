@@ -45,19 +45,28 @@ const find = (node, predicate) => {
 };
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
-test("generated Catalog projection contains viewport, residency and material identities but no project paths", () => {
+test("generated Catalog projection contains the complete pathless renderer train", () => {
   assert.equal(ALUMBRA_RENDERER_CATALOG.id, "catalog/alumbra-renderer");
   assert.equal(ALUMBRA_RENDERER_CATALOG.toolsets.length, 6);
-  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 11);
+  assert.equal(ALUMBRA_RENDERER_CATALOG.activities.length, 14);
   assert.ok(ALUMBRA_RENDERER_CATALOG.activities.every((activity) => activity.path === null));
   assert.equal(ALUMBRA_RENDERER_CATALOG.selectedActivityId, "alumbra-hodos/renderer-catalog");
   assert.deepEqual(
     ALUMBRA_RENDERER_CATALOG.activities
-      .filter((activity) => activity.toolsetId === "alumbra-viewport-playcanvas")
+      .filter((activity) => activity.toolsetId === "alumbra-core")
       .map((activity) => activity.id),
     [
-      "alumbra-viewport-playcanvas/playable-world",
-      "alumbra-viewport-playcanvas/two-sessions",
+      "alumbra-core/palette-backed-chunk",
+      "alumbra-core/reversible-block-transaction",
+    ],
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_CATALOG.activities
+      .filter((activity) => activity.toolsetId === "alumbra-engine")
+      .map((activity) => activity.id),
+    [
+      "alumbra-engine/walk-collide-jump",
+      "alumbra-engine/build-intent-undo",
     ],
   );
   assert.deepEqual(
@@ -72,13 +81,52 @@ test("generated Catalog projection contains viewport, residency and material ide
       "alumbra-renderer-playcanvas/environment-profile",
     ],
   );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_CATALOG.activities
+      .filter((activity) => activity.toolsetId === "alumbra-viewport-playcanvas")
+      .map((activity) => activity.id),
+    [
+      "alumbra-viewport-playcanvas/playable-world",
+      "alumbra-viewport-playcanvas/two-sessions",
+    ],
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_CATALOG.activities
+      .filter((activity) => activity.toolsetId === "alumbra-hodos")
+      .map((activity) => activity.id),
+    [
+      "alumbra-hodos/renderer-catalog",
+      "alumbra-hodos/renderer-workspace",
+    ],
+  );
   const packagedHara = ALUMBRA_RENDERER_CATALOG.activities
     .find((activity) => activity.id === "alumbra-hara/packaged-height-field");
+  const workspace = ALUMBRA_RENDERER_CATALOG.activities
+    .find((activity) => activity.id === "alumbra-hodos/renderer-workspace");
   assert.equal(packagedHara.metadata.surface, "viewport");
   assert.equal(packagedHara.checkCount, 9);
+  assert.equal(workspace.metadata.surface, "world");
+  assert.equal(workspace.checkCount, 10);
+  assert.equal(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-core/reversible-block-transaction"].project,
+    "packages/core/showcase/reversible-block-transaction",
+  );
+  assert.equal(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-engine/build-intent-undo"].project,
+    "packages/engine/showcase/build-intent-undo",
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hodos/renderer-workspace"],
+    {
+      package: "@greenways/alumbra-hodos",
+      demo: "renderer-workspace",
+      project: "packages/hodos/showcase/renderer-workspace",
+      surface: "world",
+      host: "playable-lab",
+    },
+  );
   assert.equal(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hara/packaged-height-field"].host, "playable-lab");
   assert.equal(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/playable-world"].host, "playable-lab");
-  assert.equal(ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-viewport-playcanvas/two-sessions"].host, "playable-lab");
   assert.deepEqual(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/chunk-residency"],
     {
@@ -90,31 +138,11 @@ test("generated Catalog projection contains viewport, residency and material ide
     },
   );
   assert.deepEqual(
-    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/stale-mesh-rejection"],
-    {
-      package: "@greenways/alumbra-renderer-playcanvas",
-      demo: "stale-mesh-rejection",
-      project: "packages/renderer-playcanvas/showcase/stale-mesh-rejection",
-      surface: "viewport",
-      host: "showcase-project",
-    },
-  );
-  assert.deepEqual(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/material-matrix"],
     {
       package: "@greenways/alumbra-renderer-playcanvas",
       demo: "material-matrix",
       project: "packages/renderer-playcanvas/showcase/material-matrix",
-      surface: "viewport",
-      host: "showcase-project",
-    },
-  );
-  assert.deepEqual(
-    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/environment-profile"],
-    {
-      package: "@greenways/alumbra-renderer-playcanvas",
-      demo: "environment-profile",
-      project: "packages/renderer-playcanvas/showcase/environment-profile",
       surface: "viewport",
       host: "showcase-project",
     },
@@ -154,7 +182,7 @@ test("browser Catalog selects and opens the installed playable lab by semantic i
   assert.equal(container.children.length, 0);
 });
 
-test("Catalog opens viewport and packaged-Hara activities through installed semantic identities", async () => {
+test("Catalog opens viewport, packaged-Hara and Workspace activities through installed identities", async () => {
   const opened = [];
   const session = createCatalogSession({
     catalog: ALUMBRA_RENDERER_CATALOG,
@@ -164,18 +192,24 @@ test("Catalog opens viewport and packaged-Hara activities through installed sema
   for (const activityId of [
     "alumbra-viewport-playcanvas/two-sessions",
     "alumbra-hara/packaged-height-field",
+    "alumbra-hodos/renderer-workspace",
   ]) {
     session.selectActivity(activityId);
     await session.openActivity();
   }
-  assert.equal(opened.length, 2);
-  assert.equal(opened[0].demo.project, "packages/viewport-playcanvas/showcase/two-sessions");
-  assert.equal(opened[1].demo.project, "packages/hara/showcase/packaged-height-field");
+  assert.deepEqual(
+    opened.map((request) => request.demo.project),
+    [
+      "packages/viewport-playcanvas/showcase/two-sessions",
+      "packages/hara/showcase/packaged-height-field",
+      "packages/hodos/showcase/renderer-workspace",
+    ],
+  );
   assert.ok(opened.every((request) => request.demo.host === "playable-lab"));
   session.dispose();
 });
 
-test("Catalog resolves renderer residency and material activities through installed package projects", async () => {
+test("Catalog resolves renderer residency and material activities through installed projects", async () => {
   const opened = [];
   const session = createCatalogSession({
     catalog: ALUMBRA_RENDERER_CATALOG,
