@@ -8,6 +8,7 @@
     "@greenways/alumbra-engine": "0.1.0",
     "@greenways/alumbra-hara": "0.1.0",
     "@greenways/alumbra-hodos": "0.1.0",
-    "@greenways/alumbra-viewport-playcanvas": "0.1.0"
+    "@greenways/alumbra-viewport-playcanvas": "0.1.0",
+    "playcanvas": "2.21.2"
   }
 }

@@ -10,7 +10,8 @@ const session = fs.readFileSync(new URL("../../../packages/viewport-playcanvas/s
 const save = fs.readFileSync(new URL("../src/world-save.js", import.meta.url), "utf8");
 
 test("lab pins PlayCanvas and consumes reusable viewport and packaged-world hosts without Hodos", () => {
-  assert.match(index, /playcanvas@2\.21\.3\/build\/playcanvas\/src\/index\.js/);
+  assert.match(index, /node_modules\/playcanvas\/build\/playcanvas\/src\/index\.js/);
+  assert.equal(JSON.parse(fs.readFileSync(new URL("../package.json", import.meta.url), "utf8")).dependencies.playcanvas, "2.21.2");
   assert.match(index, /@greenways\/alumbra-viewport-playcanvas/);
   assert.match(index, /@greenways\/alumbra-hara/);
   assert.match(main, /createWorldRuntime/);
