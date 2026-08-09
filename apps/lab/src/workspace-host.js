@@ -1,4 +1,5 @@
 import { createRendererWorkspaceSession } from "@greenways/alumbra-hodos/workspace";
+import { createLabRegistry } from "./block-pack.js";
 import {
   ENVIRONMENT_PROFILE_ACTIVITY,
   MATERIAL_MATRIX_ACTIVITY,
@@ -72,6 +73,7 @@ function boundedRuntime(runtime) {
 
 export function createRendererWorkspaceStoryHost({ pc, canvas } = {}) {
   if (!canvas?.addEventListener) throw new TypeError("Renderer Workspace story requires a canvas");
+  const registry = createLabRegistry();
   let workspace = null;
   let activeRuntime = null;
   let activeState = null;
@@ -106,7 +108,7 @@ export function createRendererWorkspaceStoryHost({ pc, canvas } = {}) {
       return { kind: "material", host };
     }
     if (activityId === CHUNK_RESIDENCY_ACTIVITY) {
-      const host = createResidencyStoryHost({ pc, canvas });
+      const host = createResidencyStoryHost({ pc, canvas, registry });
       await host.open(activityId);
       return { kind: "residency", host };
     }
@@ -247,9 +249,14 @@ export function createRendererWorkspaceStoryHost({ pc, canvas } = {}) {
         activeRuntime = null;
         activeState = requested;
         canvas.hidden = false;
-        await runLifecycle(requested);
-        status = "ready";
-        return snapshot();
+        try {
+          await runLifecycle(requested);
+          status = "ready";
+          return snapshot();
+        } catch (error) {
+          status = "failed";
+          throw error;
+        }
       });
     },
     selectActivity(activityId) {
