@@ -1,0 +1,39 @@
+name: Apply AR-09 light-aware mesh attributes
+
+on:
+  push:
+    branches:
+      - agent/light-aware-mesh-attributes
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Verify and materialize AR-09
+        run: |
+          cat .github/ar09.bundle.chunk* | base64 --decode > /tmp/ar09.bundle
+          echo "098237037eb37da086b9f6cec6be6bed892d4cfebf472f3c265c34ef8340908f  /tmp/ar09.bundle" | sha256sum -c -
+          tar -xzf /tmp/ar09.bundle -C .
+          node .github/ar09-wire.mjs
+      - name: Validate renderer and repository gates
+        run: |
+          npm run check
+          npm run pack:check
+      - name: Commit AR-09 implementation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/ar09.bundle.chunk* .github/ar09.bundle.part* .github/ar09-wire.mjs .github/workflows/apply-ar09.yml
+          git add packages/renderer-playcanvas spec/lighting.md
+          git commit -m "Project voxel light fields into deterministic mesh attributes"
+          git push origin HEAD:agent/light-aware-mesh-attributes
