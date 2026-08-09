@@ -1,0 +1,38 @@
+{:intent/type :place
+ :intent/id "showcase/place-stone"
+ :intent/actor "showcase/player"
+ :intent/origin [4.5 3.62 4.5]
+ :intent/reach 6
+ :intent/hit
+ {:voxel [4 1 4]
+  :face :up
+  :normal [0 1 0]
+  :previous [4 2 4]}
+ :intent/block {:id "alumbra/stone"}
+ :intent/player
+ {:position [2.5 2 4.5]
+  :body {:width 0.6 :height 1.8}}
+ :validation
+ {:distance 1.62
+  :within-reach true
+  :target-loaded true
+  :target-replaceable true
+  :intersects-player false}
+ :transaction
+ {:format "alumbra.block-transaction/1"
+  :id "showcase/place-stone"
+  :expected-revisions [{:chunk [0 0 0] :revision 11}]
+  :changes
+  [{:chunk [0 0 0]
+    :local [4 2 4]
+    :before {:id "alumbra/air"}
+    :after {:id "alumbra/stone"}}]}
+ :inverse
+ {:id "showcase/place-stone-undo"
+  :inverse-of "showcase/place-stone"
+  :expected-revisions [{:chunk [0 0 0] :revision 12}]
+  :changes
+  [{:chunk [0 0 0]
+    :local [4 2 4]
+    :before {:id "alumbra/stone"}
+    :after {:id "alumbra/air"}}]}}

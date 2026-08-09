@@ -1,0 +1,24 @@
+{:transaction/format "alumbra.block-transaction/1"
+ :transaction/id "showcase/core-replace-grass"
+ :transaction/expected-revisions
+ [{:chunk [0 0 0] :revision 3}]
+ :transaction/changes
+ [{:chunk [0 0 0]
+   :local [1 0 1]
+   :before {:id "alumbra/grass"}
+   :after {:id "alumbra/stone"}}]
+ :transaction/metadata
+ {:actor "showcase/builder"
+  :reason "demonstrate exact reversible state"}
+ :result/revisions
+ [{:chunk [0 0 0] :before 3 :after 4}]
+ :inverse
+ {:transaction/id "showcase/core-replace-grass-undo"
+  :transaction/inverse-of "showcase/core-replace-grass"
+  :transaction/expected-revisions
+  [{:chunk [0 0 0] :revision 4}]
+  :transaction/changes
+  [{:chunk [0 0 0]
+    :local [1 0 1]
+    :before {:id "alumbra/stone"}
+    :after {:id "alumbra/grass"}}]}}

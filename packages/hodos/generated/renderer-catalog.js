@@ -123,6 +123,33 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       }
     },
     {
+      "id": "alumbra-core/reversible-block-transaction",
+      "toolsetId": "alumbra-core",
+      "title": "Apply and undo a block transaction",
+      "level": "Foundation",
+      "summary": "Inspect exact before/after block values, optimistic chunk revision evidence and the explicit inverse transaction.",
+      "instructions": [
+        "Inspect exact before/after block values, optimistic chunk revision evidence and the explicit inverse transaction."
+      ],
+      "path": null,
+      "checkCount": 4,
+      "metadata": {
+        "package": "@greenways/alumbra-core",
+        "demo": "reversible-block-transaction",
+        "surface": "preview",
+        "tags": [
+          "transaction",
+          "undo",
+          "conflict-check"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
       "id": "alumbra-engine/walk-collide-jump",
       "toolsetId": "alumbra-engine",
       "title": "Walk, collide and jump",
@@ -140,6 +167,34 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
         "tags": [
           "movement",
           "collision"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-engine/build-intent-undo",
+      "toolsetId": "alumbra-engine",
+      "title": "Place a block and inspect undo",
+      "level": "Runtime",
+      "summary": "Follow a reach-safe face-adjacent placement into a canonical transaction and explicit inverse.",
+      "instructions": [
+        "Follow a reach-safe face-adjacent placement into a canonical transaction and explicit inverse."
+      ],
+      "path": null,
+      "checkCount": 4,
+      "metadata": {
+        "package": "@greenways/alumbra-engine",
+        "demo": "build-intent-undo",
+        "surface": "preview",
+        "tags": [
+          "build",
+          "reach",
+          "collision",
+          "undo"
         ],
         "theme": "dark",
         "viewport": {
@@ -229,10 +284,24 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "surface": "preview",
     "host": "showcase-project"
   },
+  "alumbra-core/reversible-block-transaction": {
+    "package": "@greenways/alumbra-core",
+    "demo": "reversible-block-transaction",
+    "project": "packages/core/showcase/reversible-block-transaction",
+    "surface": "preview",
+    "host": "showcase-project"
+  },
   "alumbra-engine/walk-collide-jump": {
     "package": "@greenways/alumbra-engine",
     "demo": "walk-collide-jump",
     "project": "packages/engine/showcase/walk-collide-jump",
+    "surface": "preview",
+    "host": "showcase-project"
+  },
+  "alumbra-engine/build-intent-undo": {
+    "package": "@greenways/alumbra-engine",
+    "demo": "build-intent-undo",
+    "project": "packages/engine/showcase/build-intent-undo",
     "surface": "preview",
     "host": "showcase-project"
   },
