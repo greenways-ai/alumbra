@@ -1,0 +1,30 @@
+{:format "alumbra.lighting-runtime-showcase/1"
+ :initial
+ {:status "ready"
+  :loaded-chunks 3
+  :valid-field-chunks 3}
+ :change
+ {:chunk [0 0 0]
+  :revision 1
+  :affected ["0,0,0" "1,0,0"]
+  :preserved-field "2,0,0"}
+ :stale-revision
+ {:installed false
+  :reason "stale-revision"}
+ :current-installation
+ {:installed true
+  :target-revision 2
+  :neighbour-emitted-level 14}
+ :stale-generation
+ {:installed false
+  :reason "stale-generation"}
+ :stale-epoch
+ {:installed false
+  :reason "stale-epoch"}
+ :authority-boundary
+ {:bounded-invalidation true
+  :unaffected-fields-remain-readable true
+  :late-results-cannot-replace-current-fields true
+  :worker-selected false
+  :storage-selected false
+  :renderer-selected false}}

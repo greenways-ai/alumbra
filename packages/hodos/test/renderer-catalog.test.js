@@ -16,7 +16,7 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
   assert.equal(model.catalogId, "catalog/alumbra-renderer");
   assert.equal(model.selectedActivityId, "alumbra-hodos/renderer-catalog");
   assert.equal(model.toolsets.length, 6);
-  assert.equal(model.activities.length, 14);
+  assert.equal(model.activities.length, 18);
   assert.ok(model.activities.every((activity) => activity.path === null));
   assert.deepEqual(
     model.activities
@@ -34,6 +34,8 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
     [
       "alumbra-engine/walk-collide-jump",
       "alumbra-engine/build-intent-undo",
+      "alumbra-engine/voxel-light-fields",
+      "alumbra-engine/lighting-runtime-fences",
     ],
   );
   assert.deepEqual(
@@ -46,6 +48,8 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
       "alumbra-renderer-playcanvas/stale-mesh-rejection",
       "alumbra-renderer-playcanvas/material-matrix",
       "alumbra-renderer-playcanvas/environment-profile",
+      "alumbra-renderer-playcanvas/light-aware-meshing",
+      "alumbra-renderer-playcanvas/light-field-handoff",
     ],
   );
   assert.deepEqual(
@@ -68,7 +72,15 @@ test("renderer catalog adapts through the canonical Hodos createCatalogArea func
   );
   const workspace = model.activities
     .find((activity) => activity.id === "alumbra-hodos/renderer-workspace");
+  const voxelLighting = model.activities
+    .find((activity) => activity.id === "alumbra-engine/voxel-light-fields");
+  const lightHandoff = model.activities
+    .find((activity) => activity.id === "alumbra-renderer-playcanvas/light-field-handoff");
   assert.equal(workspace.metadata.surface, "world");
+  assert.equal(voxelLighting.metadata.surface, "preview");
+  assert.equal(voxelLighting.checkCount, 9);
+  assert.equal(lightHandoff.metadata.surface, "viewport");
+  assert.equal(lightHandoff.checkCount, 10);
   assert.throws(
     () => createAlumbraRendererCatalogArea(() => ({}), {
       activities: [{ id: "injected", path: "../../outside" }],
@@ -85,9 +97,13 @@ test("generated Catalog and installed-demo registry are deeply immutable", () =>
   for (const activityId of [
     "alumbra-core/reversible-block-transaction",
     "alumbra-engine/build-intent-undo",
+    "alumbra-engine/voxel-light-fields",
+    "alumbra-engine/lighting-runtime-fences",
     "alumbra-renderer-playcanvas/chunk-residency",
     "alumbra-renderer-playcanvas/material-matrix",
     "alumbra-renderer-playcanvas/environment-profile",
+    "alumbra-renderer-playcanvas/light-aware-meshing",
+    "alumbra-renderer-playcanvas/light-field-handoff",
     "alumbra-viewport-playcanvas/two-sessions",
     "alumbra-hodos/renderer-workspace",
   ]) {
@@ -100,6 +116,26 @@ test("generated Catalog and installed-demo registry are deeply immutable", () =>
   assert.equal(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-engine/build-intent-undo"].project,
     "packages/engine/showcase/build-intent-undo",
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-engine/lighting-runtime-fences"],
+    {
+      package: "@greenways/alumbra-engine",
+      demo: "lighting-runtime-fences",
+      project: "packages/engine/showcase/lighting-runtime-fences",
+      surface: "preview",
+      host: "showcase-project",
+    },
+  );
+  assert.deepEqual(
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/light-aware-meshing"],
+    {
+      package: "@greenways/alumbra-renderer-playcanvas",
+      demo: "light-aware-meshing",
+      project: "packages/renderer-playcanvas/showcase/light-aware-meshing",
+      surface: "viewport",
+      host: "showcase-project",
+    },
   );
   assert.deepEqual(
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-hodos/renderer-workspace"],
@@ -116,5 +152,8 @@ test("generated Catalog and installed-demo registry are deeply immutable", () =>
   }, TypeError);
   assert.throws(() => {
     ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/material-matrix"].project = "elsewhere";
+  }, TypeError);
+  assert.throws(() => {
+    ALUMBRA_RENDERER_INSTALLED_DEMOS["alumbra-renderer-playcanvas/light-aware-meshing"].project = "elsewhere";
   }, TypeError);
 });

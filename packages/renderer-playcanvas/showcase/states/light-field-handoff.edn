@@ -1,0 +1,47 @@
+{:format "alumbra.mesh-light-handoff-showcase/1"
+ :target
+ {:coord [-1 0 0]
+  :shape [1 1 1]
+  :revision 0}
+ :cardinal-neighbour
+ {:coord [0 0 0]
+  :revision 0}
+ :face-samples
+ [{:face "east"
+   :sampled-chunk [0 0 0]
+   :sunlight 13
+   :emitted 4}
+  {:face "west"
+   :sampled-chunk [-1 0 0]
+   :sunlight 2
+   :emitted 1}]
+ :evidence
+ {:profile-id "alumbra/lighting-default"
+  :generation 3
+  :epoch 2
+  :maximum 15
+  :ordered-field-keys ["-1,0,0" "0,0,0"]
+  :exact-worker-result true}
+ :rejections
+ [{:case "stale-target-revision"
+   :error-code "mesh-light/target-revision"
+   :before-queue true}
+  {:case "non-cardinal-neighbour"
+   :error-code "mesh-light/neighbour"
+   :before-meshing true}
+  {:case "lighting-identity-drift"
+   :error-code "mesh-light/identity"
+   :before-meshing true}
+  {:case "substituted-worker-evidence"
+   :accepted false
+   :failed-job-count 1}]
+ :backward-compatibility
+ {:unlit-request-shape-preserved true
+  :unlit-result-lighting-omitted true}
+ :authority-boundary
+ {:snapshots-cloneable true
+  :engine-runtime-present false
+  :callback-present false
+  :playcanvas-object-present false
+  :storage-capability-present false
+  :hodos-component-present false}}

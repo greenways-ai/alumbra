@@ -39,7 +39,7 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "id": "alumbra-engine",
       "title": "Engine",
       "shortTitle": "Engine",
-      "description": "Deterministic movement, collision and reach-safe world intents over canonical state.",
+      "description": "Deterministic movement, collision, build intents and bounded voxel-lighting fields over canonical state.",
       "tools": [],
       "metadata": {
         "package": "@greenways/alumbra-engine",
@@ -50,7 +50,7 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       "id": "alumbra-renderer-playcanvas",
       "title": "PlayCanvas Renderer",
       "shortTitle": "PlayCanvas Renderer",
-      "description": "Voxel meshing, material and environment profiles, picking and bounded dynamic residency projected from canonical Alumbra chunks.",
+      "description": "Voxel meshing, light-aware attributes, material and environment profiles, picking and bounded dynamic residency projected from canonical Alumbra chunks.",
       "tools": [],
       "metadata": {
         "package": "@greenways/alumbra-renderer-playcanvas",
@@ -217,6 +217,62 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
       }
     },
     {
+      "id": "alumbra-engine/voxel-light-fields",
+      "toolsetId": "alumbra-engine",
+      "title": "Propagate sunlight and emitted light",
+      "level": "Runtime",
+      "summary": "Follow bounded 0–15 sunlight and lamp fields across loaded chunks, policy gaps and negative coordinates.",
+      "instructions": [
+        "Follow bounded 0–15 sunlight and lamp fields across loaded chunks, policy gaps and negative coordinates."
+      ],
+      "path": null,
+      "checkCount": 9,
+      "metadata": {
+        "package": "@greenways/alumbra-engine",
+        "demo": "voxel-light-fields",
+        "surface": "preview",
+        "tags": [
+          "lighting",
+          "sunlight",
+          "emission",
+          "chunk-boundary"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-engine/lighting-runtime-fences",
+      "toolsetId": "alumbra-engine",
+      "title": "Fence stale lighting jobs",
+      "level": "Runtime",
+      "summary": "Invalidate only the bounded propagation radius, retain unrelated fields and reject stale revision, generation and epoch results.",
+      "instructions": [
+        "Invalidate only the bounded propagation radius, retain unrelated fields and reject stale revision, generation and epoch results."
+      ],
+      "path": null,
+      "checkCount": 8,
+      "metadata": {
+        "package": "@greenways/alumbra-engine",
+        "demo": "lighting-runtime-fences",
+        "surface": "preview",
+        "tags": [
+          "lighting",
+          "invalidation",
+          "revision-fence",
+          "runtime"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
       "id": "alumbra-renderer-playcanvas/greedy-meshing",
       "toolsetId": "alumbra-renderer-playcanvas",
       "title": "Greedy meshing",
@@ -341,6 +397,62 @@ export const ALUMBRA_RENDERER_CATALOG = deepFreeze({
           "environment",
           "fog",
           "emissive"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-renderer-playcanvas/light-aware-meshing",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Split greedy quads by light",
+      "level": "Renderer",
+      "summary": "Compare equal and different face-light pairs, per-vertex bytes and lighting-sensitive mesh signatures.",
+      "instructions": [
+        "Compare equal and different face-light pairs, per-vertex bytes and lighting-sensitive mesh signatures."
+      ],
+      "path": null,
+      "checkCount": 9,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "light-aware-meshing",
+        "surface": "viewport",
+        "tags": [
+          "lighting",
+          "meshing",
+          "typed-attributes",
+          "greedy-merge"
+        ],
+        "theme": "dark",
+        "viewport": {
+          "width": 1180,
+          "height": 760
+        }
+      }
+    },
+    {
+      "id": "alumbra-renderer-playcanvas/light-field-handoff",
+      "toolsetId": "alumbra-renderer-playcanvas",
+      "title": "Verify the light-field handoff",
+      "level": "Renderer",
+      "summary": "Sample a loaded cardinal neighbour at a negative-coordinate face and reject stale or substituted lighting evidence.",
+      "instructions": [
+        "Sample a loaded cardinal neighbour at a negative-coordinate face and reject stale or substituted lighting evidence."
+      ],
+      "path": null,
+      "checkCount": 10,
+      "metadata": {
+        "package": "@greenways/alumbra-renderer-playcanvas",
+        "demo": "light-field-handoff",
+        "surface": "viewport",
+        "tags": [
+          "lighting",
+          "worker-meshing",
+          "revision-fence",
+          "chunk-boundary"
         ],
         "theme": "dark",
         "viewport": {
@@ -508,6 +620,20 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "surface": "preview",
     "host": "showcase-project"
   },
+  "alumbra-engine/voxel-light-fields": {
+    "package": "@greenways/alumbra-engine",
+    "demo": "voxel-light-fields",
+    "project": "packages/engine/showcase/voxel-light-fields",
+    "surface": "preview",
+    "host": "showcase-project"
+  },
+  "alumbra-engine/lighting-runtime-fences": {
+    "package": "@greenways/alumbra-engine",
+    "demo": "lighting-runtime-fences",
+    "project": "packages/engine/showcase/lighting-runtime-fences",
+    "surface": "preview",
+    "host": "showcase-project"
+  },
   "alumbra-renderer-playcanvas/greedy-meshing": {
     "package": "@greenways/alumbra-renderer-playcanvas",
     "demo": "greedy-meshing",
@@ -540,6 +666,20 @@ export const ALUMBRA_RENDERER_INSTALLED_DEMOS = deepFreeze({
     "package": "@greenways/alumbra-renderer-playcanvas",
     "demo": "environment-profile",
     "project": "packages/renderer-playcanvas/showcase/environment-profile",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-renderer-playcanvas/light-aware-meshing": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "light-aware-meshing",
+    "project": "packages/renderer-playcanvas/showcase/light-aware-meshing",
+    "surface": "viewport",
+    "host": "showcase-project"
+  },
+  "alumbra-renderer-playcanvas/light-field-handoff": {
+    "package": "@greenways/alumbra-renderer-playcanvas",
+    "demo": "light-field-handoff",
+    "project": "packages/renderer-playcanvas/showcase/light-field-handoff",
     "surface": "viewport",
     "host": "showcase-project"
   },

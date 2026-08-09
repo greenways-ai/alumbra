@@ -1,0 +1,29 @@
+{:format "alumbra.lighting-showcase/1"
+ :profile
+ {:id "alumbra/lighting-default"
+  :maximum 15
+  :sunlight-attenuation 1
+  :emitted-attenuation 1
+  :missing-neighbour-policy "opaque"}
+ :loaded-chunks
+ [{:coord [-1 0 0] :revision 1 :shape [4 4 4]}
+  {:coord [0 0 0] :revision 0 :shape [4 4 4]}]
+ :sunlight
+ {:loaded-sky-top 15
+  :loaded-sky-lower 12
+  :opaque-gap-lower-top 0
+  :open-gap-lower-top 15}
+ :emitted
+ {:lamp {:chunk [-1 0 0] :local [3 1 1] :level 15}
+  :across-boundary {:chunk [0 0 0] :local [0 1 1] :level 14}
+  :next-voxel {:chunk [0 0 0] :local [1 1 1] :level 13}
+  :ordered-field-keys ["-1,0,0" "0,0,0"]
+  :input-order-independent true}
+ :field-boundary
+ {:point-sampling true
+  :explicit-byte-copy true
+  :dense-fields-private true
+  :unloaded-field-invented false
+  :storage-selected false
+  :renderer-selected false
+  :hodos-owns-dense-fields false}}

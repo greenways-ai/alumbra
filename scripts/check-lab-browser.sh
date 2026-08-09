@@ -184,6 +184,8 @@ run_activity() {
 }
 
 run_activity "alumbra-hodos/renderer-catalog"
+run_activity "alumbra-engine/voxel-light-fields"
+run_activity "alumbra-engine/lighting-runtime-fences"
 run_activity "alumbra-viewport-playcanvas/playable-world"
 run_activity "alumbra-viewport-playcanvas/two-sessions"
 run_activity "alumbra-renderer-playcanvas/chunk-residency"
@@ -193,6 +195,8 @@ run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/daylig
 run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/fog"
 run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/emissive"
 run_activity "alumbra-renderer-playcanvas/environment-profile" "materials/unknown-profile-error"
+run_activity "alumbra-renderer-playcanvas/light-aware-meshing"
+run_activity "alumbra-renderer-playcanvas/light-field-handoff"
 run_activity "alumbra-hodos/renderer-workspace" "workspace/wide"
 run_activity "alumbra-hodos/renderer-workspace" "workspace/compact"
 run_activity "alumbra-hara/packaged-height-field" "world/default-seed"

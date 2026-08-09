@@ -1,0 +1,32 @@
+(ns showcase.alumbra-engine.lighting-runtime-fences)
+
+(def invalidation
+  {:changed [0 0 0]
+   :affected ["0,0,0" "1,0,0"]
+   :preserved "2,0,0"})
+
+(def rejection-reasons
+  [:stale-revision :stale-generation :stale-epoch])
+
+[:main {:class "preview-shell"}
+ [:article {:class "card"}
+  [:span {:class "eyebrow"} "ALUMBRA / LIGHTING RUNTIME"]
+  [:h1 "Stale work cannot replace current light"]
+  [:p "Bounded invalidation preserves unrelated fields while exact revision, generation and epoch evidence fences every installation."]
+  [:div {:class "workspace-showcase-grid"}
+   [:section
+    [:strong "1 · Invalidate"]
+    [:p "2 of 3 chunks"]
+    [:code "radius ≤ 15 voxels"]]
+   [:section
+    [:strong "2 · Preserve"]
+    [:p "field 2,0,0 remains readable"]
+    [:code "unrelated hot state survives"]]
+   [:section
+    [:strong "3 · Install"]
+    [:p "source revision 2"]
+    [:code "neighbour emitted 14"]]
+   [:section
+    [:strong "4 · Reject"]
+    [:p "revision · generation · epoch"]
+    [:code "late results fail closed"]]]]]
