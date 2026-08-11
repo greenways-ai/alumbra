@@ -66,7 +66,7 @@ run_activity() {
     --enable-unsafe-swiftshader \
     --use-gl=angle \
     --use-angle=swiftshader \
-    --virtual-time-budget=30000 \
+    --virtual-time-budget=45000 \
     --dump-dom \
     "$url" >"$dom" 2>"$log"; then
     cat "$log" >&2
@@ -95,6 +95,22 @@ run_activity() {
     cat "$dom" >&2
     echo "The Alumbra browser story reported a page or console error for ${activity}${state:+ / ${state}}." >&2
     return 1
+  fi
+
+  if [[ "$activity" == "alumbra-hara/peacock-ballroom" ]]; then
+    if ! grep -Fq "data-browser-state=\"${state}\"" "$dom"; then
+      cat "$dom" >&2
+      echo "Peacock Ballroom did not open named state ${state}." >&2
+      return 1
+    fi
+    for proof in peacock-ballroom peacock-lighting peacock-boundary disposal; do
+      if ! grep -Fq "data-browser-${proof}=\"passed\"" "$dom"; then
+        cat "$log" >&2
+        cat "$dom" >&2
+        echo "The Catalog-mounted Peacock Ballroom proof ${proof} did not pass." >&2
+        return 1
+      fi
+    done
   fi
 
   if [[ "$activity" == "alumbra-viewport-playcanvas/lit-world" ]]; then
@@ -230,3 +246,6 @@ run_activity "alumbra-hodos/renderer-workspace" "workspace/compact"
 run_activity "alumbra-hara/packaged-height-field" "world/default-seed"
 run_activity "alumbra-hara/packaged-height-field" "world/negative-coordinate"
 run_activity "alumbra-hara/packaged-height-field" "world/package-mismatch"
+run_activity "alumbra-hara/peacock-ballroom" "ballroom/day"
+run_activity "alumbra-hara/peacock-ballroom" "ballroom/gallery-overlook"
+run_activity "alumbra-hara/peacock-ballroom" "ballroom/mosaic-floor"

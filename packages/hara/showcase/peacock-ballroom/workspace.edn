@@ -1,0 +1,32 @@
+{:hara/type :workspace
+ :hara/version "1.0.0"
+ :workspace/id :showcase-hara-peacock-ballroom
+ :workspace/revision 0
+ :workspace/layout {:layout/type :area :layout/area "area/world"}
+ :workspace/documents
+ [{:document/id "document/main"
+   :document/path "src/main.hal"
+   :document/title "main.hal"
+   :document/language :hal
+   :document/dirty? false}]
+ :workspace/areas
+ [{:area/id "area/world"
+   :area/type "alumbra.world/viewport"
+   :area/title "Peacock Ballroom"
+   :area/presentation
+   {:presentation/role :output
+    :presentation/label "World"
+    :presentation/surface "viewport"}}]
+ :workspace/nodes []
+ :workspace/connections []
+ :workspace/links []
+ :workspace/selection
+ {:area/id "area/world"
+  :document/id "document/main"
+  :surface/id "viewport"}
+ :workspace/customizations
+ {:responsive/breakpoint 880
+  :responsive/default-surface "viewport"}
+ :workspace/extensions []
+ :workspace/pending []
+ :workspace/audit []}

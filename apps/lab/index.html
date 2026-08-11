@@ -40,6 +40,7 @@
   <link rel="stylesheet" href="./src/residency.css">
   <link rel="stylesheet" href="./src/material.css">
   <link rel="stylesheet" href="./src/lit-world.css">
+  <link rel="stylesheet" href="./src/peacock-ballroom-catalog.css">
   <link rel="stylesheet" href="./src/workspace.css">
   <script type="importmap">
   {
@@ -54,7 +55,7 @@
       "@greenways/alumbra-viewport-playcanvas/world": "../../packages/viewport-playcanvas/src/world-controller.js",
       "@greenways/alumbra-hodos": "../../packages/hodos/src/index.js",
       "@greenways/alumbra-hodos/workspace": "../../packages/hodos/src/renderer-workspace.js",
-      "@greenways/alumbra-hodos/catalog": "../../packages/hodos/generated/renderer-catalog.js",
+      "@greenways/alumbra-hodos/catalog": "../../packages/hodos/src/catalog.js",
       "@greenways/alumbra-core/blocks": "../../packages/core/src/block-registry.js",
       "@greenways/alumbra-core/chunks": "../../packages/core/src/chunk.js",
       "@greenways/alumbra-core/coordinates": "../../packages/core/src/coordinates.js",
@@ -142,6 +143,7 @@
       <canvas id="alumbra-canvas-residency" data-viewport-session="residency" aria-label="Dynamic renderer residency story" tabindex="0" hidden></canvas>
       <canvas id="alumbra-canvas-materials" data-viewport-session="materials" aria-label="Material and environment profile story" hidden></canvas>
       <canvas id="alumbra-canvas-lit-world" data-viewport-session="lit-world" aria-label="Live cross-chunk lit Alumbra cave" tabindex="0" hidden></canvas>
+      <iframe id="alumbra-peacock-ballroom-frame" data-viewport-session="peacock-ballroom" title="Peacock Ballroom world provider" allow="fullscreen" hidden></iframe>
       <section class="lab-world-error" data-packaged-world-error aria-live="polite" hidden>
         <p class="lab-world-error-eyebrow">ALUMBRA / EXACT PACKAGE LOCK</p>
         <h2 data-packaged-world-error-title>Package mismatch</h2>
@@ -213,5 +215,6 @@
   <script type="module" src="./src/material-entry.js"></script>
   <script type="module" src="./src/lit-world-entry.js"></script>
   <script type="module" src="./src/workspace-entry.js"></script>
+  <script type="module" src="./src/peacock-ballroom-catalog-entry.js"></script>
 </body>
 </html>
