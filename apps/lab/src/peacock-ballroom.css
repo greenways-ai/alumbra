@@ -12,6 +12,7 @@ html, body {
   height: 100%;
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;
   background:
     radial-gradient(circle at 50% 0%, rgba(55, 132, 120, 0.24), transparent 45%),
     #07110e;
@@ -24,6 +25,7 @@ button, a { font: inherit; }
   width: 100%;
   height: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 #peacock-ballroom-canvas {
@@ -33,6 +35,15 @@ button, a { font: inherit; }
   height: 100%;
   display: block;
   background: #7caeb5;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#peacock-ballroom-canvas:focus-visible {
+  outline: 2px solid rgba(227, 191, 87, 0.92);
+  outline-offset: -4px;
 }
 
 .ballroom-topbar {
@@ -55,6 +66,7 @@ button, a { font: inherit; }
   background: rgba(6, 18, 14, 0.82);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .ballroom-title {
@@ -199,6 +211,8 @@ button, a { font: inherit; }
   pointer-events: none;
 }
 
+.ballroom-help-touch { display: none; }
+
 .ballroom-crosshair {
   position: absolute;
   z-index: 3;
@@ -220,6 +234,83 @@ button, a { font: inherit; }
 
 .ballroom-crosshair::before { left: 6px; top: 0; width: 2px; height: 14px; }
 .ballroom-crosshair::after { left: 0; top: 6px; width: 14px; height: 2px; }
+
+.ballroom-mobile-controls {
+  display: none;
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  pointer-events: none;
+}
+
+.ballroom-touch-zone {
+  position: absolute;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: min(38vw, 158px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(247, 240, 218, 0.2);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(227, 191, 87, 0.09) 0 24%, transparent 25%),
+    rgba(5, 16, 13, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(5, 16, 13, 0.35), 0 8px 30px rgba(0, 0, 0, 0.18);
+  opacity: 0.72;
+}
+
+.ballroom-touch-zone span {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  color: rgba(247, 240, 218, 0.64);
+  font-size: 0.62rem;
+  font-weight: 760;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ballroom-touch-zone-move { left: max(12px, env(safe-area-inset-left)); }
+.ballroom-touch-zone-look { right: max(12px, env(safe-area-inset-right)); }
+
+.ballroom-mobile-actions {
+  position: absolute;
+  right: max(14px, env(safe-area-inset-right));
+  bottom: calc(max(14px, env(safe-area-inset-bottom)) + min(38vw, 158px) + 12px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(54px, auto));
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.ballroom-mobile-action {
+  min-width: 58px;
+  min-height: 48px;
+  border: 1px solid rgba(244, 226, 172, 0.34);
+  border-radius: 16px;
+  padding: 10px 12px;
+  color: #fff8e4;
+  background: rgba(6, 18, 14, 0.78);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ballroom-mobile-action-primary {
+  border-color: rgba(227, 191, 87, 0.76);
+  background: rgba(193, 145, 32, 0.86);
+  color: #102017;
+  font-weight: 760;
+}
+
+.ballroom-mobile-action:active,
+.ballroom-mobile-action[data-active="true"] {
+  transform: translateY(1px) scale(0.97);
+  background: rgba(227, 191, 87, 0.92);
+  color: #102017;
+}
 
 .ballroom-loading {
   position: absolute;
@@ -266,6 +357,86 @@ button, a { font: inherit; }
   .ballroom-bottom { grid-template-columns: 1fr; }
   .ballroom-stats { justify-self: stretch; grid-template-columns: repeat(3, 1fr); }
   .ballroom-stat { min-width: 0; }
+}
+
+@media (pointer: coarse), (hover: none) {
+  .ballroom-mobile-controls { display: block; }
+  .ballroom-help-desktop { display: none; }
+  .ballroom-help-touch { display: inline; }
+
+  .ballroom-topbar {
+    inset:
+      max(8px, env(safe-area-inset-top))
+      max(8px, env(safe-area-inset-right))
+      auto
+      max(8px, env(safe-area-inset-left));
+    gap: 8px;
+  }
+
+  .ballroom-title {
+    width: fit-content;
+    max-width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
+    padding: 10px 13px;
+    border-radius: 14px;
+  }
+
+  .ballroom-eyebrow,
+  .ballroom-title p:last-child { display: none; }
+
+  .ballroom-title h1 { font-size: clamp(1.25rem, 6vw, 1.7rem); }
+
+  .ballroom-controls {
+    max-width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 7px;
+    border-radius: 14px;
+  }
+
+  .ballroom-controls::-webkit-scrollbar { display: none; }
+
+  .ballroom-controls button,
+  .ballroom-back {
+    min-height: 42px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .ballroom-help {
+    display: block;
+    top: auto;
+    left: 50%;
+    right: auto;
+    bottom: calc(max(14px, env(safe-area-inset-bottom)) + min(38vw, 158px) + 18px);
+    width: min(54vw, 250px);
+    max-width: none;
+    transform: translateX(-50%);
+    padding: 9px 11px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 0.69rem;
+  }
+
+  .ballroom-bottom { display: none; }
+}
+
+@media (pointer: coarse) and (max-height: 620px) {
+  .ballroom-help { display: none; }
+  .ballroom-touch-zone {
+    width: min(30vw, 118px);
+  }
+  .ballroom-mobile-actions {
+    bottom: calc(max(10px, env(safe-area-inset-bottom)) + min(30vw, 118px) + 8px);
+    grid-template-columns: repeat(4, minmax(48px, auto));
+  }
+  .ballroom-mobile-action {
+    min-width: 50px;
+    min-height: 42px;
+    padding: 8px 9px;
+    border-radius: 14px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -3,6 +3,7 @@ import {
   PEACOCK_BALLROOM_STATE_IDS,
   PEACOCK_BALLROOM_WORLD,
 } from "@greenways/alumbra-hara";
+import {PLAYABLE_VIRTUAL_INPUT_EVENT} from "@greenways/alumbra-viewport-playcanvas/input";
 import {createPeacockBallroomPreviewHost} from "./peacock-ballroom-host.js";
 
 const body = document.body;
@@ -10,13 +11,23 @@ const canvas = document.querySelector("#peacock-ballroom-canvas");
 const loading = document.querySelector("[data-ballroom-loading]");
 const status = document.querySelector("[data-ballroom-status]");
 const stateButtons = [...document.querySelectorAll("[data-ballroom-state]")];
+const mobileControls = document.querySelector("[data-ballroom-mobile-controls]");
+const mobileActionButtons = [...document.querySelectorAll("[data-ballroom-action]")];
 const stats = Object.fromEntries(
   [...document.querySelectorAll("[data-ballroom-stat]")].map((node) => [node.dataset.ballroomStat, node]),
 );
 
-if (!body || !canvas || !loading || !status || !stats.chunks || !stats.light || !stats.player) {
+if (
+  !body || !canvas || !loading || !status || !mobileControls
+  || !stats.chunks || !stats.light || !stats.player
+) {
   throw new Error("Peacock Ballroom preview is missing a required host element");
 }
+
+const touchCapable = Number(navigator.maxTouchPoints || 0) > 0
+  || globalThis.matchMedia?.("(pointer: coarse)")?.matches === true
+  || globalThis.matchMedia?.("(hover: none)")?.matches === true;
+body.dataset.peacockBallroomInput = touchCapable ? "touch" : "desktop";
 
 const stateSet = new Set(PEACOCK_BALLROOM_STATE_IDS);
 const parameters = new URLSearchParams(location.search);
@@ -93,9 +104,52 @@ const host = createPeacockBallroomPreviewHost({
     setStatus(`${phase} failed: ${error.message}`, {error: true});
   },
   onState({stateId, scenario}) {
-    setStatus(`${scenario.view} · ${scenario.world.nonAirVoxels.toLocaleString()} authored voxels · click the world to explore.`);
+    const guidance = touchCapable
+      ? "drag left to move and right to look"
+      : "click the world to explore";
+    setStatus(`${scenario.view} · ${scenario.world.nonAirVoxels.toLocaleString()} authored voxels · ${guidance}.`);
     selectStateButton(stateId);
   },
+});
+
+function invokeMobileAction(action, button) {
+  try {
+    canvas.dispatchEvent(new CustomEvent(PLAYABLE_VIRTUAL_INPUT_EVENT, {
+      detail: {type: action},
+    }));
+    button.dataset.active = "true";
+  } catch (error) {
+    console.error(error);
+    setStatus(`Touch control failed: ${error.message}`, {error: true});
+  }
+}
+
+for (const button of mobileActionButtons) {
+  const action = String(button.dataset.ballroomAction ?? "");
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    invokeMobileAction(action, button);
+  });
+  const release = () => { button.dataset.active = "false"; };
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("pointerleave", release);
+  button.addEventListener("keydown", (event) => {
+    if (event.repeat || (event.code !== "Space" && event.code !== "Enter")) return;
+    event.preventDefault();
+    invokeMobileAction(action, button);
+  });
+  button.addEventListener("keyup", release);
+}
+body.dataset.peacockBallroomMobileControls = "ready";
+
+canvas.addEventListener("pointerdown", () => {
+  try {
+    canvas.focus({preventScroll: true});
+  } catch {
+    canvas.focus();
+  }
 });
 
 async function openState(stateId, {replaceHistory = true} = {}) {

@@ -15,6 +15,7 @@ import {
 
 const page = readFileSync(new URL("../peacock-ballroom.html", import.meta.url), "utf8");
 const entry = readFileSync(new URL("../src/peacock-ballroom-entry.js", import.meta.url), "utf8");
+const styles = readFileSync(new URL("../src/peacock-ballroom.css", import.meta.url), "utf8");
 
 function safeSpawn(world, view) {
   const [x, y, z] = view.position;
@@ -63,4 +64,18 @@ test("publishes a standalone Lab preview with three semantic views and bounded b
   assert.match(entry, /createPeacockBallroomPreviewHost/);
   assert.match(entry, /dataset\.peacockBallroomLighting/);
   assert.doesNotMatch(entry, /projectPath|meshBuffer|shaderSource/);
+});
+
+test("publishes safe-area-aware touch navigation and declared mobile actions", () => {
+  assert.match(page, /viewport-fit=cover/);
+  assert.match(page, /data-peacock-ballroom-mobile-controls="pending"/);
+  assert.match(page, /data-ballroom-mobile-controls/);
+  for (const action of ["jump", "break", "place", "undo"]) {
+    assert.ok(page.includes(`data-ballroom-action="${action}"`), action);
+  }
+  assert.match(entry, /PLAYABLE_VIRTUAL_INPUT_EVENT/);
+  assert.match(entry, /dataset\.peacockBallroomMobileControls = "ready"/);
+  assert.match(styles, /touch-action: none/);
+  assert.match(styles, /@media \(pointer: coarse\), \(hover: none\)/);
+  assert.match(styles, /env\(safe-area-inset-bottom\)/);
 });
