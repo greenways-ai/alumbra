@@ -23,6 +23,7 @@ import {
   loadPackagedHaraWorld,
   materializeBlockRegistry,
   materializeGeneratedChunk,
+  normalizeBlockPack,
   packagedWorldState,
 } from "@greenways/alumbra-hara";
 import {
@@ -210,13 +211,13 @@ async function main() {
 
     // The ballroom carries its own portable package coordinate, but this first
     // conformance fixture is housed inside the enclosing alumbra-hara project.
-    // Invoke the namespace through the enclosing project pin and then verify
-    // the exact semantic package identity returned by Hara.
-    const runtimeBallroomPack = await session.invoke({
+    // Invoke the namespace through the enclosing project pin, then pass the
+    // compact Hara declaration through the same host normalizer used at runtime.
+    const runtimeBallroomPack = normalizeBlockPack(await session.invoke({
       package:FIXTURE_PACKAGE,
       version:FIXTURE_VERSION,
       entry:{module:"gw.alumbra.peacock-ballroom", function:"peacock-ballroom-block-pack"},
-    });
+    }));
     assert.deepEqual(runtimeBallroomPack, createPeacockBallroomBlockPack());
     const {registry:ballroomRegistry} = materializeBlockRegistry([runtimeBallroomPack], {
       id:"ballroom/hara-runtime-architectural-blocks",
