@@ -36,7 +36,7 @@ test("builds the full preview world with sunlight and emitted chandelier light",
   assert.equal(evidence.maxSunlight, 15);
   assert.equal(evidence.maxEmitted, 14);
   assert.equal(fields.sample([-1, 15, 0]).emitted, 14);
-  assert.ok(fields.sample([-5, 20, 0]).sunlight > 0);
+  assert.equal(fields.sample([-5, 47, 0]).sunlight, 15);
 });
 
 test("keeps every named preview spawn collision-safe", () => {
@@ -61,6 +61,6 @@ test("publishes a standalone Lab preview with three semantic views and bounded b
     assert.ok(page.includes(`data-ballroom-state="${stateId}"`));
   }
   assert.match(entry, /createPeacockBallroomPreviewHost/);
-  assert.match(entry, /data\.peacockBallroomLighting/);
+  assert.match(entry, /dataset\.peacockBallroomLighting/);
   assert.doesNotMatch(entry, /projectPath|meshBuffer|shaderSource/);
 });
