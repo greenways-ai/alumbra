@@ -73,7 +73,8 @@ run_state() {
     'data-peacock-ballroom-lighting="passed"' \
     'data-peacock-ballroom-landmarks="passed"' \
     'data-peacock-ballroom-disposal="passed"' \
-    'data-peacock-ballroom-mobile-controls="ready"'; do
+    'data-peacock-ballroom-mobile-controls="ready"' \
+    'data-peacock-ballroom-architecture="passed"'; do
     if ! grep -Fq "$expected" "$dom"; then
       cat "$log" >&2
       cat "$dom" >&2
@@ -81,6 +82,13 @@ run_state() {
       return 1
     fi
   done
+
+  if ! grep -Eq 'data-peacock-ballroom-architecture-entities="[1-9][0-9]*"' "$dom"; then
+    cat "$log" >&2
+    cat "$dom" >&2
+    echo "Peacock Ballroom browser proof did not publish ornamental architecture entities." >&2
+    return 1
+  fi
 
   echo "Peacock Ballroom browser story passed: ${state}"
 }
