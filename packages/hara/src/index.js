@@ -6,3 +6,4 @@ export * from "./packaged-world.js";
 export * from "./interaction.js";
 export * from "./fixtures.js";
 export * from "./runtime.js";
+export * from "./peacock-ballroom.js";

@@ -1,0 +1,132 @@
+(ns gw.alumbra.peacock-ballroom)
+
+(def package-id "hara:greenways/alumbra-peacock-ballroom")
+(def package-version "0.1.0")
+(def world-id "greenways/peacock-ballroom")
+(def provider-id "alumbra/world")
+(def activity-id "alumbra-hara/peacock-ballroom")
+(def block-pack-id "ballroom/architectural-palette")
+(def generator-id "ballroom/architectural-generator")
+
+(def state-ids
+  ["ballroom/day"
+   "ballroom/gallery-overlook"
+   "ballroom/mosaic-floor"])
+
+(def block-ids
+  ["ballroom/air"
+   "ballroom/ivory-stone"
+   "ballroom/white-marble"
+   "ballroom/brushed-gold"
+   "ballroom/emerald-enamel"
+   "ballroom/teal-glass"
+   "ballroom/lapis-mosaic"
+   "ballroom/amber-lamp"
+   "ballroom/dark-wood"
+   "ballroom/foliage"])
+
+(def landmarks
+  [{"id" "ballroom/main-hall" "label" "Main Hall"}
+   {"id" "ballroom/grand-stair-west" "label" "West Grand Stair"}
+   {"id" "ballroom/grand-stair-east" "label" "East Grand Stair"}
+   {"id" "ballroom/central-dome" "label" "Central Dome"}
+   {"id" "ballroom/gallery" "label" "Upper Gallery"}
+   {"id" "ballroom/mosaic-floor" "label" "Peacock Mosaic Floor"}])
+
+(defn chunk-coordinate-loop [x y z output]
+  (if (= y 3)
+    output
+    (if (= z 2)
+      (chunk-coordinate-loop -2 (+ y 1) -2 output)
+      (if (= x 2)
+        (chunk-coordinate-loop -2 y (+ z 1) output)
+        (chunk-coordinate-loop (+ x 1) y z (conj output [x y z]))))))
+
+(defn chunk-coordinates []
+  (chunk-coordinate-loop -2 0 -2 []))
+
+(defn peacock-ballroom-block-pack []
+  {"format" "alumbra.block-pack/1"
+   "package" package-id
+   "version" package-version
+   "id" block-pack-id
+   "blocks"
+   [{"id" "ballroom/air"
+     "label" "Air"
+     "empty" true
+     "material" {"visible" false "opaque" false "opacity" 0}
+     "physics" {"solid" false "breakable" false "replaceable" true "hardness" 0}}
+    {"id" "ballroom/ivory-stone"
+     "label" "Ivory Stone"
+     "material" {"color" [0.88 0.84 0.72] "gloss" 0.28}
+     "physics" {"solid" true "breakable" true "replaceable" false "hardness" 4}}
+    {"id" "ballroom/white-marble"
+     "label" "White Marble"
+     "material" {"color" [0.91 0.91 0.86] "gloss" 0.68}
+     "physics" {"solid" true "breakable" true "replaceable" false "hardness" 5}}
+    {"id" "ballroom/brushed-gold"
+     "label" "Brushed Gold"
+     "material" {"color" [0.78 0.58 0.19] "gloss" 0.74}
+     "physics" {"solid" true "breakable" true "replaceable" false "hardness" 5}}
+    {"id" "ballroom/emerald-enamel"
+     "label" "Emerald Enamel"
+     "material" {"color" [0.04 0.34 0.22] "gloss" 0.72}
+     "physics" {"solid" true "breakable" true "replaceable" false "hardness" 3}}
+    {"id" "ballroom/teal-glass"
+     "label" "Teal Glass"
+     "material" {"opaque" false "opacity" 0.42 "color" [0.08 0.55 0.58] "gloss" 0.84}
+     "physics" {"solid" true "breakable" true "replaceable" false "hardness" 1}}
+    {"id" "ballroom/lapis-mosaic"
+     "label" "Lapis Mosaic"
+     "material" {"color" [0.06 0.18 0.52] "gloss" 0.52}
+     "physics" {"solid" true "breakable" true "replaceable" false "hardness" 4}}
+    {"id" "ballroom/amber-lamp"
+     "label" "Amber Lamp"
+     "material" {"color" [0.88 0.56 0.16] "emissive" [0.72 0.31 0.06] "gloss" 0.48}
+     "physics" {"solid" true "breakable" true "replaceable" false "hardness" 2}
+     "emittedLight" 14}
+    {"id" "ballroom/dark-wood"
+     "label" "Dark Wood"
+     "material" {"color" [0.20 0.12 0.08] "gloss" 0.18}
+     "physics" {"solid" true "breakable" true "replaceable" false "hardness" 3}}
+    {"id" "ballroom/foliage"
+     "label" "Ballroom Foliage"
+     "material" {"opaque" false "opacity" 1 "color" [0.12 0.42 0.25] "gloss" 0.08}
+     "physics" {"solid" false "breakable" true "replaceable" true "hardness" 0.2}}]
+   "metadata"
+   {"identity" "greenways/peacock-ballroom"
+    "purpose" "original Greenways architectural world palette"}})
+
+(defn provider-descriptor []
+  {"provider/id" provider-id
+   "provider/activity" activity-id
+   "provider/package" "hara:greenways/alumbra-peacock-ballroom@0.1.0"
+   "provider/default-state" "ballroom/day"
+   "provider/states" state-ids})
+
+(defn peacock-ballroom-world []
+  {"format" "alumbra.architectural-world/1"
+   "id" world-id
+   "title" "Peacock Ballroom"
+   "summary" "A monumental Hara-authored Greenways interior of ivory arches, teal glass, peacock mosaics and warm light."
+   "package" package-id
+   "version" package-version
+   "provider" provider-id
+   "activity" activity-id
+   "blockPack" block-pack-id
+   "generator" generator-id
+   "envelope"
+   {"chunkShape" [16 16 16]
+    "minimumChunk" [-2 0 -2]
+    "maximumChunk" [1 2 1]
+    "chunkCount" 48}
+   "chunkCoordinates" (chunk-coordinates)
+   "states" state-ids
+   "defaultState" "ballroom/day"
+   "blocks" block-ids
+   "landmarks" landmarks
+   "tags" ["greenways" "architecture" "interior" "ballroom" "benchmark"]
+   "provenance"
+   {"reference" "https://oss.greenways.ai/visual-language/artwork/greenways/peacock-ballroom-day.webp"
+    "relationship" "visual-inspiration"
+    "assets" "original"}})

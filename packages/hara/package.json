@@ -18,6 +18,7 @@
     "./interaction": "./src/interaction.js",
     "./fixtures": "./src/fixtures.js",
     "./runtime": "./src/runtime.js",
+    "./peacock-ballroom": "./src/peacock-ballroom.js",
     "./hara/*": "./src/gw/alumbra/*.hal"
   },
   "files": [
