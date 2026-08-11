@@ -1,0 +1,30 @@
+(ns showcase.alumbra-hara.peacock-ballroom)
+
+(def provider
+  {"provider/id" "alumbra/world"
+   "provider/activity" "alumbra-hara/peacock-ballroom"
+   "provider/package" "hara:greenways/alumbra-peacock-ballroom@0.1.0"
+   "provider/default-state" "ballroom/day"
+   "provider/states"
+   ["ballroom/day"
+    "ballroom/gallery-overlook"
+    "ballroom/mosaic-floor"]})
+
+(def world
+  {:world/id "greenways/peacock-ballroom"
+   :world/title "Peacock Ballroom"
+   :world/provider provider
+   :world/landmarks
+   ["ballroom/main-hall"
+    "ballroom/grand-stair-west"
+    "ballroom/grand-stair-east"
+    "ballroom/central-dome"
+    "ballroom/gallery"
+    "ballroom/mosaic-floor"]
+   :world/pipeline
+   [:hara/architectural-generator
+    :alumbra/core-chunks
+    :alumbra/lighting
+    :playcanvas/viewport]})
+
+world
