@@ -22,6 +22,14 @@ jobs:
       - run: npm run pack:check
       - name: Run installed Catalog activities in headless Chromium
         run: npm run check:browser
+      - name: Upload Peacock Ballroom review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: peacock-ballroom-review-${{ github.sha }}
+          path: artifacts/peacock-ballroom/*.png
+          if-no-files-found: warn
+          retention-days: 14
 
   hara-runtime:
     runs-on: ubuntu-latest
