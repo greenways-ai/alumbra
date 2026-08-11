@@ -3,7 +3,9 @@ import {
   PEACOCK_BALLROOM_STATE_IDS,
   PEACOCK_BALLROOM_WORLD,
 } from "@greenways/alumbra-hara";
+import {createLitPlayCanvasViewportSession} from "@greenways/alumbra-viewport-playcanvas";
 import {PLAYABLE_VIRTUAL_INPUT_EVENT} from "@greenways/alumbra-viewport-playcanvas/input";
+import {createPeacockBallroomArchitecturalProjection} from "./peacock-ballroom-architecture.js";
 import {createPeacockBallroomPreviewHost} from "./peacock-ballroom-host.js";
 
 const body = document.body;
@@ -27,7 +29,11 @@ if (
 const touchCapable = Number(navigator.maxTouchPoints || 0) > 0
   || globalThis.matchMedia?.("(pointer: coarse)")?.matches === true
   || globalThis.matchMedia?.("(hover: none)")?.matches === true;
+const architectureProfile = touchCapable ? "mobile" : "desktop";
 body.dataset.peacockBallroomInput = touchCapable ? "touch" : "desktop";
+body.dataset.peacockBallroomArchitecture = "pending";
+body.dataset.peacockBallroomArchitectureProfile = architectureProfile;
+body.dataset.peacockBallroomArchitectureEntities = "0";
 
 const stateSet = new Set(PEACOCK_BALLROOM_STATE_IDS);
 const parameters = new URLSearchParams(location.search);
@@ -48,6 +54,68 @@ function selectStateButton(stateId) {
     button.setAttribute("aria-pressed", selected ? "true" : "false");
     button.disabled = false;
   }
+}
+
+function applyArchitectureEvidence(evidence) {
+  window.__PEACOCK_BALLROOM_ARCHITECTURE__ = evidence;
+  body.dataset.peacockBallroomArchitecture = evidence.status === "ready" ? "passed" : evidence.status;
+  body.dataset.peacockBallroomArchitectureProfile = evidence.profile;
+  body.dataset.peacockBallroomArchitectureEntities = String(evidence.entities);
+}
+
+function createArchitecturalSession(options) {
+  const session = createLitPlayCanvasViewportSession(options);
+  if (String(options?.sessionId ?? "").endsWith("/probe")) return session;
+
+  const architecture = createPeacockBallroomArchitecturalProjection({
+    pc,
+    app: session.app,
+    profile: architectureProfile,
+  });
+  applyArchitectureEvidence(architecture.evidence());
+  let destroyPromise = null;
+  const api = Object.create(session);
+  Object.defineProperties(api, {
+    architecture: {value: architecture, enumerable: true},
+    suspend: {
+      enumerable: true,
+      value(reason = "manual") {
+        const base = session.suspend(reason);
+        const ornamental = architecture.suspend(reason);
+        applyArchitectureEvidence(architecture.evidence());
+        return Boolean(base || ornamental);
+      },
+    },
+    resume: {
+      enumerable: true,
+      value(reason = "manual") {
+        const ornamental = architecture.resume(reason);
+        const base = session.resume(reason);
+        applyArchitectureEvidence(architecture.evidence());
+        return Boolean(base || ornamental);
+      },
+    },
+    snapshot: {
+      enumerable: true,
+      value() {
+        return Object.freeze({
+          ...session.snapshot(),
+          architecture: architecture.evidence(),
+        });
+      },
+    },
+    destroy: {
+      enumerable: true,
+      value() {
+        if (destroyPromise) return destroyPromise;
+        const architectureEvidence = architecture.destroy();
+        window.__PEACOCK_BALLROOM_ARCHITECTURE_DISPOSAL__ = architectureEvidence;
+        destroyPromise = Promise.resolve(session.destroy());
+        return destroyPromise;
+      },
+    },
+  });
+  return Object.freeze(api);
 }
 
 function applyEvidence(snapshot) {
@@ -79,6 +147,7 @@ function applyEvidence(snapshot) {
 const host = createPeacockBallroomPreviewHost({
   pc,
   canvas,
+  createSession: createArchitecturalSession,
   onFrame(frame) {
     const now = performance.now();
     if (now - lastHud < 100) return;
@@ -107,7 +176,9 @@ const host = createPeacockBallroomPreviewHost({
     const guidance = touchCapable
       ? "drag left to move and right to look"
       : "click the world to explore";
-    setStatus(`${scenario.view} · ${scenario.world.nonAirVoxels.toLocaleString()} authored voxels · ${guidance}.`);
+    const architecture = window.__PEACOCK_BALLROOM_ARCHITECTURE__;
+    const surfaces = architecture?.entities ?? 0;
+    setStatus(`${scenario.view} · ${surfaces} smooth ornamental surfaces over the canonical editable world · ${guidance}.`);
     selectStateButton(stateId);
   },
 });
@@ -157,9 +228,10 @@ async function openState(stateId, {replaceHistory = true} = {}) {
   activeState = nextState;
   body.dataset.peacockBallroomReady = "false";
   body.dataset.peacockBallroomState = nextState;
+  body.dataset.peacockBallroomArchitecture = "pending";
   loading.hidden = false;
   stateButtons.forEach((button) => { button.disabled = true; });
-  setStatus(`Opening ${nextState} from the Hara-authored architectural generator…`);
+  setStatus(`Opening ${nextState} from the Hara-authored canonical and ornamental scene descriptors…`);
   try {
     const snapshot = await host.open(nextState);
     applyEvidence(snapshot);
@@ -176,6 +248,7 @@ async function openState(stateId, {replaceHistory = true} = {}) {
     console.error(error);
     body.dataset.peacockBallroomReady = "false";
     body.dataset.peacockBallroomError = "true";
+    body.dataset.peacockBallroomArchitecture = "failed";
     loading.hidden = true;
     stateButtons.forEach((button) => { button.disabled = false; });
     setStatus(`Preview failed: ${error.message}`, {error: true});
