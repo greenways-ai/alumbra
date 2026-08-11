@@ -57,7 +57,8 @@ test("keeps every named preview spawn collision-safe", () => {
 test("publishes a standalone Lab preview with three semantic views and bounded browser evidence", () => {
   assert.match(page, /id="peacock-ballroom-canvas"/);
   assert.match(page, /data-peacock-ballroom-ready="false"/);
-  assert.match(page, /src="\.\/src\/peacock-ballroom-entry\.js"/);
+  assert.match(page, /href="\.\/src\/peacock-ballroom\.css\?v=pb-mobile-2"/);
+  assert.match(page, /src="\.\/src\/peacock-ballroom-entry\.js\?v=pb-mobile-2"/);
   for (const stateId of PEACOCK_BALLROOM_STATE_IDS) {
     assert.ok(page.includes(`data-ballroom-state="${stateId}"`));
   }
