@@ -15,6 +15,7 @@ import {
 
 const page = readFileSync(new URL("../peacock-ballroom.html", import.meta.url), "utf8");
 const entry = readFileSync(new URL("../src/peacock-ballroom-entry.js", import.meta.url), "utf8");
+const architecture = readFileSync(new URL("../src/peacock-ballroom-architecture.js", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../src/peacock-ballroom.css", import.meta.url), "utf8");
 
 function safeSpawn(world, view) {
@@ -78,4 +79,21 @@ test("publishes safe-area-aware touch navigation and declared mobile actions", (
   assert.match(styles, /touch-action: none/);
   assert.match(styles, /@media \(pointer: coarse\), \(hover: none\)/);
   assert.match(styles, /env\(safe-area-inset-bottom\)/);
+});
+
+test("mounts a smooth hybrid architectural projection through the viewport lifecycle", () => {
+  assert.match(entry, /createPeacockBallroomArchitecturalProjection/);
+  assert.match(entry, /createArchitecturalSession/);
+  assert.match(entry, /architecture\.suspend/);
+  assert.match(entry, /architecture\.resume/);
+  assert.match(entry, /architecture\.destroy/);
+  assert.match(entry, /dataset\.peacockBallroomArchitecture = "pending"/);
+  for (const primitive of ["cylinder", "capsule", "cone", "torus", "sphere"]) {
+    assert.ok(architecture.includes(`type: "${primitive}"`), primitive);
+  }
+  assert.match(architecture, /Smooth grand stair ramp/);
+  assert.match(architecture, /Dome rib/);
+  assert.match(architecture, /Chandelier bulb/);
+  assert.match(architecture, /Peacock floor feather/);
+  assert.doesNotMatch(architecture, /canonicalChunk|applyTransaction|setBlock|shaderSource/);
 });
