@@ -5,7 +5,7 @@
  :project/source-paths ["src"]
  :project/test-paths []
  :project/extension-paths []
- :project/capabilities #{}
+ :project/capabilities #{:canvas/webgl2 :input/pointer :input/keyboard}
  :project/dependencies
  {"hara:greenways/alumbra-core" {:version "^0.1.0"}
   "hara:greenways/alumbra-history" {:version "^0.1.0"}
@@ -14,4 +14,19 @@
   "hara:greenways/alumbra-renderer-playcanvas" {:version "^0.1.0"}
   "hara:greenways/alumbra-hodos" {:version "^0.1.0"}
   "hara:greenways/alumbra-hara" {:version "^0.1.0"}}
+ :project/world
+ {:world/version "1.0.0"
+  :world/title "Peacock Ballroom"
+  :world/background "#07110e"
+  :world/layers []
+  :world/imports []
+  :world/provider
+  {:provider/id "alumbra/world"
+   :provider/activity "alumbra-hara/peacock-ballroom"
+   :provider/package "hara:greenways/alumbra-peacock-ballroom@0.1.0"
+   :provider/default-state "ballroom/day"
+   :provider/states
+   ["ballroom/day"
+    "ballroom/gallery-overlook"
+    "ballroom/mosaic-floor"]}}
  :project/recipe "hara.recipe.edn"}
