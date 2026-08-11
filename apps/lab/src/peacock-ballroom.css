@@ -161,7 +161,18 @@ button, a { font: inherit; }
   line-height: 1.4;
 }
 
-.ballroom-status[data-error="true"] {
+.ballroom-status[data-tone="hint"] {
+  border-color: rgba(227, 191, 87, 0.54);
+  color: #f7e6ad;
+}
+
+.ballroom-status[data-tone="success"] {
+  border-color: rgba(117, 211, 157, 0.5);
+  color: #c9f4d9;
+}
+
+.ballroom-status[data-error="true"],
+.ballroom-status[data-tone="error"] {
   border-color: rgba(255, 140, 120, 0.65);
   color: #ffd2ca;
 }
@@ -230,10 +241,18 @@ button, a { font: inherit; }
   position: absolute;
   background: rgba(255, 248, 226, 0.82);
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+  transition: background 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 }
 
 .ballroom-crosshair::before { left: 6px; top: 0; width: 2px; height: 14px; }
 .ballroom-crosshair::after { left: 0; top: 6px; width: 14px; height: 2px; }
+
+body[data-peacock-ballroom-target="ready"] .ballroom-crosshair::before,
+body[data-peacock-ballroom-target="ready"] .ballroom-crosshair::after {
+  background: #e3bf57;
+  box-shadow: 0 0 8px rgba(227, 191, 87, 0.66), 0 0 3px rgba(0, 0, 0, 0.64);
+  transform: scale(1.12);
+}
 
 .ballroom-mobile-controls {
   display: none;
@@ -245,8 +264,8 @@ button, a { font: inherit; }
 
 .ballroom-touch-zone {
   position: absolute;
-  bottom: max(14px, env(safe-area-inset-bottom));
-  width: min(38vw, 158px);
+  bottom: max(12px, env(safe-area-inset-bottom));
+  width: min(32vw, 132px);
   aspect-ratio: 1;
   border: 1px solid rgba(247, 240, 218, 0.2);
   border-radius: 50%;
@@ -260,7 +279,7 @@ button, a { font: inherit; }
 .ballroom-touch-zone span {
   position: absolute;
   left: 50%;
-  bottom: 18px;
+  bottom: 16px;
   transform: translateX(-50%);
   color: rgba(247, 240, 218, 0.64);
   font-size: 0.62rem;
@@ -269,25 +288,25 @@ button, a { font: inherit; }
   text-transform: uppercase;
 }
 
-.ballroom-touch-zone-move { left: max(12px, env(safe-area-inset-left)); }
-.ballroom-touch-zone-look { right: max(12px, env(safe-area-inset-right)); }
+.ballroom-touch-zone-move { left: max(10px, env(safe-area-inset-left)); }
+.ballroom-touch-zone-look { right: max(10px, env(safe-area-inset-right)); }
 
 .ballroom-mobile-actions {
   position: absolute;
-  right: max(14px, env(safe-area-inset-right));
-  bottom: calc(max(14px, env(safe-area-inset-bottom)) + min(38vw, 158px) + 12px);
+  right: max(12px, env(safe-area-inset-right));
+  bottom: calc(max(12px, env(safe-area-inset-bottom)) + min(32vw, 132px) + 10px);
   display: grid;
-  grid-template-columns: repeat(2, minmax(54px, auto));
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(52px, auto));
+  gap: 7px;
   pointer-events: auto;
 }
 
 .ballroom-mobile-action {
-  min-width: 58px;
-  min-height: 48px;
+  min-width: 56px;
+  min-height: 46px;
   border: 1px solid rgba(244, 226, 172, 0.34);
-  border-radius: 16px;
-  padding: 10px 12px;
+  border-radius: 15px;
+  padding: 9px 11px;
   color: #fff8e4;
   background: rgba(6, 18, 14, 0.78);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
@@ -310,6 +329,16 @@ button, a { font: inherit; }
   transform: translateY(1px) scale(0.97);
   background: rgba(227, 191, 87, 0.92);
   color: #102017;
+}
+
+.ballroom-mobile-action:disabled,
+.ballroom-mobile-action[aria-disabled="true"] {
+  border-color: rgba(244, 226, 172, 0.12);
+  color: rgba(247, 240, 218, 0.38);
+  background: rgba(6, 18, 14, 0.46);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 .ballroom-loading {
@@ -351,39 +380,27 @@ button, a { font: inherit; }
 }
 
 @media (max-width: 860px) {
-  .ballroom-topbar { grid-template-columns: 1fr; }
-  .ballroom-controls { justify-content: flex-start; max-width: none; }
-  .ballroom-help { display: none; }
-  .ballroom-bottom { grid-template-columns: 1fr; }
-  .ballroom-stats { justify-self: stretch; grid-template-columns: repeat(3, 1fr); }
-  .ballroom-stat { min-width: 0; }
-}
-
-@media (pointer: coarse), (hover: none) {
-  .ballroom-mobile-controls { display: block; }
-  .ballroom-help-desktop { display: none; }
-  .ballroom-help-touch { display: inline; }
-
   .ballroom-topbar {
     inset:
       max(8px, env(safe-area-inset-top))
       max(8px, env(safe-area-inset-right))
       auto
       max(8px, env(safe-area-inset-left));
-    gap: 8px;
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .ballroom-title {
     width: fit-content;
     max-width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
-    padding: 10px 13px;
-    border-radius: 14px;
+    padding: 8px 11px;
+    border-radius: 12px;
   }
 
   .ballroom-eyebrow,
   .ballroom-title p:last-child { display: none; }
 
-  .ballroom-title h1 { font-size: clamp(1.25rem, 6vw, 1.7rem); }
+  .ballroom-title h1 { font-size: clamp(1.05rem, 5vw, 1.4rem); }
 
   .ballroom-controls {
     max-width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
@@ -391,51 +408,132 @@ button, a { font: inherit; }
     justify-content: flex-start;
     overflow-x: auto;
     scrollbar-width: none;
-    padding: 7px;
-    border-radius: 14px;
+    gap: 5px;
+    padding: 5px;
+    border-radius: 12px;
   }
 
   .ballroom-controls::-webkit-scrollbar { display: none; }
 
   .ballroom-controls button,
   .ballroom-back {
-    min-height: 42px;
+    min-height: 36px;
     flex: 0 0 auto;
+    padding: 7px 10px;
     white-space: nowrap;
+    font-size: 0.82rem;
   }
 
-  .ballroom-help {
-    display: block;
-    top: auto;
-    left: 50%;
-    right: auto;
-    bottom: calc(max(14px, env(safe-area-inset-bottom)) + min(38vw, 158px) + 18px);
-    width: min(54vw, 250px);
-    max-width: none;
-    transform: translateX(-50%);
-    padding: 9px 11px;
-    border-radius: 12px;
-    text-align: center;
-    font-size: 0.69rem;
-  }
-
-  .ballroom-bottom { display: none; }
+  .ballroom-help { display: none; }
+  .ballroom-bottom { grid-template-columns: 1fr; }
+  .ballroom-stats { justify-self: stretch; grid-template-columns: repeat(3, 1fr); }
+  .ballroom-stat { min-width: 0; }
 }
 
-@media (pointer: coarse) and (max-height: 620px) {
-  .ballroom-help { display: none; }
-  .ballroom-touch-zone {
-    width: min(30vw, 118px);
+:root[data-peacock-ballroom-input="touch"] .ballroom-mobile-controls {
+  display: block;
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-help-desktop {
+  display: none;
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-help-touch {
+  display: inline;
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-topbar {
+  inset:
+    max(8px, env(safe-area-inset-top))
+    max(8px, env(safe-area-inset-right))
+    auto
+    max(8px, env(safe-area-inset-left));
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-title {
+  width: fit-content;
+  max-width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
+  padding: 8px 11px;
+  border-radius: 12px;
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-eyebrow,
+:root[data-peacock-ballroom-input="touch"] .ballroom-title p:last-child {
+  display: none;
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-title h1 {
+  font-size: clamp(1.05rem, 5vw, 1.4rem);
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-controls {
+  max-width: calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right));
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 5px;
+  padding: 5px;
+  border-radius: 12px;
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-controls::-webkit-scrollbar {
+  display: none;
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-controls button,
+:root[data-peacock-ballroom-input="touch"] .ballroom-back {
+  min-height: 36px;
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+
+:root[data-peacock-ballroom-input="touch"] .ballroom-help,
+:root[data-peacock-ballroom-input="touch"] .ballroom-bottom {
+  display: none;
+}
+
+:root[data-peacock-ballroom-input="touch"] body[data-peacock-ballroom-error="true"] .ballroom-bottom {
+  display: block;
+  inset:
+    auto
+    max(10px, env(safe-area-inset-right))
+    calc(max(12px, env(safe-area-inset-bottom)) + min(32vw, 132px) + 118px)
+    max(10px, env(safe-area-inset-left));
+}
+
+:root[data-peacock-ballroom-input="touch"] body[data-peacock-ballroom-error="true"] .ballroom-status {
+  width: min(100%, 460px);
+  margin: 0 auto;
+  padding: 9px 11px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 0.74rem;
+}
+
+:root[data-peacock-ballroom-input="touch"] body[data-peacock-ballroom-error="true"] .ballroom-stats {
+  display: none;
+}
+
+@media (max-height: 620px) {
+  :root[data-peacock-ballroom-input="touch"] .ballroom-touch-zone {
+    width: min(27vw, 104px);
   }
-  .ballroom-mobile-actions {
-    bottom: calc(max(10px, env(safe-area-inset-bottom)) + min(30vw, 118px) + 8px);
-    grid-template-columns: repeat(4, minmax(48px, auto));
+
+  :root[data-peacock-ballroom-input="touch"] .ballroom-mobile-actions {
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + min(27vw, 104px) + 7px);
+    grid-template-columns: repeat(4, minmax(46px, auto));
   }
-  .ballroom-mobile-action {
-    min-width: 50px;
-    min-height: 42px;
-    padding: 8px 9px;
-    border-radius: 14px;
+
+  :root[data-peacock-ballroom-input="touch"] .ballroom-mobile-action {
+    min-width: 48px;
+    min-height: 40px;
+    padding: 7px 8px;
+    border-radius: 13px;
   }
 }
 
