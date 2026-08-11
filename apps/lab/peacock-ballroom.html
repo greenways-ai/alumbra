@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07110e" />
+  <title>Peacock Ballroom · Alumbra</title>
+  <link rel="stylesheet" href="./src/peacock-ballroom.css" />
+</head>
+<body
+  data-peacock-ballroom-ready="false"
+  data-peacock-ballroom-error="false"
+  data-peacock-ballroom-state="ballroom/day"
+  data-peacock-ballroom-chunks="0"
+  data-peacock-ballroom-lighting="pending"
+  data-peacock-ballroom-landmarks="pending"
+  data-peacock-ballroom-disposal="pending"
+>
+  <main class="ballroom-shell">
+    <canvas id="peacock-ballroom-canvas" aria-label="Playable Peacock Ballroom world"></canvas>
+    <div class="ballroom-crosshair" aria-hidden="true"></div>
+
+    <header class="ballroom-topbar">
+      <section class="ballroom-title">
+        <p class="ballroom-eyebrow">Alumbra world preview</p>
+        <h1>Peacock Ballroom</h1>
+        <p>An original Hara-authored hall of ivory colonnades, teal glass, peacock mosaics and warm chandelier light.</p>
+      </section>
+      <nav class="ballroom-controls" aria-label="Peacock Ballroom views">
+        <a class="ballroom-back" href="./">Back to Lab</a>
+        <button type="button" data-ballroom-state="ballroom/day">Day entrance</button>
+        <button type="button" data-ballroom-state="ballroom/gallery-overlook">Gallery overlook</button>
+        <button type="button" data-ballroom-state="ballroom/mosaic-floor">Mosaic floor</button>
+      </nav>
+    </header>
+
+    <aside class="ballroom-help">
+      Click the world to look around. Use W, A, S and D to move, Space to jump, left click to break, right click to place, and Z to undo.
+    </aside>
+
+    <footer class="ballroom-bottom">
+      <div class="ballroom-status" data-ballroom-status>Preparing the canonical 48-chunk world…</div>
+      <div class="ballroom-stats" aria-label="World evidence">
+        <div class="ballroom-stat"><span>Chunks</span><strong data-ballroom-stat="chunks">0</strong></div>
+        <div class="ballroom-stat"><span>Light</span><strong data-ballroom-stat="light">pending</strong></div>
+        <div class="ballroom-stat"><span>Position</span><strong data-ballroom-stat="player">—</strong></div>
+      </div>
+    </footer>
+
+    <div class="ballroom-loading" data-ballroom-loading>
+      <div class="ballroom-loading-card">
+        <h2>Building the Peacock Ballroom</h2>
+        <p>Materialising Hara architecture, canonical chunks, sunlight, lamps and renderer-owned meshes.</p>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="./src/peacock-ballroom-entry.js"></script>
+</body>
+</html>

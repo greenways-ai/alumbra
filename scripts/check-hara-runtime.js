@@ -8,12 +8,18 @@ import {
   FIXTURE_VERSION,
   FIXTURE_WORLD_RULE,
   PACKAGED_WORLD_STATE_IDS,
+  PEACOCK_BALLROOM_BLOCK_PACK_ID,
+  PEACOCK_BALLROOM_PACKAGE,
+  PEACOCK_BALLROOM_VERSION,
   createFixtureBlockPack,
   createFlatFixtureGenerator,
   createFlatFixturePlan,
   createHaraRulesSession,
   createHeightFieldFixtureGenerator,
   createHeightFieldFixturePlan,
+  createPeacockBallroomBlockPack,
+  createPeacockBallroomChunkPlan,
+  createPeacockBallroomGeneratorDescriptor,
   loadPackagedHaraWorld,
   materializeBlockRegistry,
   materializeGeneratedChunk,
@@ -46,6 +52,7 @@ async function activationEvidence() {
     },
     packages:[
       {package:FIXTURE_PACKAGE, version:FIXTURE_VERSION},
+      {package:PEACOCK_BALLROOM_PACKAGE, version:PEACOCK_BALLROOM_VERSION},
       {package:"hara:greenways/alumbra-core", version:"0.1.0"},
     ],
     capabilities:[],
@@ -199,6 +206,35 @@ async function main() {
         minimum:2,
         span:5,
       }, registry),
+    }));
+
+    const runtimeBallroomPack = await session.invokeBlockPack({
+      package:PEACOCK_BALLROOM_PACKAGE,
+      version:PEACOCK_BALLROOM_VERSION,
+      id:PEACOCK_BALLROOM_BLOCK_PACK_ID,
+      entry:{module:"gw.alumbra.peacock-ballroom", function:"peacock-ballroom-block-pack"},
+    });
+    assert.deepEqual(runtimeBallroomPack, createPeacockBallroomBlockPack());
+    const {registry:ballroomRegistry} = materializeBlockRegistry([runtimeBallroomPack], {
+      id:"ballroom/hara-runtime-architectural-blocks",
+      version:PEACOCK_BALLROOM_VERSION,
+    });
+    const ballroomGenerator = createPeacockBallroomGeneratorDescriptor();
+    const ballroomShape = [16, 16, 16];
+    evidence.push(...await provePlanParity({
+      session,
+      registry:ballroomRegistry,
+      generator:ballroomGenerator,
+      coordinates:[[0, 0, 0], [-2, 0, -2], [1, 1, 1]],
+      shape:ballroomShape,
+      kind:"peacock-ballroom",
+      argumentsFor:(coord) => [ballroomGenerator, coord, ballroomShape],
+      directPlan:(coord) => createPeacockBallroomChunkPlan({
+        generator:ballroomGenerator,
+        coord,
+        shape:ballroomShape,
+        revision:1,
+      }, ballroomRegistry),
     }));
 
     for (const stateId of [

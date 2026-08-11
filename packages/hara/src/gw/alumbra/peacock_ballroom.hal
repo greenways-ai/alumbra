@@ -7,11 +7,36 @@
 (def activity-id "alumbra-hara/peacock-ballroom")
 (def block-pack-id "ballroom/architectural-palette")
 (def generator-id "ballroom/architectural-generator")
+(def generator-seed "20260811")
+(def chunk-shape [16 16 16])
 
 (def state-ids
   ["ballroom/day"
    "ballroom/gallery-overlook"
    "ballroom/mosaic-floor"])
+
+(def state-views
+  {"ballroom/day"
+   {"position" [-0.5 2.05 23.5]
+    "velocity" [0 0 0]
+    "yaw" 0
+    "pitch" -8
+    "grounded" false
+    "label" "Day entrance"}
+   "ballroom/gallery-overlook"
+   {"position" [-21.5 11.05 0.5]
+    "velocity" [0 0 0]
+    "yaw" -90
+    "pitch" -12
+    "grounded" false
+    "label" "Gallery overlook"}
+   "ballroom/mosaic-floor"
+   {"position" [-0.5 2.05 10.5]
+    "velocity" [0 0 0]
+    "yaw" 0
+    "pitch" -28
+    "grounded" false
+    "label" "Mosaic floor"}})
 
 (def block-ids
   ["ballroom/air"
@@ -32,6 +57,24 @@
    {"id" "ballroom/central-dome" "label" "Central Dome"}
    {"id" "ballroom/gallery" "label" "Upper Gallery"}
    {"id" "ballroom/mosaic-floor" "label" "Peacock Mosaic Floor"}])
+
+(defn absolute [value]
+  (if (< value 0) (- 0 value) value))
+
+(defn centered-distance [value]
+  (min (absolute value) (absolute (+ value 1))))
+
+(defn between? [value minimum maximum]
+  (and (>= value minimum) (<= value maximum)))
+
+(defn positive-mod [value divisor]
+  (mod (+ (mod value divisor) divisor) divisor))
+
+(defn column-band? [distance]
+  (or (= distance 4) (= distance 12) (= distance 20)))
+
+(defn chandelier-band? [distance]
+  (or (<= distance 1) (between? distance 11 13)))
 
 (defn chunk-coordinate-loop [x y z output]
   (if (= y 3)
@@ -94,8 +137,232 @@
      "material" {"opaque" false "opacity" 1 "color" [0.12 0.42 0.25] "gloss" 0.08}
      "physics" {"solid" false "breakable" true "replaceable" true "hardness" 0.2}}]
    "metadata"
-   {"identity" "greenways/peacock-ballroom"
+   {"identity" world-id
     "purpose" "original Greenways architectural world palette"}})
+
+(defn peacock-ballroom-generator []
+  {"format" "alumbra.generator/1"
+   "package" package-id
+   "version" package-version
+   "id" generator-id
+   "seed" generator-seed
+   "entry" {"module" "gw.alumbra.peacock-ballroom"
+             "function" "peacock-ballroom-chunk-plan"}
+   "parameters" {"world" world-id
+                 "style" "peacock-ballroom-day"}})
+
+(defn floor-material [world-x world-z dx dz]
+  (let [radius (max dx dz)]
+    (if (and (<= dx 1) (<= dz 1))
+      "ballroom/brushed-gold"
+      (if (or (= radius 3) (= radius 8))
+        "ballroom/brushed-gold"
+        (if (and (or (= dx 0) (= dz 0)) (<= radius 15))
+          "ballroom/brushed-gold"
+          (if (<= radius 6)
+            "ballroom/lapis-mosaic"
+            (if (<= radius 12)
+              (if (= (positive-mod (+ dx dz) 3) 0)
+                "ballroom/brushed-gold"
+                (if (= (positive-mod (+ world-x world-z) 2) 0)
+                  "ballroom/emerald-enamel"
+                  "ballroom/lapis-mosaic"))
+              (if (and (<= dz 21)
+                       (<= dx 15)
+                       (<= (positive-mod (+ (* dx 3) (* dz 5)) 11) 1))
+                "ballroom/lapis-mosaic"
+                (if (and (<= dz 21)
+                         (<= dx 15)
+                         (<= (positive-mod (+ (* dx 5) (* dz 2)) 13) 1))
+                  "ballroom/emerald-enamel"
+                  "ballroom/white-marble")))))))))
+
+(defn side-window-material [world-y world-z]
+  (let [offset (positive-mod (+ world-z 24) 8)]
+    (if (or (= offset 0) (= offset 7) (= world-y 5) (= world-y 16))
+      "ballroom/brushed-gold"
+      (if (and (or (= offset 3) (= offset 4)) (between? world-y 9 13))
+        "ballroom/emerald-enamel"
+        "ballroom/teal-glass"))))
+
+(defn south-window-material [dx world-y]
+  (let [top (- 20 dx)]
+    (if (or (= world-y 11) (= world-y top) (= dx 8))
+      "ballroom/brushed-gold"
+      (if (and (<= dx 2) (between? world-y 13 17))
+        "ballroom/emerald-enamel"
+        "ballroom/teal-glass"))))
+
+(defn north-window-material [dx world-y]
+  (if (or (= dx 10) (= world-y 5) (= world-y 18) (= dx 0))
+    "ballroom/brushed-gold"
+    (if (and (<= dx 3) (between? world-y 9 14))
+      "ballroom/emerald-enamel"
+      (if (= (positive-mod (+ dx world-y) 5) 0)
+        "ballroom/lapis-mosaic"
+        "ballroom/teal-glass"))))
+
+(defn dome-radius [world-y]
+  (if (<= world-y 23)
+    12
+    (if (<= world-y 25)
+      10
+      (if (<= world-y 27) 8 6))))
+
+(defn stair-block [world-y world-z dx]
+  (if (and (between? world-z 15 23) (between? dx 10 17))
+    (let [top (+ 1 (- 24 world-z))]
+      (if (between? world-y 2 top)
+        (if (and (= world-y top) (or (= dx 10) (= dx 17)))
+          "ballroom/brushed-gold"
+          "ballroom/white-marble")
+        nil))
+    nil))
+
+(defn gallery-block [world-y world-z dx dz]
+  (if (and (= world-y 10) (between? dx 18 24) (<= dz 22))
+    "ballroom/white-marble"
+    (if (and (or (= world-y 11) (= world-y 12))
+             (= dx 17)
+             (<= dz 22)
+             (not (between? world-z 15 23)))
+      (if (= world-y 12) "ballroom/brushed-gold" "ballroom/ivory-stone")
+      nil)))
+
+(defn column-block [world-y dx dz]
+  (if (and (between? dx 17 18) (column-band? dz) (between? world-y 2 16))
+    (if (<= world-y 3)
+      "ballroom/white-marble"
+      (if (= world-y 15) "ballroom/brushed-gold" "ballroom/ivory-stone"))
+    nil))
+
+(defn arch-block [world-y world-z dx dz]
+  (if (and (between? dx 17 18) (<= dz 23) (between? world-y 17 20))
+    (let [offset (positive-mod (+ world-z 21) 8)
+          rise (min offset (- 7 offset))
+          lower (+ 17 rise)]
+      (if (>= world-y lower)
+        (if (= world-y lower) "ballroom/brushed-gold" "ballroom/ivory-stone")
+        nil))
+    nil))
+
+(defn chandelier-block [world-y dx dz]
+  (if (and (= dx 0) (chandelier-band? dz) (between? world-y 17 20))
+    "ballroom/dark-wood"
+    (if (and (<= dx 1) (chandelier-band? dz) (between? world-y 15 16))
+      "ballroom/amber-lamp"
+      nil)))
+
+(defn planter-block [world-y dx dz]
+  (if (and (between? dx 21 23) (between? dz 19 21))
+    (if (= world-y 2)
+      "ballroom/dark-wood"
+      (if (between? world-y 3 5) "ballroom/foliage" nil))
+    nil))
+
+(defn outer-wall-block [world-x world-y world-z dx dz]
+  (let [outer-wall (or (and (= dx 25) (<= dz 27))
+                       (and (= dz 27) (<= dx 25)))]
+    (if (and outer-wall (between? world-y 2 20))
+      (if (and (= dz 27) (> world-z 0) (<= dx 4) (<= world-y 10))
+        "ballroom/air"
+        (if (and (= dz 27)
+                 (> world-z 0)
+                 (<= dx 8)
+                 (between? world-y 11 (- 20 dx)))
+          (south-window-material dx world-y)
+          (if (and (= dz 27)
+                   (< world-z 0)
+                   (<= dx 10)
+                   (between? world-y 5 18))
+            (north-window-material dx world-y)
+            (if (and (= dx 25) (<= dz 23) (between? world-y 5 16))
+              (side-window-material world-y world-z)
+              "ballroom/ivory-stone"))))
+      nil)))
+
+(defn ceiling-block [world-y dx dz maximum-distance]
+  (if (and (= world-y 21) (<= dx 24) (<= dz 26))
+    (if (> maximum-distance 12)
+      "ballroom/ivory-stone"
+      (if (= maximum-distance 12) "ballroom/brushed-gold" "ballroom/air"))
+    nil))
+
+(defn dome-block [world-y dx dz maximum-distance]
+  (if (between? world-y 22 29)
+    (let [radius (dome-radius world-y)
+          transition (or (= world-y 24) (= world-y 26) (= world-y 28))
+          on-shell (or (= maximum-distance radius)
+                       (and transition (between? maximum-distance radius (+ radius 2))))]
+      (if (and on-shell (<= dx (+ radius 2)) (<= dz (+ radius 2)))
+        (if (or (= dx 0)
+                (= dz 0)
+                (and transition (= maximum-distance (+ radius 2))))
+          "ballroom/brushed-gold"
+          "ballroom/teal-glass")
+        nil))
+    (if (and (= world-y 30) (<= maximum-distance 6))
+      (if (or (= dx 0) (= dz 0)) "ballroom/brushed-gold" "ballroom/teal-glass")
+      nil)))
+
+(defn ballroom-block-at [world-x world-y world-z]
+  (let [dx (centered-distance world-x)
+        dz (centered-distance world-z)
+        maximum-distance (max dx dz)]
+    (if (and (= world-y 0) (<= dx 27) (<= dz 29))
+      "ballroom/ivory-stone"
+      (if (and (= world-y 1) (<= dx 25) (<= dz 27))
+        (floor-material world-x world-z dx dz)
+        (if (or (< world-y 2) (> world-y 30))
+          "ballroom/air"
+          (or (stair-block world-y world-z dx)
+              (gallery-block world-y world-z dx dz)
+              (column-block world-y dx dz)
+              (arch-block world-y world-z dx dz)
+              (chandelier-block world-y dx dz)
+              (planter-block world-y dx dz)
+              (outer-wall-block world-x world-y world-z dx dz)
+              (ceiling-block world-y dx dz maximum-distance)
+              (dome-block world-y dx dz maximum-distance)
+              "ballroom/air"))))))
+
+(defn row-overrides [coord shape local-y local-z local-x output]
+  (if (= local-x (get shape 0))
+    output
+    (let [world-x (+ (* (get coord 0) (get shape 0)) local-x)
+          world-y (+ (* (get coord 1) (get shape 1)) local-y)
+          world-z (+ (* (get coord 2) (get shape 2)) local-z)
+          block (ballroom-block-at world-x world-y world-z)
+          next-output (if (= block "ballroom/air")
+                        output
+                        (conj output {"local" [local-x local-y local-z]
+                                      "block" block}))]
+      (row-overrides coord shape local-y local-z (+ local-x 1) next-output))))
+
+(defn layer-overrides [coord shape local-z local-y output]
+  (if (= local-y (get shape 1))
+    output
+    (let [next-output (row-overrides coord shape local-y local-z 0 output)]
+      (layer-overrides coord shape local-z (+ local-y 1) next-output))))
+
+(defn chunk-overrides [coord shape local-z output]
+  (if (= local-z (get shape 2))
+    output
+    (let [next-output (layer-overrides coord shape local-z 0 output)]
+      (chunk-overrides coord shape (+ local-z 1) next-output))))
+
+(defn peacock-ballroom-chunk-plan [generator coord shape]
+  {"format" "alumbra.generated-chunk/1"
+   "generator" generator
+   "coord" coord
+   "shape" shape
+   "revision" 1
+   "base" "ballroom/air"
+   "regions" []
+   "overrides" (chunk-overrides coord shape 0 [])
+   "metadata" {"world" world-id
+               "style" "peacock-ballroom-day"
+               "authoredBy" "gw.alumbra.peacock-ballroom"}})
 
 (defn provider-descriptor []
   {"provider/id" provider-id
@@ -103,6 +370,9 @@
    "provider/package" "hara:greenways/alumbra-peacock-ballroom@0.1.0"
    "provider/default-state" "ballroom/day"
    "provider/states" state-ids})
+
+(defn state-view [state-id]
+  (get state-views state-id))
 
 (defn peacock-ballroom-world []
   {"format" "alumbra.architectural-world/1"
@@ -116,7 +386,7 @@
    "blockPack" block-pack-id
    "generator" generator-id
    "envelope"
-   {"chunkShape" [16 16 16]
+   {"chunkShape" chunk-shape
     "minimumChunk" [-2 0 -2]
     "maximumChunk" [1 2 1]
     "chunkCount" 48}

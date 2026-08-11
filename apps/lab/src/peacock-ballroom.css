@@ -1,0 +1,273 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #07110e;
+  color: #f7f0da;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(55, 132, 120, 0.24), transparent 45%),
+    #07110e;
+}
+
+button, a { font: inherit; }
+
+.ballroom-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+}
+
+#peacock-ballroom-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #7caeb5;
+}
+
+.ballroom-topbar {
+  position: absolute;
+  z-index: 4;
+  inset: 18px 18px auto 18px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  align-items: start;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.ballroom-title,
+.ballroom-controls,
+.ballroom-status,
+.ballroom-stats,
+.ballroom-help {
+  border: 1px solid rgba(244, 226, 172, 0.22);
+  background: rgba(6, 18, 14, 0.82);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(16px);
+}
+
+.ballroom-title {
+  max-width: 560px;
+  padding: 15px 18px 16px;
+  border-radius: 18px;
+}
+
+.ballroom-eyebrow {
+  margin: 0 0 5px;
+  color: #e3bf57;
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ballroom-title h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.65rem, 3vw, 2.75rem);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.ballroom-title p:last-child {
+  max-width: 46rem;
+  margin: 9px 0 0;
+  color: rgba(247, 240, 218, 0.76);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.ballroom-controls {
+  pointer-events: auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 520px;
+  padding: 10px;
+  border-radius: 16px;
+}
+
+.ballroom-controls button,
+.ballroom-back {
+  min-height: 38px;
+  border: 1px solid rgba(244, 226, 172, 0.24);
+  border-radius: 999px;
+  padding: 8px 13px;
+  color: #f7f0da;
+  background: rgba(255, 255, 255, 0.055);
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+.ballroom-controls button:hover,
+.ballroom-controls button:focus-visible,
+.ballroom-back:hover,
+.ballroom-back:focus-visible {
+  border-color: rgba(227, 191, 87, 0.75);
+  background: rgba(227, 191, 87, 0.16);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.ballroom-controls button[aria-pressed="true"] {
+  border-color: #e3bf57;
+  background: #d2a82f;
+  color: #102017;
+  font-weight: 720;
+}
+
+.ballroom-bottom {
+  position: absolute;
+  z-index: 4;
+  inset: auto 18px 18px 18px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  align-items: end;
+  gap: 14px;
+  pointer-events: none;
+}
+
+.ballroom-status {
+  max-width: 620px;
+  padding: 12px 15px;
+  border-radius: 14px;
+  color: rgba(247, 240, 218, 0.86);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.ballroom-status[data-error="true"] {
+  border-color: rgba(255, 140, 120, 0.65);
+  color: #ffd2ca;
+}
+
+.ballroom-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(88px, auto));
+  gap: 1px;
+  padding: 1px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.ballroom-stat {
+  min-width: 94px;
+  padding: 9px 12px;
+  background: rgba(4, 14, 11, 0.84);
+}
+
+.ballroom-stat span {
+  display: block;
+  color: rgba(247, 240, 218, 0.52);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ballroom-stat strong {
+  display: block;
+  margin-top: 3px;
+  color: #fff8e4;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.ballroom-help {
+  position: absolute;
+  z-index: 4;
+  top: 160px;
+  right: 18px;
+  max-width: 250px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  color: rgba(247, 240, 218, 0.68);
+  font-size: 0.77rem;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.ballroom-crosshair {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  pointer-events: none;
+}
+
+.ballroom-crosshair::before,
+.ballroom-crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 248, 226, 0.82);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+}
+
+.ballroom-crosshair::before { left: 6px; top: 0; width: 2px; height: 14px; }
+.ballroom-crosshair::after { left: 0; top: 6px; width: 14px; height: 2px; }
+
+.ballroom-loading {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #07110e;
+  transition: opacity 220ms ease, visibility 220ms ease;
+}
+
+.ballroom-loading[hidden] {
+  display: grid;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.ballroom-loading-card {
+  width: min(420px, calc(100vw - 40px));
+  padding: 28px;
+  border: 1px solid rgba(227, 191, 87, 0.25);
+  border-radius: 22px;
+  background: rgba(10, 27, 21, 0.92);
+  text-align: center;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.4);
+}
+
+.ballroom-loading-card h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 500;
+}
+
+.ballroom-loading-card p {
+  margin: 10px 0 0;
+  color: rgba(247, 240, 218, 0.66);
+}
+
+@media (max-width: 860px) {
+  .ballroom-topbar { grid-template-columns: 1fr; }
+  .ballroom-controls { justify-content: flex-start; max-width: none; }
+  .ballroom-help { display: none; }
+  .ballroom-bottom { grid-template-columns: 1fr; }
+  .ballroom-stats { justify-self: stretch; grid-template-columns: repeat(3, 1fr); }
+  .ballroom-stat { min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
+}
