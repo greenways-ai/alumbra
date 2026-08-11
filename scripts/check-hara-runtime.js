@@ -208,10 +208,13 @@ async function main() {
       }, registry),
     }));
 
-    const runtimeBallroomPack = await session.invokeBlockPack({
-      package:PEACOCK_BALLROOM_PACKAGE,
-      version:PEACOCK_BALLROOM_VERSION,
-      id:PEACOCK_BALLROOM_BLOCK_PACK_ID,
+    // The ballroom carries its own portable package coordinate, but this first
+    // conformance fixture is housed inside the enclosing alumbra-hara project.
+    // Invoke the namespace through the enclosing project pin and then verify
+    // the exact semantic package identity returned by Hara.
+    const runtimeBallroomPack = await session.invoke({
+      package:FIXTURE_PACKAGE,
+      version:FIXTURE_VERSION,
       entry:{module:"gw.alumbra.peacock-ballroom", function:"peacock-ballroom-block-pack"},
     });
     assert.deepEqual(runtimeBallroomPack, createPeacockBallroomBlockPack());
@@ -220,17 +223,22 @@ async function main() {
       version:PEACOCK_BALLROOM_VERSION,
     });
     const ballroomGenerator = createPeacockBallroomGeneratorDescriptor();
+    const runtimeBallroomGenerator = {
+      ...ballroomGenerator,
+      package:FIXTURE_PACKAGE,
+      version:FIXTURE_VERSION,
+    };
     const ballroomShape = [16, 16, 16];
     evidence.push(...await provePlanParity({
       session,
       registry:ballroomRegistry,
-      generator:ballroomGenerator,
+      generator:runtimeBallroomGenerator,
       coordinates:[[0, 0, 0], [-2, 0, -2], [1, 1, 1]],
       shape:ballroomShape,
       kind:"peacock-ballroom",
-      argumentsFor:(coord) => [ballroomGenerator, coord, ballroomShape],
+      argumentsFor:(coord) => [runtimeBallroomGenerator, coord, ballroomShape],
       directPlan:(coord) => createPeacockBallroomChunkPlan({
-        generator:ballroomGenerator,
+        generator:runtimeBallroomGenerator,
         coord,
         shape:ballroomShape,
         revision:1,
