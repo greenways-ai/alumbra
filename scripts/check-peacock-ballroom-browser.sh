@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${ALUMBRA_BALLROOM_BROWSER_PORT:-4174}"
+ARTIFACT_DIR="${ALUMBRA_BALLROOM_ARTIFACT_DIR:-$ROOT/artifacts/peacock-ballroom}"
 TMP="$(mktemp -d)"
 SERVER_PID=""
 
@@ -26,6 +27,9 @@ else
   exit 1
 fi
 
+mkdir -p "$ARTIFACT_DIR"
+rm -f "$ARTIFACT_DIR"/*.png
+
 cd "$ROOT"
 PORT="$PORT" node scripts/serve-lab.js >"$TMP/server.log" 2>&1 &
 SERVER_PID=$!
@@ -46,6 +50,7 @@ run_state() {
   local slug="${state//\//-}"
   local dom="$TMP/${slug}.html"
   local log="$TMP/${slug}.log"
+  local screenshot="$ARTIFACT_DIR/${slug}.png"
   local url="http://127.0.0.1:${PORT}/apps/lab/peacock-ballroom.html?state=${state}"
 
   if ! "$CHROME" \
@@ -57,7 +62,9 @@ run_state() {
     --enable-unsafe-swiftshader \
     --use-gl=angle \
     --use-angle=swiftshader \
+    --window-size=1440,900 \
     --virtual-time-budget=45000 \
+    --screenshot="$screenshot" \
     --dump-dom \
     "$url" >"$dom" 2>"$log"; then
     cat "$log" >&2
@@ -87,6 +94,12 @@ run_state() {
     cat "$log" >&2
     cat "$dom" >&2
     echo "Peacock Ballroom browser proof did not publish ornamental architecture entities." >&2
+    return 1
+  fi
+
+  if [[ ! -s "$screenshot" ]]; then
+    cat "$log" >&2
+    echo "Peacock Ballroom review screenshot was not written for ${state}." >&2
     return 1
   fi
 
