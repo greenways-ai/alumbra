@@ -1,0 +1,74 @@
+(ns gw.alumbra.peacock-ballroom-test
+  (:require [std.lib.test :as test]
+            [gw.alumbra.peacock-ballroom :as ballroom]))
+
+(def block-pack
+  (ballroom/peacock-ballroom-block-pack))
+
+(def world
+  (ballroom/peacock-ballroom-world))
+
+(def provider
+  (ballroom/provider-descriptor))
+
+(def coordinates
+  (ballroom/chunk-coordinates))
+
+(def results
+  [(test/check
+    "the Peacock Ballroom block pack carries the package and palette identity"
+    [(get block-pack "format")
+     (get block-pack "package")
+     (get block-pack "version")
+     (get block-pack "id")
+     (count (get block-pack "blocks"))]
+    ["alumbra.block-pack/1"
+     "hara:greenways/alumbra-peacock-ballroom"
+     "0.1.0"
+     "ballroom/architectural-palette"
+     10])
+
+   (test/check
+    "the authored world spans one exact forty-eight chunk envelope"
+    [(get world "format")
+     (get (get world "envelope") "chunkShape")
+     (get (get world "envelope") "minimumChunk")
+     (get (get world "envelope") "maximumChunk")
+     (get (get world "envelope") "chunkCount")
+     (count coordinates)
+     (first coordinates)
+     (last coordinates)]
+    ["alumbra.architectural-world/1"
+     [16 16 16]
+     [-2 0 -2]
+     [1 2 1]
+     48
+     48
+     [-2 0 -2]
+     [1 2 1]])
+
+   (test/check
+    "named states and landmarks remain portable Hara values"
+    [(get world "defaultState")
+     (get world "states")
+     (count (get world "landmarks"))
+     (get (first (get world "landmarks")) "id")]
+    ["ballroom/day"
+     ["ballroom/day" "ballroom/gallery-overlook" "ballroom/mosaic-floor"]
+     6
+     "ballroom/main-hall"])
+
+   (test/check
+    "the Hodos handoff contains semantic identities only"
+    [(get provider "provider/id")
+     (get provider "provider/activity")
+     (get provider "provider/package")
+     (get provider "provider/default-state")
+     (get provider "provider/states")]
+    ["alumbra/world"
+     "alumbra-hara/peacock-ballroom"
+     "hara:greenways/alumbra-peacock-ballroom@0.1.0"
+     "ballroom/day"
+     ["ballroom/day" "ballroom/gallery-overlook" "ballroom/mosaic-floor"]])])
+
+(test/print-results results)
