@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#07110e" />
   <title>Peacock Ballroom · Alumbra</title>
   <script>
@@ -65,9 +65,15 @@
   data-peacock-ballroom-lighting="pending"
   data-peacock-ballroom-landmarks="pending"
   data-peacock-ballroom-disposal="pending"
+  data-peacock-ballroom-mobile-controls="pending"
 >
   <main class="ballroom-shell">
-    <canvas id="peacock-ballroom-canvas" aria-label="Playable Peacock Ballroom world"></canvas>
+    <canvas
+      id="peacock-ballroom-canvas"
+      aria-label="Playable Peacock Ballroom world"
+      aria-describedby="peacock-ballroom-help"
+      tabindex="0"
+    ></canvas>
     <div class="ballroom-crosshair" aria-hidden="true"></div>
 
     <header class="ballroom-topbar">
@@ -84,12 +90,28 @@
       </nav>
     </header>
 
-    <aside class="ballroom-help">
-      Click the world to look around. Use W, A, S and D to move, Space to jump, left click to break, right click to place, and Z to undo.
+    <aside class="ballroom-help" id="peacock-ballroom-help">
+      <span class="ballroom-help-desktop">Click the world to look around. Use W, A, S and D to move, Space to jump, left click to break, right click to place, and Z to undo.</span>
+      <span class="ballroom-help-touch">Drag the left side to move and the right side to look. Use the action buttons to jump, break, place and undo.</span>
     </aside>
 
+    <section class="ballroom-mobile-controls" data-ballroom-mobile-controls aria-label="Touch controls">
+      <div class="ballroom-touch-zone ballroom-touch-zone-move" aria-hidden="true">
+        <span>Move</span>
+      </div>
+      <div class="ballroom-touch-zone ballroom-touch-zone-look" aria-hidden="true">
+        <span>Look</span>
+      </div>
+      <div class="ballroom-mobile-actions" role="group" aria-label="World actions">
+        <button class="ballroom-mobile-action ballroom-mobile-action-primary" type="button" data-ballroom-action="jump">Jump</button>
+        <button class="ballroom-mobile-action" type="button" data-ballroom-action="break">Break</button>
+        <button class="ballroom-mobile-action" type="button" data-ballroom-action="place">Place</button>
+        <button class="ballroom-mobile-action" type="button" data-ballroom-action="undo">Undo</button>
+      </div>
+    </section>
+
     <footer class="ballroom-bottom">
-      <div class="ballroom-status" data-ballroom-status>Preparing the canonical 48-chunk world…</div>
+      <div class="ballroom-status" data-ballroom-status aria-live="polite">Preparing the canonical 48-chunk world…</div>
       <div class="ballroom-stats" aria-label="World evidence">
         <div class="ballroom-stat"><span>Chunks</span><strong data-ballroom-stat="chunks">0</strong></div>
         <div class="ballroom-stat"><span>Light</span><strong data-ballroom-stat="light">pending</strong></div>
