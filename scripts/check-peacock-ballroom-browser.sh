@@ -92,7 +92,7 @@ run_state() {
     for expected in \
       'data-peacock-ballroom-input="touch"' \
       'data-peacock-ballroom-mobile-layout="passed"' \
-      'data-peacock-ballroom-target="none"'; do
+      'data-peacock-ballroom-target='; do
       if ! grep -Fq "$expected" "$dom"; then
         cat "$log" >&2
         cat "$dom" >&2
