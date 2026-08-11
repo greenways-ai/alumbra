@@ -5,6 +5,9 @@
 (def block-pack
   (ballroom/peacock-ballroom-block-pack))
 
+(def generator
+  (ballroom/peacock-ballroom-generator))
+
 (def world
   (ballroom/peacock-ballroom-world))
 
@@ -13,6 +16,12 @@
 
 (def coordinates
   (ballroom/chunk-coordinates))
+
+(def center-plan
+  (ballroom/peacock-ballroom-chunk-plan generator [0 0 0] [16 16 16]))
+
+(def day-view
+  (ballroom/state-view "ballroom/day"))
 
 (def results
   [(test/check
@@ -48,15 +57,53 @@
      [1 2 1]])
 
    (test/check
-    "named states and landmarks remain portable Hara values"
+    "the Hara generator produces the bounded center architecture plan"
+    [(get generator "id")
+     (get generator "seed")
+     (get center-plan "format")
+     (get center-plan "coord")
+     (get center-plan "revision")
+     (count (get center-plan "regions"))
+     (count (get center-plan "overrides"))
+     (get (get center-plan "metadata") "authoredBy")]
+    ["ballroom/architectural-generator"
+     "20260811"
+     "alumbra.generated-chunk/1"
+     [0 0 0]
+     1
+     0
+     576
+     "gw.alumbra.peacock-ballroom"])
+
+   (test/check
+    "the architecture contains its floor, chandelier, dome, colonnade and windows"
+    [(ballroom/ballroom-block-at -1 1 0)
+     (ballroom/ballroom-block-at -1 15 0)
+     (ballroom/ballroom-block-at -1 30 0)
+     (ballroom/ballroom-block-at -18 15 4)
+     (ballroom/ballroom-block-at 25 10 4)
+     (ballroom/ballroom-block-at -1 2 23)]
+    ["ballroom/brushed-gold"
+     "ballroom/amber-lamp"
+     "ballroom/brushed-gold"
+     "ballroom/brushed-gold"
+     "ballroom/emerald-enamel"
+     "ballroom/air"])
+
+   (test/check
+    "named states, camera views and landmarks remain portable Hara values"
     [(get world "defaultState")
      (get world "states")
      (count (get world "landmarks"))
-     (get (first (get world "landmarks")) "id")]
+     (get (first (get world "landmarks")) "id")
+     (get day-view "position")
+     (get day-view "label")]
     ["ballroom/day"
      ["ballroom/day" "ballroom/gallery-overlook" "ballroom/mosaic-floor"]
      6
-     "ballroom/main-hall"])
+     "ballroom/main-hall"
+     [-0.5 2.05 23.5]
+     "Day entrance"])
 
    (test/check
     "the Hodos handoff contains semantic identities only"

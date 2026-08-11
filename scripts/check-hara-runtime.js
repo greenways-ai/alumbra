@@ -8,15 +8,22 @@ import {
   FIXTURE_VERSION,
   FIXTURE_WORLD_RULE,
   PACKAGED_WORLD_STATE_IDS,
+  PEACOCK_BALLROOM_BLOCK_PACK_ID,
+  PEACOCK_BALLROOM_PACKAGE,
+  PEACOCK_BALLROOM_VERSION,
   createFixtureBlockPack,
   createFlatFixtureGenerator,
   createFlatFixturePlan,
   createHaraRulesSession,
   createHeightFieldFixtureGenerator,
   createHeightFieldFixturePlan,
+  createPeacockBallroomBlockPack,
+  createPeacockBallroomChunkPlan,
+  createPeacockBallroomGeneratorDescriptor,
   loadPackagedHaraWorld,
   materializeBlockRegistry,
   materializeGeneratedChunk,
+  normalizeBlockPack,
   packagedWorldState,
 } from "@greenways/alumbra-hara";
 import {
@@ -46,6 +53,7 @@ async function activationEvidence() {
     },
     packages:[
       {package:FIXTURE_PACKAGE, version:FIXTURE_VERSION},
+      {package:PEACOCK_BALLROOM_PACKAGE, version:PEACOCK_BALLROOM_VERSION},
       {package:"hara:greenways/alumbra-core", version:"0.1.0"},
     ],
     capabilities:[],
@@ -199,6 +207,43 @@ async function main() {
         minimum:2,
         span:5,
       }, registry),
+    }));
+
+    // The ballroom carries its own portable package coordinate, but this first
+    // conformance fixture is housed inside the enclosing alumbra-hara project.
+    // Invoke the namespace through the enclosing project pin, then pass the
+    // compact Hara declaration through the same host normalizer used at runtime.
+    const runtimeBallroomPack = normalizeBlockPack(await session.invoke({
+      package:FIXTURE_PACKAGE,
+      version:FIXTURE_VERSION,
+      entry:{module:"gw.alumbra.peacock-ballroom", function:"peacock-ballroom-block-pack"},
+    }));
+    assert.deepEqual(runtimeBallroomPack, createPeacockBallroomBlockPack());
+    const {registry:ballroomRegistry} = materializeBlockRegistry([runtimeBallroomPack], {
+      id:"ballroom/hara-runtime-architectural-blocks",
+      version:PEACOCK_BALLROOM_VERSION,
+    });
+    const ballroomGenerator = createPeacockBallroomGeneratorDescriptor();
+    const runtimeBallroomGenerator = {
+      ...ballroomGenerator,
+      package:FIXTURE_PACKAGE,
+      version:FIXTURE_VERSION,
+    };
+    const ballroomShape = [16, 16, 16];
+    evidence.push(...await provePlanParity({
+      session,
+      registry:ballroomRegistry,
+      generator:runtimeBallroomGenerator,
+      coordinates:[[0, 0, 0], [-2, 0, -2], [1, 1, 1]],
+      shape:ballroomShape,
+      kind:"peacock-ballroom",
+      argumentsFor:(coord) => [runtimeBallroomGenerator, coord, ballroomShape],
+      directPlan:(coord) => createPeacockBallroomChunkPlan({
+        generator:runtimeBallroomGenerator,
+        coord,
+        shape:ballroomShape,
+        revision:1,
+      }, ballroomRegistry),
     }));
 
     for (const stateId of [

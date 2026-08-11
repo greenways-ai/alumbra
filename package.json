@@ -13,7 +13,7 @@
     "check:boundaries": "node scripts/check-boundaries.js",
     "check:hara-runtime": "node scripts/check-hara-runtime.js",
     "check:showcases": "node scripts/check-showcases.mjs",
-    "check:browser": "bash scripts/check-lab-browser.sh",
+    "check:browser": "bash scripts/check-lab-browser.sh && bash scripts/check-peacock-ballroom-browser.sh",
     "catalog:build": "node scripts/build-renderer-catalog.mjs",
     "catalog:check": "node scripts/check-renderer-catalog.mjs",
     "check": "npm run check:syntax && npm run check:boundaries && npm run check:showcases && npm run catalog:check && npm test",
