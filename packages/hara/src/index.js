@@ -7,3 +7,4 @@ export * from "./interaction.js";
 export * from "./fixtures.js";
 export * from "./runtime.js";
 export * from "./peacock-ballroom.js";
+export * from "./peacock-ballroom-architecture.js";
