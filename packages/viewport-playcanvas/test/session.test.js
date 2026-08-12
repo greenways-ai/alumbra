@@ -43,20 +43,31 @@ class FakeColor {
 function fakeApp() {
   const handlers = new Map();
   const root = new FakeEntity("root");
+  const operations = [];
+  let autoRender = true;
   return {
     root,
     scene: {},
     graphicsDevice: {},
-    autoRender: true,
+    operations,
+    get autoRender() { return autoRender; },
+    set autoRender(value) {
+      autoRender = Boolean(value);
+      operations.push(`autoRender:${autoRender}`);
+    },
     renderNextFrame: false,
     resizeCount: 0,
+    start() { operations.push("start"); },
     on(type, listener) {
       handlers.set(type, listener);
       return {off: () => handlers.delete(type)};
     },
     off(type) { handlers.delete(type); },
     emit(type, value) { handlers.get(type)?.(value); },
-    resizeCanvas() { this.resizeCount += 1; },
+    resizeCanvas() {
+      this.resizeCount += 1;
+      operations.push("resize");
+    },
   };
 }
 
@@ -150,6 +161,12 @@ test("viewport suspension preserves the same canonical world and resumes one ses
     disposeInput: true,
   });
 
+  assert.deepEqual(app.operations.slice(0, 4), [
+    "autoRender:false",
+    "resize",
+    "start",
+    "autoRender:true",
+  ]);
   app.emit("update", 1);
   assert.equal(player.state.position[0], 1);
   assert.equal(frames.length, 1);
@@ -160,7 +177,9 @@ test("viewport suspension preserves the same canonical world and resumes one ses
   app.emit("update", 1);
   assert.equal(player.state.position[0], 1);
 
+  const resumeOperation = app.operations.length;
   assert.equal(viewport.resume("visible"), true);
+  assert.deepEqual(app.operations.slice(resumeOperation), ["resize", "autoRender:true"]);
   assert.equal(app.autoRender, true);
   assert.equal(app.renderNextFrame, true);
   app.emit("update", 1);
@@ -175,6 +194,37 @@ test("viewport suspension preserves the same canonical world and resumes one ses
   viewport.destroy();
   assert.equal(renderer.state.destroyed, 1);
   assert.equal(viewport.status, "destroyed");
+});
+
+test("an initially suspended viewport is resized and started without enabling rendering", () => {
+  const app = fakeApp();
+  const renderer = fakeRenderer();
+  const input = fakeInput();
+  const {world, player} = fixture("initially-suspended");
+  const viewport = createPlayCanvasViewportSession({
+    sessionId: "initially-suspended",
+    pc,
+    canvas: new FakeEventTarget(),
+    world,
+    player,
+    application: app,
+    manageApplicationRendering: true,
+    renderer,
+    input,
+    eventTarget: new FakeEventTarget(),
+    documentTarget: new FakeEventTarget(),
+    initialSuspended: true,
+  });
+
+  assert.deepEqual(app.operations, ["autoRender:false", "resize", "start"]);
+  assert.equal(app.autoRender, false);
+  assert.equal(viewport.status, "suspended");
+
+  const resumeOperation = app.operations.length;
+  assert.equal(viewport.resume("visible"), true);
+  assert.deepEqual(app.operations.slice(resumeOperation), ["resize", "autoRender:true"]);
+  assert.equal(viewport.status, "active");
+  viewport.destroy();
 });
 
 test("session groups keep two worlds, players and frame clocks independent", () => {
