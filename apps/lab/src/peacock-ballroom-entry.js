@@ -143,6 +143,7 @@ function createArchitecturalSession(options) {
     app: session.app,
     profile: architectureProfile,
   });
+  if (options?.initialSuspended) architecture.suspend("initial");
   applyArchitectureEvidence(architecture.evidence());
   let destroyPromise = null;
   const api = Object.create(session);
@@ -160,8 +161,8 @@ function createArchitecturalSession(options) {
     resume: {
       enumerable: true,
       value(reason = "manual") {
-        const ornamental = architecture.resume(reason);
         const base = session.resume(reason);
+        const ornamental = architecture.resume(reason);
         applyArchitectureEvidence(architecture.evidence());
         return Boolean(base || ornamental);
       },
