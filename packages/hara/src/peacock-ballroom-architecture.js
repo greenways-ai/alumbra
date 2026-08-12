@@ -17,13 +17,13 @@ export const PEACOCK_BALLROOM_ARCHITECTURE = deepFreeze({
     {id: "architecture/ivory", color: [0.92, 0.87, 0.75], gloss: 0.52, metalness: 0},
     {id: "architecture/marble", color: [0.96, 0.96, 0.92], gloss: 0.84, metalness: 0.02},
     {id: "architecture/gold", color: [0.78, 0.55, 0.17], gloss: 0.82, metalness: 0.88},
-    {id: "architecture/teal-glass", color: [0.04, 0.42, 0.45], gloss: 0.96, metalness: 0.08, opacity: 0.24},
+    {id: "architecture/teal-glass", color: [0.03, 0.26, 0.28], gloss: 0.90, metalness: 0.05},
     {id: "architecture/emerald", color: [0.02, 0.28, 0.16], gloss: 0.78, metalness: 0.18},
     {id: "architecture/lapis", color: [0.03, 0.11, 0.42], gloss: 0.72, metalness: 0.12},
     {id: "architecture/amber", color: [0.95, 0.45, 0.08], gloss: 0.74, metalness: 0.16, emissive: [1, 0.28, 0.03], emissiveIntensity: 3.5},
     {id: "architecture/wood", color: [0.13, 0.055, 0.025], gloss: 0.34, metalness: 0},
     {id: "architecture/foliage", color: [0.035, 0.30, 0.13], gloss: 0.20, metalness: 0},
-    {id: "architecture/floor-sheen", color: [0.46, 0.66, 0.64], gloss: 1, metalness: 0.12, opacity: 0.08},
+    {id: "architecture/floor-sheen", color: [0.23, 0.40, 0.38], gloss: 0.96, metalness: 0.08},
   ],
   layout: {
     floorY: 2.02,
@@ -91,9 +91,9 @@ export const PEACOCK_BALLROOM_ARCHITECTURE = deepFreeze({
     },
   },
   profiles: {
-    // The canonical voxel world owns shadow maps. The smooth projection remains
-    // shadowless so embedded and SwiftShader contexts never allocate competing
-    // ornamental shadow framebuffers while retaining the full desktop geometry.
+    // The canonical voxel world owns lighting and shadow maps. The smooth
+    // projection uses opaque ornamental materials so embedded and SwiftShader
+    // contexts never allocate competing translucent or shadow render targets.
     desktop: {archSegments: 6, domeSegments: 7, foliageLeaves: 9, chandelierBulbs: 10, shadows: false},
     mobile: {archSegments: 4, domeSegments: 5, foliageLeaves: 5, chandelierBulbs: 6, shadows: false},
   },
