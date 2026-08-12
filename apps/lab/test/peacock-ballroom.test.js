@@ -57,7 +57,8 @@ test("keeps every named preview spawn collision-safe", () => {
 test("publishes a standalone Lab preview with three semantic views and bounded browser evidence", () => {
   assert.match(page, /id="peacock-ballroom-canvas"/);
   assert.match(page, /data-peacock-ballroom-ready="false"/);
-  assert.match(page, /src="\.\/src\/peacock-ballroom-entry\.js"/);
+  assert.match(page, /href="\.\/src\/peacock-ballroom\.css\?v=pb-mobile-2"/);
+  assert.match(page, /src="\.\/src\/peacock-ballroom-entry\.js\?v=pb-mobile-2"/);
   for (const stateId of PEACOCK_BALLROOM_STATE_IDS) {
     assert.ok(page.includes(`data-ballroom-state="${stateId}"`));
   }
@@ -69,13 +70,29 @@ test("publishes a standalone Lab preview with three semantic views and bounded b
 test("publishes safe-area-aware touch navigation and declared mobile actions", () => {
   assert.match(page, /viewport-fit=cover/);
   assert.match(page, /data-peacock-ballroom-mobile-controls="pending"/);
+  assert.match(page, /data-peacock-ballroom-mobile-layout="pending"/);
+  assert.match(page, /documentElement\.dataset\.peacockBallroomInput/);
+  assert.match(page, /requestedInput === "touch"/);
   assert.match(page, /data-ballroom-mobile-controls/);
   for (const action of ["jump", "break", "place", "undo"]) {
     assert.ok(page.includes(`data-ballroom-action="${action}"`), action);
   }
   assert.match(entry, /PLAYABLE_VIRTUAL_INPUT_EVENT/);
   assert.match(entry, /dataset\.peacockBallroomMobileControls = "ready"/);
+  assert.match(entry, /dataset\.peacockBallroomMobileLayout = passed \? "passed" : "failed"/);
   assert.match(styles, /touch-action: none/);
-  assert.match(styles, /@media \(pointer: coarse\), \(hover: none\)/);
+  assert.match(styles, /data-peacock-ballroom-input="touch"[^}]+ballroom-mobile-controls/s);
   assert.match(styles, /env\(safe-area-inset-bottom\)/);
+});
+
+test("keeps expected no-target actions out of the runtime-error channel", () => {
+  assert.match(entry, /setTargetAvailability\(frame\.hit\)/);
+  assert.match(entry, /button\.disabled = !available/);
+  assert.match(entry, /reason === "no-reachable-target" && type === "break"/);
+  assert.match(entry, /outcome\?\.status === "noop" \|\| outcome\?\.status === "rejected"/);
+  assert.match(entry, /setStatus\(actionFeedback\(action, outcome\), \{tone: "hint"\}\)/);
+  assert.doesNotMatch(entry, /Cannot \$\{action\.type\}.*error: true/s);
+  assert.match(styles, /ballroom-mobile-action:disabled/);
+  assert.match(styles, /data-peacock-ballroom-target="ready"/);
+  assert.match(styles, /data-peacock-ballroom-error="true"[^}]+ballroom-bottom/s);
 });

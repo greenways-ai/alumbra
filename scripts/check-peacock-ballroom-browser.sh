@@ -43,10 +43,15 @@ done
 
 run_state() {
   local state="$1"
-  local slug="${state//\//-}"
+  local input="${2:-desktop}"
+  local slug="${state//\//-}-${input}"
   local dom="$TMP/${slug}.html"
   local log="$TMP/${slug}.log"
-  local url="http://127.0.0.1:${PORT}/apps/lab/peacock-ballroom.html?state=${state}"
+  local window_size="1280,720"
+  local url="http://127.0.0.1:${PORT}/apps/lab/peacock-ballroom.html?state=${state}&input=${input}"
+  if [[ "$input" == "touch" ]]; then
+    window_size="390,844"
+  fi
 
   if ! "$CHROME" \
     --headless=new \
@@ -57,11 +62,12 @@ run_state() {
     --enable-unsafe-swiftshader \
     --use-gl=angle \
     --use-angle=swiftshader \
+    --window-size="$window_size" \
     --virtual-time-budget=45000 \
     --dump-dom \
     "$url" >"$dom" 2>"$log"; then
     cat "$log" >&2
-    echo "Headless Chromium failed for Peacock Ballroom state ${state}." >&2
+    echo "Headless Chromium failed for Peacock Ballroom state ${state} (${input})." >&2
     return 1
   fi
 
@@ -82,9 +88,24 @@ run_state() {
     fi
   done
 
-  echo "Peacock Ballroom browser story passed: ${state}"
+  if [[ "$input" == "touch" ]]; then
+    for expected in \
+      'data-peacock-ballroom-input="touch"' \
+      'data-peacock-ballroom-mobile-layout="passed"' \
+      'data-peacock-ballroom-target='; do
+      if ! grep -Fq "$expected" "$dom"; then
+        cat "$log" >&2
+        cat "$dom" >&2
+        echo "Peacock Ballroom mobile proof is missing ${expected}." >&2
+        return 1
+      fi
+    done
+  fi
+
+  echo "Peacock Ballroom browser story passed: ${state} (${input})"
 }
 
-run_state "ballroom/day"
-run_state "ballroom/gallery-overlook"
-run_state "ballroom/mosaic-floor"
+run_state "ballroom/day" "desktop"
+run_state "ballroom/gallery-overlook" "desktop"
+run_state "ballroom/mosaic-floor" "desktop"
+run_state "ballroom/day" "touch"
