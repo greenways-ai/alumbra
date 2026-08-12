@@ -102,6 +102,8 @@ test("mounts a smooth hybrid architectural projection through the viewport lifec
   assert.match(entry, /createPeacockBallroomArchitecturalProjection/);
   assert.match(entry, /createArchitecturalSession/);
   assert.match(entry, /architecture\.suspend/);
+  assert.match(entry, /if \(options\?\.initialSuspended\) architecture\.suspend\("initial"\)/);
+  assert.match(entry, /const base = session\.resume\(reason\);\s+const ornamental = architecture\.resume\(reason\);/);
   assert.match(entry, /architecture\.resume/);
   assert.match(entry, /architecture\.destroy/);
   assert.match(entry, /dataset\.peacockBallroomArchitecture = "pending"/);
