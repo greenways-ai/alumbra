@@ -29,7 +29,7 @@ test("describes a closed Hara-owned ornamental scene above the canonical world",
   assert.doesNotMatch(JSON.stringify(desktop), /callback|function|shader|PlayCanvas|meshInstance|url/i);
 });
 
-test("uses bounded LOD profiles while the canonical voxel world owns shadow maps", () => {
+test("uses bounded opaque LOD profiles while the canonical world owns lighting targets", () => {
   const desktop = createPeacockBallroomArchitectureDescriptor("desktop");
   const mobile = createPeacockBallroomArchitectureDescriptor("mobile");
   assert.equal(mobile.layout, desktop.layout);
@@ -39,6 +39,8 @@ test("uses bounded LOD profiles while the canonical voxel world owns shadow maps
   assert.ok(mobile.detail.foliageLeaves < desktop.detail.foliageLeaves);
   assert.equal(desktop.detail.shadows, false);
   assert.equal(mobile.detail.shadows, false);
+  assert.equal(desktop.materials.every((material) => material.opacity == null || material.opacity >= 1), true);
+  assert.doesNotMatch(JSON.stringify(desktop.materials), /"opacity":0\./);
   assert.throws(
     () => createPeacockBallroomArchitectureDescriptor("cinematic"),
     /Unsupported Peacock Ballroom architecture profile/,
@@ -60,5 +62,6 @@ test("keeps the scene dimensions and material identities authoritative in Hara",
   assert.match(haraSource, /"x" \[-18 18\]/);
   assert.match(haraSource, /"z" \[-20\.5 -12\.5 -4\.5 4\.5 12\.5 20\.5\]/);
   assert.match(haraSource, /"desktop" \{[^}]+"shadows" false\}/);
+  assert.doesNotMatch(haraSource, /"opacity" 0\./);
   assert.match(haraSource, /"profile" profile/);
 });
