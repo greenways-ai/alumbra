@@ -121,13 +121,13 @@ export function createPlayCanvasViewportSession({
   });
   if (!app?.root || typeof app.root.addChild !== "function") throw new TypeError("Viewport Application requires a root graph node");
 
+  if (manageApplicationRendering && "autoRender" in app) app.autoRender = false;
   app.setCanvasFillMode?.(pc?.FILLMODE_FILL_WINDOW);
   app.setCanvasResolution?.(pc?.RESOLUTION_AUTO);
   if (app.scene && pc?.Color) {
     const ambient = cameraOptions.ambientLight ?? [0.34, 0.38, 0.46];
     app.scene.ambientLight = new pc.Color(...ambient);
   }
-  if (startApplication) app.start?.();
 
   const worldRoot = makeEntity(pc, `Alumbra viewport ${id}`);
   app.root.addChild(worldRoot);
@@ -197,7 +197,9 @@ export function createPlayCanvasViewportSession({
     worldRoot.enabled = active;
     camera.enabled = active;
     sun.enabled = active;
-    if (manageApplicationRendering && "autoRender" in app) app.autoRender = active;
+    if (manageApplicationRendering && "autoRender" in app && app.autoRender !== active) {
+      app.autoRender = active;
+    }
     if (active && "renderNextFrame" in app) app.renderNextFrame = true;
   };
 
@@ -311,6 +313,9 @@ export function createPlayCanvasViewportSession({
   if (autoResize) eventTarget.addEventListener("resize", resize);
 
   projectPlayer(camera, player.state, eyeHeight);
+  setRenderActivity(false);
+  resize();
+  if (startApplication) app.start?.();
   setRenderActivity(!initialSuspended);
   if (initialSuspended) viewportInput.suspend?.();
 
@@ -360,9 +365,9 @@ export function createPlayCanvasViewportSession({
       status = "active";
       statusReason = String(reason);
       resumeCount += 1;
+      resize();
       viewportInput.resume?.();
       setRenderActivity(true);
-      resize();
       return true;
     },
     destroy() {
