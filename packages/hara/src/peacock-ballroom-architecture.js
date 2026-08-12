@@ -91,7 +91,10 @@ export const PEACOCK_BALLROOM_ARCHITECTURE = deepFreeze({
     },
   },
   profiles: {
-    desktop: {archSegments: 6, domeSegments: 7, foliageLeaves: 9, chandelierBulbs: 10, shadows: true},
+    // The canonical voxel world owns shadow maps. The smooth projection remains
+    // shadowless so embedded and SwiftShader contexts never allocate competing
+    // ornamental shadow framebuffers while retaining the full desktop geometry.
+    desktop: {archSegments: 6, domeSegments: 7, foliageLeaves: 9, chandelierBulbs: 10, shadows: false},
     mobile: {archSegments: 4, domeSegments: 5, foliageLeaves: 5, chandelierBulbs: 6, shadows: false},
   },
 });
