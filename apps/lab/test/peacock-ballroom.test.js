@@ -68,6 +68,18 @@ test("publishes a standalone Lab preview with three semantic views and bounded b
   assert.doesNotMatch(entry, /projectPath|meshBuffer|shaderSource/);
 });
 
+test("waits for a stable non-zero framebuffer before opening an embedded Ballroom", () => {
+  assert.match(entry, /async function prepareDrawableCanvas/);
+  assert.match(entry, /getBoundingClientRect\(\)/);
+  assert.match(entry, /width > 1 && height > 1/);
+  assert.match(entry, /stableFrames >= 2/);
+  assert.match(entry, /element\.width = pixelWidth/);
+  assert.match(entry, /element\.height = pixelHeight/);
+  assert.match(entry, /await prepareDrawableCanvas\(canvas\);\s+const snapshot = await host\.open\(nextState\);/);
+  assert.match(entry, /dataset\.peacockBallroomDrawable = "ready"/);
+  assert.match(entry, /canvas did not acquire a stable drawable size/);
+});
+
 test("publishes safe-area-aware touch navigation and declared mobile actions", () => {
   assert.match(page, /viewport-fit=cover/);
   assert.match(page, /data-peacock-ballroom-mobile-controls="pending"/);
