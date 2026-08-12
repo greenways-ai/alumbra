@@ -72,8 +72,11 @@
     "width" 5.45
     "height" 10.4}})
 
+;; The canonical voxel world owns shadow maps. The smooth projection remains
+;; shadowless so embedded and SwiftShader contexts do not allocate a competing
+;; ornamental shadow framebuffer while retaining full desktop geometry.
 (def profiles
-  {"desktop" {"archSegments" 6 "domeSegments" 7 "foliageLeaves" 9 "chandelierBulbs" 10 "shadows" true}
+  {"desktop" {"archSegments" 6 "domeSegments" 7 "foliageLeaves" 9 "chandelierBulbs" 10 "shadows" false}
    "mobile" {"archSegments" 4 "domeSegments" 5 "foliageLeaves" 5 "chandelierBulbs" 6 "shadows" false}})
 
 (defn peacock-ballroom-architecture [profile]
