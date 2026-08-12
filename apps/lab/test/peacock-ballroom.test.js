@@ -15,6 +15,7 @@ import {
 
 const page = readFileSync(new URL("../peacock-ballroom.html", import.meta.url), "utf8");
 const entry = readFileSync(new URL("../src/peacock-ballroom-entry.js", import.meta.url), "utf8");
+const architecture = readFileSync(new URL("../src/peacock-ballroom-architecture.js", import.meta.url), "utf8");
 const styles = readFileSync(new URL("../src/peacock-ballroom.css", import.meta.url), "utf8");
 
 function safeSpawn(world, view) {
@@ -67,6 +68,18 @@ test("publishes a standalone Lab preview with three semantic views and bounded b
   assert.doesNotMatch(entry, /projectPath|meshBuffer|shaderSource/);
 });
 
+test("waits for a stable non-zero framebuffer before opening an embedded Ballroom", () => {
+  assert.match(entry, /async function prepareDrawableCanvas/);
+  assert.match(entry, /getBoundingClientRect\(\)/);
+  assert.match(entry, /width > 1 && height > 1/);
+  assert.match(entry, /stableFrames >= 2/);
+  assert.match(entry, /element\.width = pixelWidth/);
+  assert.match(entry, /element\.height = pixelHeight/);
+  assert.match(entry, /await prepareDrawableCanvas\(canvas\);\s+const snapshot = await host\.open\(nextState\);/);
+  assert.match(entry, /dataset\.peacockBallroomDrawable = "ready"/);
+  assert.match(entry, /canvas did not acquire a stable drawable size/);
+});
+
 test("publishes safe-area-aware touch navigation and declared mobile actions", () => {
   assert.match(page, /viewport-fit=cover/);
   assert.match(page, /data-peacock-ballroom-mobile-controls="pending"/);
@@ -95,4 +108,23 @@ test("keeps expected no-target actions out of the runtime-error channel", () => 
   assert.match(styles, /ballroom-mobile-action:disabled/);
   assert.match(styles, /data-peacock-ballroom-target="ready"/);
   assert.match(styles, /data-peacock-ballroom-error="true"[^}]+ballroom-bottom/s);
+});
+
+test("mounts a smooth hybrid architectural projection through the viewport lifecycle", () => {
+  assert.match(entry, /createPeacockBallroomArchitecturalProjection/);
+  assert.match(entry, /createArchitecturalSession/);
+  assert.match(entry, /architecture\.suspend/);
+  assert.match(entry, /if \(options\?\.initialSuspended\) architecture\.suspend\("initial"\)/);
+  assert.match(entry, /const base = session\.resume\(reason\);\s+const ornamental = architecture\.resume\(reason\);/);
+  assert.match(entry, /architecture\.resume/);
+  assert.match(entry, /architecture\.destroy/);
+  assert.match(entry, /dataset\.peacockBallroomArchitecture = "pending"/);
+  for (const primitive of ["cylinder", "capsule", "cone", "torus", "sphere"]) {
+    assert.ok(architecture.includes(`type: "${primitive}"`), primitive);
+  }
+  assert.match(architecture, /Smooth grand stair ramp/);
+  assert.match(architecture, /Dome rib/);
+  assert.match(architecture, /Chandelier bulb/);
+  assert.match(architecture, /Peacock floor feather/);
+  assert.doesNotMatch(architecture, /canonicalChunk|applyTransaction|setBlock|shaderSource/);
 });

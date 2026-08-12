@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${ALUMBRA_BALLROOM_BROWSER_PORT:-4174}"
+ARTIFACT_DIR="${ALUMBRA_BALLROOM_ARTIFACT_DIR:-$ROOT/artifacts/peacock-ballroom}"
 TMP="$(mktemp -d)"
 SERVER_PID=""
 
@@ -26,6 +27,9 @@ else
   exit 1
 fi
 
+mkdir -p "$ARTIFACT_DIR"
+rm -f "$ARTIFACT_DIR"/*.png
+
 cd "$ROOT"
 PORT="$PORT" node scripts/serve-lab.js >"$TMP/server.log" 2>&1 &
 SERVER_PID=$!
@@ -47,6 +51,7 @@ run_state() {
   local slug="${state//\//-}-${input}"
   local dom="$TMP/${slug}.html"
   local log="$TMP/${slug}.log"
+  local screenshot="$ARTIFACT_DIR/${slug}.png"
   local window_size="1280,720"
   local url="http://127.0.0.1:${PORT}/apps/lab/peacock-ballroom.html?state=${state}&input=${input}"
   if [[ "$input" == "touch" ]]; then
@@ -64,6 +69,7 @@ run_state() {
     --use-angle=swiftshader \
     --window-size="$window_size" \
     --virtual-time-budget=45000 \
+    --screenshot="$screenshot" \
     --dump-dom \
     "$url" >"$dom" 2>"$log"; then
     cat "$log" >&2
@@ -79,7 +85,8 @@ run_state() {
     'data-peacock-ballroom-lighting="passed"' \
     'data-peacock-ballroom-landmarks="passed"' \
     'data-peacock-ballroom-disposal="passed"' \
-    'data-peacock-ballroom-mobile-controls="ready"'; do
+    'data-peacock-ballroom-mobile-controls="ready"' \
+    'data-peacock-ballroom-architecture="passed"'; do
     if ! grep -Fq "$expected" "$dom"; then
       cat "$log" >&2
       cat "$dom" >&2
@@ -87,6 +94,19 @@ run_state() {
       return 1
     fi
   done
+
+  if ! grep -Eq 'data-peacock-ballroom-architecture-entities="[1-9][0-9]*"' "$dom"; then
+    cat "$log" >&2
+    cat "$dom" >&2
+    echo "Peacock Ballroom browser proof did not publish ornamental architecture entities." >&2
+    return 1
+  fi
+
+  if [[ ! -s "$screenshot" ]]; then
+    cat "$log" >&2
+    echo "Peacock Ballroom review screenshot was not written for ${state} (${input})." >&2
+    return 1
+  fi
 
   if [[ "$input" == "touch" ]]; then
     for expected in \
