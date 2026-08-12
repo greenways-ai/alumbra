@@ -29,7 +29,7 @@ test("describes a closed Hara-owned ornamental scene above the canonical world",
   assert.doesNotMatch(JSON.stringify(desktop), /callback|function|shader|PlayCanvas|meshInstance|url/i);
 });
 
-test("uses a bounded mobile LOD without changing the authored composition", () => {
+test("uses bounded LOD profiles while the canonical voxel world owns shadow maps", () => {
   const desktop = createPeacockBallroomArchitectureDescriptor("desktop");
   const mobile = createPeacockBallroomArchitectureDescriptor("mobile");
   assert.equal(mobile.layout, desktop.layout);
@@ -37,6 +37,7 @@ test("uses a bounded mobile LOD without changing the authored composition", () =
   assert.ok(mobile.detail.archSegments < desktop.detail.archSegments);
   assert.ok(mobile.detail.domeSegments < desktop.detail.domeSegments);
   assert.ok(mobile.detail.foliageLeaves < desktop.detail.foliageLeaves);
+  assert.equal(desktop.detail.shadows, false);
   assert.equal(mobile.detail.shadows, false);
   assert.throws(
     () => createPeacockBallroomArchitectureDescriptor("cinematic"),
@@ -58,5 +59,6 @@ test("keeps the scene dimensions and material identities authoritative in Hara",
   }
   assert.match(haraSource, /"x" \[-18 18\]/);
   assert.match(haraSource, /"z" \[-20\.5 -12\.5 -4\.5 4\.5 12\.5 20\.5\]/);
+  assert.match(haraSource, /"desktop" \{[^}]+"shadows" false\}/);
   assert.match(haraSource, /"profile" profile/);
 });
