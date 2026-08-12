@@ -7,6 +7,15 @@
   <title>Peacock Ballroom · Alumbra</title>
   <script>
   (() => {
+    const parameters = new URLSearchParams(location.search);
+    const requestedInput = parameters.get("input");
+    const detectedTouch = Number(navigator.maxTouchPoints || 0) > 0
+      || globalThis.matchMedia?.("(pointer: coarse)")?.matches === true
+      || globalThis.matchMedia?.("(hover: none)")?.matches === true;
+    const touchCapable = requestedInput === "touch"
+      || (requestedInput !== "desktop" && detectedTouch);
+    document.documentElement.dataset.peacockBallroomInput = touchCapable ? "touch" : "desktop";
+
     const errors = [];
     const serialize = (value) => {
       if (value instanceof Error) return value.stack || value.message;
@@ -34,7 +43,7 @@
     });
   })();
   </script>
-  <link rel="stylesheet" href="./src/peacock-ballroom.css" />
+  <link rel="stylesheet" href="./src/peacock-ballroom.css?v=pb-mobile-2" />
   <script type="importmap">
   {
     "imports": {
@@ -66,6 +75,8 @@
   data-peacock-ballroom-landmarks="pending"
   data-peacock-ballroom-disposal="pending"
   data-peacock-ballroom-mobile-controls="pending"
+  data-peacock-ballroom-mobile-layout="pending"
+  data-peacock-ballroom-target="none"
 >
   <main class="ballroom-shell">
     <canvas
@@ -92,7 +103,7 @@
 
     <aside class="ballroom-help" id="peacock-ballroom-help">
       <span class="ballroom-help-desktop">Click the world to look around. Use W, A, S and D to move, Space to jump, left click to break, right click to place, and Z to undo.</span>
-      <span class="ballroom-help-touch">Drag the left side to move and the right side to look. Use the action buttons to jump, break, place and undo.</span>
+      <span class="ballroom-help-touch">Drag the left side to move and the right side to look. Aim the crosshair at a nearby block before using Break or Place.</span>
     </aside>
 
     <section class="ballroom-mobile-controls" data-ballroom-mobile-controls aria-label="Touch controls">
@@ -111,7 +122,7 @@
     </section>
 
     <footer class="ballroom-bottom">
-      <div class="ballroom-status" data-ballroom-status aria-live="polite">Preparing the canonical 48-chunk world…</div>
+      <div class="ballroom-status" data-ballroom-status data-tone="neutral" aria-live="polite">Preparing the canonical 48-chunk world…</div>
       <div class="ballroom-stats" aria-label="World evidence">
         <div class="ballroom-stat"><span>Chunks</span><strong data-ballroom-stat="chunks">0</strong></div>
         <div class="ballroom-stat"><span>Light</span><strong data-ballroom-stat="light">pending</strong></div>
@@ -126,6 +137,6 @@
       </div>
     </div>
   </main>
-  <script type="module" src="./src/peacock-ballroom-entry.js"></script>
+  <script type="module" src="./src/peacock-ballroom-entry.js?v=pb-mobile-2"></script>
 </body>
 </html>

@@ -8,28 +8,36 @@ import {PLAYABLE_VIRTUAL_INPUT_EVENT} from "@greenways/alumbra-viewport-playcanv
 import {createPeacockBallroomArchitecturalProjection} from "./peacock-ballroom-architecture.js";
 import {createPeacockBallroomPreviewHost} from "./peacock-ballroom-host.js";
 
+const root = document.documentElement;
 const body = document.body;
 const canvas = document.querySelector("#peacock-ballroom-canvas");
 const loading = document.querySelector("[data-ballroom-loading]");
 const status = document.querySelector("[data-ballroom-status]");
+const topbar = document.querySelector(".ballroom-topbar");
+const titleDescription = document.querySelector(".ballroom-title p:last-child");
 const stateButtons = [...document.querySelectorAll("[data-ballroom-state]")];
 const mobileControls = document.querySelector("[data-ballroom-mobile-controls]");
 const mobileActionButtons = [...document.querySelectorAll("[data-ballroom-action]")];
+const targetActionButtons = mobileActionButtons.filter((button) => (
+  button.dataset.ballroomAction === "break" || button.dataset.ballroomAction === "place"
+));
 const stats = Object.fromEntries(
   [...document.querySelectorAll("[data-ballroom-stat]")].map((node) => [node.dataset.ballroomStat, node]),
 );
 
 if (
-  !body || !canvas || !loading || !status || !mobileControls
+  !root || !body || !canvas || !loading || !status || !topbar || !titleDescription || !mobileControls
   || !stats.chunks || !stats.light || !stats.player
 ) {
   throw new Error("Peacock Ballroom preview is missing a required host element");
 }
 
-const touchCapable = Number(navigator.maxTouchPoints || 0) > 0
+const detectedTouch = Number(navigator.maxTouchPoints || 0) > 0
   || globalThis.matchMedia?.("(pointer: coarse)")?.matches === true
   || globalThis.matchMedia?.("(hover: none)")?.matches === true;
+const touchCapable = root.dataset.peacockBallroomInput === "touch" || detectedTouch;
 const architectureProfile = touchCapable ? "mobile" : "desktop";
+root.dataset.peacockBallroomInput = touchCapable ? "touch" : "desktop";
 body.dataset.peacockBallroomInput = touchCapable ? "touch" : "desktop";
 body.dataset.peacockBallroomArchitecture = "pending";
 body.dataset.peacockBallroomArchitectureProfile = architectureProfile;
@@ -41,11 +49,74 @@ const requested = parameters.get("state") ?? PEACOCK_BALLROOM_WORLD.defaultState
 let activeState = stateSet.has(requested) ? requested : PEACOCK_BALLROOM_WORLD.defaultState;
 let lastHud = 0;
 let disposed = false;
+let runtimeFault = false;
 
-function setStatus(message, {error = false} = {}) {
+function clearRuntimeFault() {
+  runtimeFault = false;
+  status.dataset.error = "false";
+  if (root.dataset.peacockBallroomPageError !== "true") {
+    body.dataset.peacockBallroomError = "false";
+  }
+}
+
+function setStatus(message, {tone = "neutral", fault = false} = {}) {
   status.textContent = message;
-  status.dataset.error = error ? "true" : "false";
-  body.dataset.peacockBallroomError = error ? "true" : "false";
+  status.dataset.tone = tone;
+  status.dataset.error = fault ? "true" : "false";
+  if (fault) {
+    runtimeFault = true;
+    body.dataset.peacockBallroomError = "true";
+  } else if (!runtimeFault && root.dataset.peacockBallroomPageError !== "true") {
+    body.dataset.peacockBallroomError = "false";
+  }
+}
+
+function setTargetAvailability(hit) {
+  const available = hit != null;
+  body.dataset.peacockBallroomTarget = available ? "ready" : "none";
+  for (const button of targetActionButtons) {
+    button.disabled = !available;
+    button.setAttribute("aria-disabled", available ? "false" : "true");
+    button.title = available
+      ? `${button.textContent.trim()} the targeted block`
+      : "Aim the crosshair at a nearby block first";
+  }
+}
+
+function actionFeedback(action, outcome) {
+  const type = String(action?.type ?? "action");
+  const reason = String(outcome?.reason ?? "");
+  if (reason === "no-reachable-target" && type === "break") {
+    return "Aim the crosshair at a nearby block, then tap Break.";
+  }
+  if (reason === "no-reachable-target" && type === "place") {
+    return "Aim the crosshair at a nearby surface, then tap Place.";
+  }
+  if (reason === "empty-undo-stack" || outcome?.status === "noop") {
+    return "Nothing has been changed yet, so there is nothing to undo.";
+  }
+  const readableReason = reason ? reason.replaceAll("-", " ") : "not available here";
+  return `${type[0]?.toUpperCase() ?? "A"}${type.slice(1)} is ${readableReason}.`;
+}
+
+function verifyMobileLayout() {
+  if (!touchCapable) {
+    body.dataset.peacockBallroomMobileLayout = "not-applicable";
+    return true;
+  }
+  const controlsVisible = getComputedStyle(mobileControls).display !== "none";
+  const descriptionHidden = getComputedStyle(titleDescription).display === "none";
+  const topbarHeight = topbar.getBoundingClientRect().height;
+  const compactTopbar = topbarHeight > 0 && topbarHeight < Math.max(190, innerHeight * 0.34);
+  const passed = controlsVisible && descriptionHidden && compactTopbar;
+  body.dataset.peacockBallroomMobileLayout = passed ? "passed" : "failed";
+  if (!passed) {
+    setStatus("Touch controls could not be displayed. Reload the page to retry the mobile layout.", {
+      tone: "error",
+      fault: true,
+    });
+  }
+  return passed;
 }
 
 function selectStateButton(stateId) {
@@ -144,11 +215,14 @@ function applyEvidence(snapshot) {
   window.__PEACOCK_BALLROOM_PREVIEW__ = snapshot;
 }
 
+setTargetAvailability(null);
+
 const host = createPeacockBallroomPreviewHost({
   pc,
   canvas,
   createSession: createArchitecturalSession,
   onFrame(frame) {
+    setTargetAvailability(frame.hit);
     const now = performance.now();
     if (now - lastHud < 100) return;
     stats.player.textContent = frame.player.position.map((entry) => entry.toFixed(1)).join(" · ");
@@ -157,20 +231,18 @@ const host = createPeacockBallroomPreviewHost({
   },
   onActionResult({action, outcome, error}) {
     if (error) {
-      setStatus(`${action.type} rejected: ${error.message}`, {error: true});
+      setStatus(`${action.type} failed: ${error.message}`, {tone: "error", fault: true});
       return;
     }
     if (outcome?.status === "applied") {
-      setStatus(`${action.type} accepted through the canonical Core transaction and relighting path.`);
-    } else if (outcome?.status === "noop") {
-      setStatus("Nothing remains to undo.");
-    } else if (outcome?.status === "rejected") {
-      setStatus(`Cannot ${action.type}: ${String(outcome.reason).replaceAll("-", " ")}`, {error: true});
+      setStatus(`${action.type} applied.`, {tone: "success"});
+    } else if (outcome?.status === "noop" || outcome?.status === "rejected") {
+      setStatus(actionFeedback(action, outcome), {tone: "hint"});
     }
   },
   onError({phase, error}) {
     console.error(`Peacock Ballroom ${phase} failed`, error);
-    setStatus(`${phase} failed: ${error.message}`, {error: true});
+    setStatus(`${phase} failed: ${error.message}`, {tone: "error", fault: true});
   },
   onState({stateId, scenario}) {
     const guidance = touchCapable
@@ -184,6 +256,12 @@ const host = createPeacockBallroomPreviewHost({
 });
 
 function invokeMobileAction(action, button) {
+  if (button.disabled) {
+    setStatus(actionFeedback({type: action}, {status: "rejected", reason: "no-reachable-target"}), {
+      tone: "hint",
+    });
+    return;
+  }
   try {
     canvas.dispatchEvent(new CustomEvent(PLAYABLE_VIRTUAL_INPUT_EVENT, {
       detail: {type: action},
@@ -191,7 +269,7 @@ function invokeMobileAction(action, button) {
     button.dataset.active = "true";
   } catch (error) {
     console.error(error);
-    setStatus(`Touch control failed: ${error.message}`, {error: true});
+    setStatus(`Touch control failed: ${error.message}`, {tone: "error", fault: true});
   }
 }
 
@@ -214,6 +292,7 @@ for (const button of mobileActionButtons) {
   button.addEventListener("keyup", release);
 }
 body.dataset.peacockBallroomMobileControls = "ready";
+requestAnimationFrame(verifyMobileLayout);
 
 canvas.addEventListener("pointerdown", () => {
   try {
@@ -226,6 +305,8 @@ canvas.addEventListener("pointerdown", () => {
 async function openState(stateId, {replaceHistory = true} = {}) {
   const nextState = stateSet.has(stateId) ? stateId : PEACOCK_BALLROOM_WORLD.defaultState;
   activeState = nextState;
+  clearRuntimeFault();
+  setTargetAvailability(null);
   body.dataset.peacockBallroomReady = "false";
   body.dataset.peacockBallroomState = nextState;
   body.dataset.peacockBallroomArchitecture = "pending";
@@ -242,16 +323,18 @@ async function openState(stateId, {replaceHistory = true} = {}) {
       history.replaceState({state: nextState}, "", url);
     }
     loading.hidden = true;
-    requestAnimationFrame(() => host.resize());
+    requestAnimationFrame(() => {
+      host.resize();
+      verifyMobileLayout();
+    });
     return snapshot;
   } catch (error) {
     console.error(error);
     body.dataset.peacockBallroomReady = "false";
-    body.dataset.peacockBallroomError = "true";
     body.dataset.peacockBallroomArchitecture = "failed";
     loading.hidden = true;
     stateButtons.forEach((button) => { button.disabled = false; });
-    setStatus(`Preview failed: ${error.message}`, {error: true});
+    setStatus(`Preview failed: ${error.message}`, {tone: "error", fault: true});
     throw error;
   }
 }
@@ -269,7 +352,7 @@ const visibility = () => {
   }
   void host.resume("document-visible").then(applyEvidence).catch((error) => {
     console.error(error);
-    setStatus(`Resume failed: ${error.message}`, {error: true});
+    setStatus(`Resume failed: ${error.message}`, {tone: "error", fault: true});
   });
 };
 document.addEventListener("visibilitychange", visibility);
