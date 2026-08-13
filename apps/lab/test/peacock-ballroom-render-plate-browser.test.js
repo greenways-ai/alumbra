@@ -37,12 +37,16 @@ test("requires exact visual-language asset identities and the six-stage progress
 });
 
 test("proves the original render is visible while geometry remains available", () => {
-  assert.match(browserGate, /render-plate-opacity=\\"0\\\.\[0-9\]\+\\"/);
-  assert.match(browserGate, /render-plate-geometry-opacity=\\"0\\\.\[0-9\]\+\\"/);
-  assert.match(browserGate, /render-plate-opacity=\\"0\\"/);
-  assert.match(browserGate, /render-plate-geometry-opacity=\\"1\\"/);
-  assert.match(browserGate, /class=\"ballroom-render-plate-image\"/);
-  assert.match(browserGate, /peacock-ballroom-\$\{appearance\}\.webp/);
+  for (const token of [
+    'data-peacock-ballroom-render-plate-opacity="0\\.[0-9]+"',
+    'data-peacock-ballroom-render-plate-geometry-opacity="0\\.[0-9]+"',
+    'data-peacock-ballroom-render-plate-opacity="0"',
+    'data-peacock-ballroom-render-plate-geometry-opacity="1"',
+    'class="ballroom-render-plate-image"',
+    'peacock-ballroom-${appearance}.webp',
+  ]) {
+    assert.ok(browserGate.includes(token), token);
+  }
 });
 
 test("writes distinct review screenshots and rejects page-level browser errors", () => {
