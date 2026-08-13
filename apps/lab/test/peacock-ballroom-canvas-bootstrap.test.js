@@ -6,20 +6,25 @@ const bootstrap = readFileSync(
   new URL("../src/peacock-ballroom-canvas-bootstrap.js", import.meta.url),
   "utf8",
 );
+const documentSource = readFileSync(
+  new URL("../peacock-ballroom.html", import.meta.url),
+  "utf8",
+);
 const renderEntry = readFileSync(
   new URL("../src/peacock-ballroom-render-plate-entry.js", import.meta.url),
   "utf8",
 );
 
-test("installs canvas sizing before the render plate and canonical world start", () => {
-  assert.match(
-    renderEntry,
-    /^import "\.\/peacock-ballroom-canvas-bootstrap\.js";/,
+test("installs canvas sizing synchronously before every module entry point", () => {
+  const bootstrapScript = documentSource.indexOf(
+    '<script src="./src/peacock-ballroom-canvas-bootstrap.js?v=pb-canvas-1"></script>',
   );
-  assert.ok(
-    renderEntry.indexOf("peacock-ballroom-canvas-bootstrap.js")
-      < renderEntry.indexOf("createPeacockBallroomRenderPlateHost"),
-  );
+  const firstModule = documentSource.indexOf('<script type="module"');
+  const worldEntry = documentSource.indexOf("peacock-ballroom-entry.js");
+  assert.ok(bootstrapScript >= 0);
+  assert.ok(firstModule > bootstrapScript);
+  assert.ok(worldEntry > bootstrapScript);
+  assert.doesNotMatch(renderEntry, /peacock-ballroom-canvas-bootstrap\.js/);
 });
 
 test("uses the document viewport when percentage layout has not acquired a box yet", () => {
