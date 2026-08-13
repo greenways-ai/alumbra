@@ -13,6 +13,7 @@ import {
 
 const page = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const entry = readFileSync(new URL("../src/peacock-ballroom-catalog-entry.js", import.meta.url), "utf8");
+const main = readFileSync(new URL("../src/main.js", import.meta.url), "utf8");
 const rootProject = readFileSync(new URL("../../../project.edn", import.meta.url), "utf8");
 
 test("extends the generated Catalog with one pathless provider-backed world activity", () => {
@@ -54,6 +55,20 @@ test("mounts the same standalone provider host inside the live Lab Catalog", () 
   assert.match(entry, /PEACOCK_BALLROOM_ACTIVITY_ID/);
   assert.match(entry, /peacock-ballroom\.html/);
   assert.match(entry, /setViewportEvidenceContributor\("peacockBallroom"/);
+});
+
+test("the main Lab lifecycle suspends the outer renderer before mounting Peacock Ballroom", () => {
+  assert.match(main, /const PEACOCK_BALLROOM_ACTIVITY = "alumbra-hara\/peacock-ballroom"/);
+  const owner = main.indexOf("if (activityId === PEACOCK_BALLROOM_ACTIVITY)");
+  const primarySuspend = main.indexOf("primaryViewport.suspend", owner);
+  const secondarySuspend = main.indexOf("secondaryViewport?.suspend", owner);
+  const canvasHide = main.indexOf("canvas.hidden = true", owner);
+  const mode = main.indexOf('viewportGrid.dataset.mode = "peacock-ballroom"', owner);
+  assert.ok(owner >= 0, "the main Lab lifecycle must own the Peacock activity");
+  assert.ok(primarySuspend > owner, "the primary renderer must be suspended");
+  assert.ok(secondarySuspend > primarySuspend, "the optional secondary renderer must be suspended");
+  assert.ok(canvasHide > secondarySuspend, "the canvas must only be hidden after its session is suspended");
+  assert.ok(mode > canvasHide, "the embedded provider mode must be published after suspension");
 });
 
 test("publishes the exact Hodos world-provider descriptor at repository root", () => {
