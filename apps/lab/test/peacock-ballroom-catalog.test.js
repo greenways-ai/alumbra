@@ -57,6 +57,31 @@ test("mounts the same standalone provider host inside the live Lab Catalog", () 
   assert.match(entry, /setViewportEvidenceContributor\("peacockBallroom"/);
 });
 
+test("relays the child progress rail instead of treating assembly as a blank wait", () => {
+  assert.match(entry, /const READY_POLL_ATTEMPTS = 1_600/);
+  assert.match(entry, /function compactChildDiagnostic\(\)/);
+  for (const field of [
+    "drawableSize",
+    "chunks",
+    "architectureEntities",
+    "lighting",
+    "landmarks",
+    "disposal",
+    "progressStage",
+  ]) {
+    assert.ok(entry.includes(field), field);
+  }
+  assert.match(entry, /__PEACOCK_BALLROOM_PROGRESS__/);
+  assert.match(entry, /data\.browserPeacockProgress = String\(progressValue\)/);
+  assert.match(entry, /data\.browserPeacockProgressStage = progressStage/);
+  assert.match(entry, /data\.browserPeacockProgressRail/);
+  assert.match(entry, /status\.textContent = `\$\{label\} · \$\{progressValue\}%`/);
+  assert.match(entry, /alumbra\.peacock-ballroom-progress\/1/);
+  assert.match(entry, /diagnostic\.progress\.progress === 100/);
+  assert.match(entry, /diagnostic\.progress\.activeStage === "ready"/);
+  assert.match(entry, /child=\$\{detail\}/);
+});
+
 test("the main Lab lifecycle suspends the outer renderer before mounting Peacock Ballroom", () => {
   assert.match(main, /const PEACOCK_BALLROOM_ACTIVITY = "alumbra-hara\/peacock-ballroom"/);
   const owner = main.indexOf("if (activityId === PEACOCK_BALLROOM_ACTIVITY)");
