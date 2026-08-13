@@ -39,9 +39,11 @@ test("uses the document viewport when percentage layout has not acquired a box y
   assert.doesNotMatch(bootstrap, /setTimeout|setInterval|Date\.now|Math\.random/);
 });
 
-test("pins the first observed host size before a one-frame layout can collapse", () => {
-  assert.match(bootstrap, /Math\.max\(shellSize\.width, viewport\.width, canvasSize\.width\)/);
-  assert.match(bootstrap, /Math\.max\(shellSize\.height, viewport\.height, canvasSize\.height\)/);
+test("pins the first observed host size and follows later host shrinkage", () => {
+  assert.match(bootstrap, /const hostWidth = Math\.max\(shellSize\.width, viewport\.width\)/);
+  assert.match(bootstrap, /const hostHeight = Math\.max\(shellSize\.height, viewport\.height\)/);
+  assert.match(bootstrap, /const width = hostWidth > 1 \? hostWidth : canvasSize\.width/);
+  assert.match(bootstrap, /const height = hostHeight > 1 \? hostHeight : canvasSize\.height/);
   assert.match(bootstrap, /canvas\.style\.width = `\$\{width\}px`/);
   assert.match(bootstrap, /canvas\.style\.height = `\$\{height\}px`/);
   assert.match(bootstrap, /fallbackApplied = true/);
