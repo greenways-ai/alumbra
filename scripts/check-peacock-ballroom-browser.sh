@@ -53,22 +53,29 @@ run_state() {
   local log="$TMP/${slug}.log"
   local screenshot="$ARTIFACT_DIR/${slug}.png"
   local window_size="1280,720"
+  local virtual_time_budget="45000"
   local url="http://127.0.0.1:${PORT}/apps/lab/peacock-ballroom.html?state=${state}&input=${input}"
   if [[ "$input" == "touch" ]]; then
     window_size="390,844"
+    virtual_time_budget="120000"
   fi
 
   if ! "$CHROME" \
     --headless=new \
     --no-sandbox \
     --disable-dev-shm-usage \
+    --disable-background-timer-throttling \
+    --disable-backgrounding-occluded-windows \
+    --disable-renderer-backgrounding \
+    --disable-features=CalculateNativeWinOcclusion \
+    --run-all-compositor-stages-before-draw \
     --enable-webgl \
     --ignore-gpu-blocklist \
     --enable-unsafe-swiftshader \
     --use-gl=angle \
     --use-angle=swiftshader \
     --window-size="$window_size" \
-    --virtual-time-budget=45000 \
+    --virtual-time-budget="$virtual_time_budget" \
     --screenshot="$screenshot" \
     --dump-dom \
     "$url" >"$dom" 2>"$log"; then
