@@ -1,0 +1,69 @@
+(ns gw.alumbra.peacock-ballroom-render-plates)
+
+(def render-plate-format "alumbra.render-plate-set/1")
+(def render-plate-id "ballroom/reference-render-plates")
+(def render-plate-package "hara:greenways/alumbra-peacock-ballroom@0.1.0")
+
+;; Portable values carry exact source identities, never delivery URLs. The
+;; trusted browser host maps these asset ids to installed visual-language files.
+(def render-assets
+  [{"id" "visual-language/greenways/peacock-ballroom-day"
+    "appearance" "day"
+    "repository" "greenways-ai/visual-language"
+    "path" "artwork/masters/greenways/peacock-ballroom-day.png"
+    "blob" "ceeb1917f99142f39f06e6de7424333e9d2df360"
+    "mediaType" "image/png"
+    "width" 1536
+    "height" 1024}
+   {"id" "visual-language/greenways/peacock-ballroom-night"
+    "appearance" "night"
+    "repository" "greenways-ai/visual-language"
+    "path" "artwork/masters/greenways/peacock-ballroom-night.png"
+    "blob" "fad7dff0d4bd7f21af0af6aa73508caeb4c177de"
+    "mediaType" "image/png"
+    "width" 1536
+    "height" 1024}])
+
+(def render-states
+  {"ballroom/day"
+   {"asset" "visual-language/greenways/peacock-ballroom-day"
+    "anchor" {"position" [-0.5 2.05 23.5] "yaw" 0 "pitch" -8}
+    "crop" {"focus" [50 50] "zoom" 1.03}
+    "blend" {"plateOpacity" 0.96 "geometryOpacity" 0.18}}
+   "ballroom/gallery-overlook"
+   {"asset" "visual-language/greenways/peacock-ballroom-day"
+    "anchor" {"position" [-21.5 11.05 0.5] "yaw" -90 "pitch" -12}
+    "crop" {"focus" [34 43] "zoom" 1.14}
+    "blend" {"plateOpacity" 0.93 "geometryOpacity" 0.22}}
+   "ballroom/mosaic-floor"
+   {"asset" "visual-language/greenways/peacock-ballroom-day"
+    "anchor" {"position" [-0.5 2.05 10.5] "yaw" 0 "pitch" -28}
+    "crop" {"focus" [50 67] "zoom" 1.19}
+    "blend" {"plateOpacity" 0.94 "geometryOpacity" 0.20}}})
+
+(def render-profiles
+  {"desktop"
+   {"parallaxX" 0.032
+    "parallaxY" 0.026
+    "fadeDistance" 11
+    "fadeYaw" 38
+    "fadePitch" 28
+    "minimumOpacity" 0.16}
+   "mobile"
+   {"parallaxX" 0.021
+    "parallaxY" 0.018
+    "fadeDistance" 7
+    "fadeYaw" 28
+    "fadePitch" 22
+    "minimumOpacity" 0.24}})
+
+(defn peacock-ballroom-render-plate [state-id profile appearance]
+  {"format" render-plate-format
+   "id" render-plate-id
+   "package" render-plate-package
+   "stateId" state-id
+   "profile" profile
+   "appearance" appearance
+   "assets" render-assets
+   "state" (get render-states state-id)
+   "parallax" (get render-profiles profile)})
