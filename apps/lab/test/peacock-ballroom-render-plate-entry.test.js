@@ -35,7 +35,10 @@ test("observes semantic world-state changes and falls back to full geometry if t
   assert.match(entry, /createPeacockBallroomRenderPlateHost/);
   assert.match(entry, /new MutationObserver/);
   assert.match(entry, /attributeFilter: \["data-peacock-ballroom-state"\]/);
-  assert.match(entry, /await host\.open\(activeState, \{profile, appearance\}\)/);
+  assert.match(
+    entry,
+    /await host\.open\(activeState,\s*\{\s*profile,\s*appearance: activeAppearance,\s*\}\)/s,
+  );
   assert.match(entry, /error\?\.name === "AbortError"/);
   assert.match(entry, /fell back to structural geometry/);
   assert.match(entry, /canvas\.style\.opacity = "1"/);
@@ -54,9 +57,12 @@ test("publishes bounded render evidence and leaves canvas input authoritative", 
   ]) {
     assert.ok(entry.includes(token), token);
   }
-  assert.match(entry, /canvas\.style\.opacity = ready \? String\(evidence\.geometryOpacity\) : "1"/);
+  assert.match(
+    entry,
+    /canvas\.style\.opacity = rendered && ready \? String\(evidence\.geometryOpacity\) : "1"/,
+  );
   assert.match(entry, /__PEACOCK_BALLROOM_RENDER_PLATE_FRAME__/);
-  assert.match(host, /pointer-transparent|DOM mount|createElement\("img"\)/);
+  assert.match(host, /DOM mount|createElement\("img"\)/);
   assert.doesNotMatch(host, /drawImage|canvas\.getContext|createTexture|shaderSource/);
   assert.match(styles, /z-index: 2/);
   assert.match(styles, /pointer-events: none/);
