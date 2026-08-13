@@ -496,13 +496,22 @@ export function createPeacockBallroomArchitecturalProjection({
   const foliage = material("architecture/foliage");
   const sheen = material("architecture/floor-sheen");
 
+  const {
+    radius: columnRadius,
+    height: columnHeight,
+    baseHeight: columnBaseHeight,
+    capitalHeight: columnCapitalHeight,
+  } = layout.columns;
   for (const x of layout.columns.x) {
     for (const z of layout.columns.z) {
       counters.entities += addColumn(pc, app, root, {
         x,
         z,
         floorY: layout.floorY,
-        ...layout.columns,
+        radius: columnRadius,
+        height: columnHeight,
+        baseHeight: columnBaseHeight,
+        capitalHeight: columnCapitalHeight,
         detail,
         ivory,
         marble,
