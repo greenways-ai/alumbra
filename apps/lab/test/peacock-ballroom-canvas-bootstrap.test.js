@@ -14,16 +14,20 @@ const renderEntry = readFileSync(
   new URL("../src/peacock-ballroom-render-plate-entry.js", import.meta.url),
   "utf8",
 );
+const worldEntry = readFileSync(
+  new URL("../src/peacock-ballroom-entry.js", import.meta.url),
+  "utf8",
+);
 
 test("installs canvas sizing synchronously before every module entry point", () => {
   const bootstrapScript = documentSource.indexOf(
     '<script src="./src/peacock-ballroom-canvas-bootstrap.js?v=pb-canvas-1"></script>',
   );
   const firstModule = documentSource.indexOf('<script type="module"');
-  const worldEntry = documentSource.indexOf("peacock-ballroom-entry.js");
+  const worldEntryScript = documentSource.indexOf("peacock-ballroom-entry.js");
   assert.ok(bootstrapScript >= 0);
   assert.ok(firstModule > bootstrapScript);
-  assert.ok(worldEntry > bootstrapScript);
+  assert.ok(worldEntryScript > bootstrapScript);
   assert.doesNotMatch(renderEntry, /peacock-ballroom-canvas-bootstrap\.js/);
 });
 
@@ -58,6 +62,18 @@ test("pins the first observed host size and follows later host shrinkage", () =>
   assert.match(bootstrap, /new ResizeObserver\(schedule\)/);
   assert.match(bootstrap, /resizeObserver\?\.observe\(shell\)/);
   assert.match(bootstrap, /resizeObserver\?\.observe\(canvas\)/);
+});
+
+test("the world entry consumes bounded bootstrap evidence when layout still reports zero", () => {
+  assert.match(worldEntry, /function drawableSize\(element\)/);
+  assert.match(worldEntry, /__PEACOCK_BALLROOM_CANVAS_BOOTSTRAP__/);
+  assert.match(worldEntry, /alumbra\.peacock-ballroom-canvas-bootstrap\/1/);
+  assert.match(worldEntry, /source: bootstrapValid \? "bootstrap" : "viewport"/);
+  assert.match(worldEntry, /peacockBallroomDrawableSource/);
+  assert.ok(
+    worldEntry.indexOf("const observed = drawableSize(element)")
+      < worldEntry.indexOf("stableFrames >= 2"),
+  );
 });
 
 test("publishes bounded diagnostics and releases all observers", () => {
