@@ -39,20 +39,18 @@ test("uses the document viewport when percentage layout has not acquired a box y
   assert.doesNotMatch(bootstrap, /setTimeout|setInterval|Date\.now|Math\.random/);
 });
 
-test("keeps an acquired fallback responsive instead of alternating with zero-sized layout", () => {
-  assert.match(bootstrap, /if \(fallbackApplied\)/);
-  assert.match(bootstrap, /const stableWidth = width > 1 \? width : canvasSize\.width/);
-  assert.match(bootstrap, /const stableHeight = height > 1 \? height : canvasSize\.height/);
-  assert.match(bootstrap, /canvas\.style\.width = `\$\{stableWidth\}px`/);
-  assert.match(bootstrap, /canvas\.style\.height = `\$\{stableHeight\}px`/);
-  assert.ok(
-    bootstrap.indexOf("if (fallbackApplied)")
-      < bootstrap.indexOf("if (canvasSize.width > 1"),
-  );
-  assert.doesNotMatch(bootstrap, /embeddedHost/);
-  assert.equal((bootstrap.match(/fallbackApplied = false/g) || []).length, 1);
+test("pins the first observed host size before a one-frame layout can collapse", () => {
+  assert.match(bootstrap, /Math\.max\(shellSize\.width, viewport\.width, canvasSize\.width\)/);
+  assert.match(bootstrap, /Math\.max\(shellSize\.height, viewport\.height, canvasSize\.height\)/);
+  assert.match(bootstrap, /canvas\.style\.width = `\$\{width\}px`/);
+  assert.match(bootstrap, /canvas\.style\.height = `\$\{height\}px`/);
+  assert.match(bootstrap, /fallbackApplied = true/);
+  assert.match(bootstrap, /\? "layout-pinned"\s+: "viewport-fallback"/);
+  assert.doesNotMatch(bootstrap, /if \(fallbackApplied\)/);
+  assert.doesNotMatch(bootstrap, /fallbackApplied = false/);
   assert.match(bootstrap, /new ResizeObserver\(schedule\)/);
   assert.match(bootstrap, /resizeObserver\?\.observe\(shell\)/);
+  assert.match(bootstrap, /resizeObserver\?\.observe\(canvas\)/);
 });
 
 test("publishes bounded diagnostics and releases all observers", () => {
