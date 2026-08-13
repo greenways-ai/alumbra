@@ -512,12 +512,21 @@ export function createPeacockBallroomArchitecturalProjection({
     }
   }
 
+  const {
+    span: archSpan,
+    springY: archSpringY,
+    rise: archRise,
+    radius: archRadius,
+  } = layout.arches;
   for (const x of layout.arches.sideX) {
     for (const centerZ of layout.arches.centerZ) {
       counters.entities += addArch(pc, app, root, {
         x,
         centerZ,
-        ...layout.arches,
+        span: archSpan,
+        springY: archSpringY,
+        rise: archRise,
+        radius: archRadius,
         segments: detail.archSegments,
         ivory,
         gold,
