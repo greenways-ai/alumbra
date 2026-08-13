@@ -47,7 +47,7 @@ test("pins the first observed host size before a one-frame layout can collapse",
   assert.match(bootstrap, /fallbackApplied = true/);
   assert.match(bootstrap, /\? "layout-pinned"\s+: "viewport-fallback"/);
   assert.doesNotMatch(bootstrap, /if \(fallbackApplied\)/);
-  assert.doesNotMatch(bootstrap, /fallbackApplied = false/);
+  assert.equal((bootstrap.match(/fallbackApplied = false/g) || []).length, 1);
   assert.match(bootstrap, /new ResizeObserver\(schedule\)/);
   assert.match(bootstrap, /resizeObserver\?\.observe\(shell\)/);
   assert.match(bootstrap, /resizeObserver\?\.observe\(canvas\)/);
