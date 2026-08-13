@@ -8,3 +8,4 @@ export * from "./fixtures.js";
 export * from "./runtime.js";
 export * from "./peacock-ballroom.js";
 export * from "./peacock-ballroom-architecture.js";
+export * from "./peacock-ballroom-render-plates.js";
