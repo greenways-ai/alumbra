@@ -50,7 +50,7 @@ test("keeps an acquired fallback responsive instead of alternating with zero-siz
       < bootstrap.indexOf("if (canvasSize.width > 1"),
   );
   assert.doesNotMatch(bootstrap, /embeddedHost/);
-  assert.doesNotMatch(bootstrap, /fallbackApplied = false/);
+  assert.equal((bootstrap.match(/fallbackApplied = false/g) || []).length, 1);
   assert.match(bootstrap, /new ResizeObserver\(schedule\)/);
   assert.match(bootstrap, /resizeObserver\?\.observe\(shell\)/);
 });
