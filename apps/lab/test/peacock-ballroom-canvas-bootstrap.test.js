@@ -22,7 +22,7 @@ test("installs canvas sizing before the render plate and canonical world start",
   );
 });
 
-test("uses the embedded viewport when percentage layout has not acquired a box yet", () => {
+test("uses the document viewport when percentage layout has not acquired a box yet", () => {
   for (const token of [
     "visualViewport",
     "root.clientWidth",
@@ -39,18 +39,18 @@ test("uses the embedded viewport when percentage layout has not acquired a box y
   assert.doesNotMatch(bootstrap, /setTimeout|setInterval|Date\.now|Math\.random/);
 });
 
-test("keeps the Catalog fallback stable while standalone layout can return to responsive sizing", () => {
-  assert.match(bootstrap, /parameters\.get\("embed"\) === "catalog"/);
-  assert.match(bootstrap, /fallbackApplied && embeddedHost/);
+test("keeps an acquired fallback responsive instead of alternating with zero-sized layout", () => {
+  assert.match(bootstrap, /if \(fallbackApplied\)/);
+  assert.match(bootstrap, /const stableWidth = width > 1 \? width : canvasSize\.width/);
+  assert.match(bootstrap, /const stableHeight = height > 1 \? height : canvasSize\.height/);
+  assert.match(bootstrap, /canvas\.style\.width = `\$\{stableWidth\}px`/);
+  assert.match(bootstrap, /canvas\.style\.height = `\$\{stableHeight\}px`/);
   assert.ok(
-    bootstrap.indexOf("fallbackApplied && embeddedHost")
-      < bootstrap.indexOf('canvas.style.removeProperty("width")'),
+    bootstrap.indexOf("if (fallbackApplied)")
+      < bootstrap.indexOf("if (canvasSize.width > 1"),
   );
-  assert.match(bootstrap, /const embeddedWidth = width > 1 \? width : canvasSize\.width/);
-  assert.match(bootstrap, /const embeddedHeight = height > 1 \? height : canvasSize\.height/);
-  assert.match(bootstrap, /canvas\.style\.removeProperty\("width"\)/);
-  assert.match(bootstrap, /canvas\.style\.removeProperty\("height"\)/);
-  assert.match(bootstrap, /fallbackApplied = false/);
+  assert.doesNotMatch(bootstrap, /embeddedHost/);
+  assert.doesNotMatch(bootstrap, /fallbackApplied = false/);
   assert.match(bootstrap, /new ResizeObserver\(schedule\)/);
   assert.match(bootstrap, /resizeObserver\?\.observe\(shell\)/);
 });
@@ -61,5 +61,7 @@ test("publishes bounded diagnostics and releases all observers", () => {
   assert.match(bootstrap, /__PEACOCK_BALLROOM_CANVAS_BOOTSTRAP__/);
   assert.match(bootstrap, /resizeObserver\?\.disconnect\(\)/);
   assert.match(bootstrap, /removeEventListener\?\.\("resize", schedule\)/);
+  assert.match(bootstrap, /canvas\.style\.removeProperty\("width"\)/);
+  assert.match(bootstrap, /canvas\.style\.removeProperty\("height"\)/);
   assert.match(bootstrap, /delete globalThis\.__PEACOCK_BALLROOM_CANVAS_BOOTSTRAP__/);
 });
