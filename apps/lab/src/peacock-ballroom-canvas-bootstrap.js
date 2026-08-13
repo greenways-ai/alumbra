@@ -2,6 +2,8 @@ const root = document.documentElement;
 const body = document.body;
 const shell = document.querySelector(".ballroom-shell");
 const canvas = document.querySelector("#peacock-ballroom-canvas");
+const parameters = new URLSearchParams(location.search);
+const embeddedHost = parameters.get("embed") === "catalog";
 
 if (!root || !body || !shell || !canvas) {
   throw new Error("Peacock Ballroom canvas bootstrap is missing its shell or canvas");
@@ -57,23 +59,36 @@ function publish(mode, width, height) {
 function measure() {
   scheduled = false;
   if (disposed) return null;
-  const canvasSize = elementSize(canvas);
-  if (canvasSize.width > 1 && canvasSize.height > 1) {
-    if (fallbackApplied) {
-      const shellSize = elementSize(shell);
-      if (shellSize.width > 1 && shellSize.height > 1) {
-        canvas.style.removeProperty("width");
-        canvas.style.removeProperty("height");
-        fallbackApplied = false;
-      }
-    }
-    return publish("layout", canvasSize.width, canvasSize.height);
-  }
 
+  const canvasSize = elementSize(canvas);
   const shellSize = elementSize(shell);
   const viewport = viewportSize();
   const width = Math.max(shellSize.width, viewport.width);
   const height = Math.max(shellSize.height, viewport.height);
+
+  // A newly exposed Catalog iframe can report a valid child viewport while its
+  // percentage-sized canvas repeatedly collapses after inline fallback removal.
+  // Keep the fallback responsive to observed host size for that embedded
+  // boundary instead of alternating between a drawable and zero-sized canvas.
+  if (fallbackApplied && embeddedHost) {
+    const embeddedWidth = width > 1 ? width : canvasSize.width;
+    const embeddedHeight = height > 1 ? height : canvasSize.height;
+    if (embeddedWidth > 1 && embeddedHeight > 1) {
+      canvas.style.width = `${embeddedWidth}px`;
+      canvas.style.height = `${embeddedHeight}px`;
+      return publish("viewport-fallback", embeddedWidth, embeddedHeight);
+    }
+  }
+
+  if (canvasSize.width > 1 && canvasSize.height > 1) {
+    if (fallbackApplied && shellSize.width > 1 && shellSize.height > 1) {
+      canvas.style.removeProperty("width");
+      canvas.style.removeProperty("height");
+      fallbackApplied = false;
+    }
+    return publish("layout", canvasSize.width, canvasSize.height);
+  }
+
   if (width > 1 && height > 1) {
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
