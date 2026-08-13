@@ -83,6 +83,7 @@
   data-peacock-ballroom-architecture="pending"
   data-peacock-ballroom-progress="1"
   data-peacock-ballroom-progress-stage="canvas"
+  data-peacock-ballroom-render-progress="pending"
   data-peacock-ballroom-render-plate="pending"
   data-peacock-ballroom-render-plate-loaded="false"
   data-peacock-ballroom-render-plate-state="ballroom/day"
@@ -189,6 +190,11 @@
             <span class="ballroom-progress-stage-meter" aria-hidden="true"><span data-ballroom-progress-stage-fill></span></span>
             <small data-ballroom-progress-stage-state>queued</small>
           </li>
+          <li class="ballroom-progress-stage" data-ballroom-progress-stage="render" data-progress-state="queued" style="--stage-progress: 0%">
+            <span>Original rendering</span>
+            <span class="ballroom-progress-stage-meter" aria-hidden="true"><span data-ballroom-progress-stage-fill></span></span>
+            <small data-ballroom-progress-stage-state>queued</small>
+          </li>
           <li class="ballroom-progress-stage" data-ballroom-progress-stage="evidence" data-progress-state="queued" style="--stage-progress: 0%">
             <span>Lighting &amp; evidence</span>
             <span class="ballroom-progress-stage-meter" aria-hidden="true"><span data-ballroom-progress-stage-fill></span></span>
@@ -205,6 +211,7 @@
   </main>
   <script type="module" src="./src/peacock-ballroom-progress.js?v=pb-progress-1"></script>
   <script type="module" src="./src/peacock-ballroom-render-plate-entry.js?v=pb-plate-1"></script>
+  <script type="module" src="./src/peacock-ballroom-render-plate-progress.js?v=pb-plate-1"></script>
   <script type="module" src="./src/peacock-ballroom-render-plate-pose.js?v=pb-plate-1"></script>
   <script type="module" src="./src/peacock-ballroom-render-plate-controls.js?v=pb-plate-1"></script>
   <script type="module" src="./src/peacock-ballroom-entry.js?v=pb-mobile-2"></script>
