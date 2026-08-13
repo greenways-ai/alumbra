@@ -54,14 +54,51 @@ let runtimeFault = false;
 
 const nextAnimationFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 
+function drawableSize(element) {
+  const rect = element.getBoundingClientRect();
+  const measuredWidth = Math.floor(Math.max(0, Number(rect.width) || 0, Number(element.clientWidth) || 0));
+  const measuredHeight = Math.floor(Math.max(0, Number(rect.height) || 0, Number(element.clientHeight) || 0));
+  if (measuredWidth > 1 && measuredHeight > 1) {
+    return Object.freeze({width: measuredWidth, height: measuredHeight, source: "layout"});
+  }
+
+  const bootstrap = globalThis.__PEACOCK_BALLROOM_CANVAS_BOOTSTRAP__;
+  const bootstrapValid = bootstrap?.format === "alumbra.peacock-ballroom-canvas-bootstrap/1";
+  const width = Math.floor(Math.max(
+    0,
+    bootstrapValid ? Number(bootstrap.width) || 0 : 0,
+    Number(root.clientWidth) || 0,
+    Number(body.clientWidth) || 0,
+    Number(globalThis.visualViewport?.width) || 0,
+    Number(globalThis.innerWidth) || 0,
+  ));
+  const height = Math.floor(Math.max(
+    0,
+    bootstrapValid ? Number(bootstrap.height) || 0 : 0,
+    Number(root.clientHeight) || 0,
+    Number(body.clientHeight) || 0,
+    Number(globalThis.visualViewport?.height) || 0,
+    Number(globalThis.innerHeight) || 0,
+  ));
+  if (width > 1 && height > 1) {
+    element.style.width = `${width}px`;
+    element.style.height = `${height}px`;
+    return Object.freeze({
+      width,
+      height,
+      source: bootstrapValid ? "bootstrap" : "viewport",
+    });
+  }
+  return Object.freeze({width: 0, height: 0, source: "waiting"});
+}
+
 async function prepareDrawableCanvas(element, {timeout = 10_000} = {}) {
   const startedAt = performance.now();
   let previousSize = "";
   let stableFrames = 0;
   while (performance.now() - startedAt < timeout) {
-    const rect = element.getBoundingClientRect();
-    const width = Math.floor(rect.width || element.clientWidth || 0);
-    const height = Math.floor(rect.height || element.clientHeight || 0);
+    const observed = drawableSize(element);
+    const {width, height} = observed;
     if (width > 1 && height > 1) {
       const size = `${width}x${height}`;
       stableFrames = size === previousSize ? stableFrames + 1 : 1;
@@ -74,7 +111,8 @@ async function prepareDrawableCanvas(element, {timeout = 10_000} = {}) {
         element.height = pixelHeight;
         body.dataset.peacockBallroomDrawable = "ready";
         body.dataset.peacockBallroomDrawableSize = `${pixelWidth}x${pixelHeight}`;
-        return Object.freeze({width, height, pixelWidth, pixelHeight});
+        body.dataset.peacockBallroomDrawableSource = observed.source;
+        return Object.freeze({width, height, pixelWidth, pixelHeight, source: observed.source});
       }
     } else {
       previousSize = "";
@@ -83,6 +121,7 @@ async function prepareDrawableCanvas(element, {timeout = 10_000} = {}) {
     await nextAnimationFrame();
   }
   body.dataset.peacockBallroomDrawable = "failed";
+  body.dataset.peacockBallroomDrawableSource = "failed";
   throw new Error("Peacock Ballroom canvas did not acquire a stable drawable size");
 }
 
