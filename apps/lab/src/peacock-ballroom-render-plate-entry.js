@@ -1,3 +1,4 @@
+import "./peacock-ballroom-canvas-bootstrap.js";
 import {createPeacockBallroomRenderPlateHost} from "./peacock-ballroom-render-plate.js";
 
 const body = document.body;
