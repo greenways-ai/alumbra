@@ -45,6 +45,7 @@
   </script>
   <link rel="stylesheet" href="./src/peacock-ballroom.css?v=pb-mobile-2" />
   <link rel="stylesheet" href="./src/peacock-ballroom-progress.css?v=pb-progress-1" />
+  <link rel="stylesheet" href="./src/peacock-ballroom-render-plate.css?v=pb-plate-1" />
   <script type="importmap">
   {
     "imports": {
@@ -82,6 +83,22 @@
   data-peacock-ballroom-architecture="pending"
   data-peacock-ballroom-progress="1"
   data-peacock-ballroom-progress-stage="canvas"
+  data-peacock-ballroom-render-plate="pending"
+  data-peacock-ballroom-render-plate-loaded="false"
+  data-peacock-ballroom-render-plate-state="ballroom/day"
+  data-peacock-ballroom-render-plate-asset="none"
+  data-peacock-ballroom-render-plate-blob="none"
+  data-peacock-ballroom-render-plate-appearance="day"
+  data-peacock-ballroom-render-plate-profile="desktop"
+  data-peacock-ballroom-render-plate-presentation="rendered"
+  data-peacock-ballroom-render-plate-opacity="0"
+  data-peacock-ballroom-render-plate-geometry-opacity="1"
+  data-peacock-ballroom-render-plate-fidelity="0"
+  data-peacock-ballroom-render-plate-pose="pending"
+  data-peacock-ballroom-render-plate-position="-0.50,2.05,23.50"
+  data-peacock-ballroom-render-plate-yaw="0.00"
+  data-peacock-ballroom-render-plate-pitch="-8.00"
+  data-peacock-ballroom-render-controls="pending"
 >
   <main class="ballroom-shell">
     <canvas
@@ -98,8 +115,10 @@
         <h1>Peacock Ballroom</h1>
         <p>An original Hara-authored hall of ivory colonnades, teal glass, peacock mosaics and warm chandelier light.</p>
       </section>
-      <nav class="ballroom-controls" aria-label="Peacock Ballroom views">
+      <nav class="ballroom-controls" aria-label="Peacock Ballroom views and rendering">
         <a class="ballroom-back" href="./">Back to Lab</a>
+        <button type="button" data-ballroom-presentation-toggle aria-pressed="true">Rendered</button>
+        <button type="button" data-ballroom-appearance-toggle aria-pressed="false">Day</button>
         <button type="button" data-ballroom-state="ballroom/day">Day entrance</button>
         <button type="button" data-ballroom-state="ballroom/gallery-overlook">Gallery overlook</button>
         <button type="button" data-ballroom-state="ballroom/mosaic-floor">Mosaic floor</button>
@@ -185,6 +204,9 @@
     </div>
   </main>
   <script type="module" src="./src/peacock-ballroom-progress.js?v=pb-progress-1"></script>
+  <script type="module" src="./src/peacock-ballroom-render-plate-entry.js?v=pb-plate-1"></script>
+  <script type="module" src="./src/peacock-ballroom-render-plate-pose.js?v=pb-plate-1"></script>
+  <script type="module" src="./src/peacock-ballroom-render-plate-controls.js?v=pb-plate-1"></script>
   <script type="module" src="./src/peacock-ballroom-entry.js?v=pb-mobile-2"></script>
 </body>
 </html>
