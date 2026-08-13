@@ -45,6 +45,7 @@
   </script>
   <link rel="stylesheet" href="./src/peacock-ballroom.css?v=pb-mobile-2" />
   <link rel="stylesheet" href="./src/peacock-ballroom-progress.css?v=pb-progress-1" />
+  <link rel="stylesheet" href="./src/peacock-ballroom-render-plate.css?v=pb-plate-1" />
   <script type="importmap">
   {
     "imports": {
@@ -82,6 +83,16 @@
   data-peacock-ballroom-architecture="pending"
   data-peacock-ballroom-progress="1"
   data-peacock-ballroom-progress-stage="canvas"
+  data-peacock-ballroom-render-plate="pending"
+  data-peacock-ballroom-render-plate-loaded="false"
+  data-peacock-ballroom-render-plate-state="ballroom/day"
+  data-peacock-ballroom-render-plate-asset="none"
+  data-peacock-ballroom-render-plate-blob="none"
+  data-peacock-ballroom-render-plate-appearance="day"
+  data-peacock-ballroom-render-plate-profile="desktop"
+  data-peacock-ballroom-render-plate-opacity="0"
+  data-peacock-ballroom-render-plate-geometry-opacity="1"
+  data-peacock-ballroom-render-plate-fidelity="0"
 >
   <main class="ballroom-shell">
     <canvas
@@ -185,6 +196,7 @@
     </div>
   </main>
   <script type="module" src="./src/peacock-ballroom-progress.js?v=pb-progress-1"></script>
+  <script type="module" src="./src/peacock-ballroom-render-plate-entry.js?v=pb-plate-1"></script>
   <script type="module" src="./src/peacock-ballroom-entry.js?v=pb-mobile-2"></script>
 </body>
 </html>
