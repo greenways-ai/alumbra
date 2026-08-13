@@ -61,8 +61,10 @@ function measure() {
   const canvasSize = elementSize(canvas);
   const shellSize = elementSize(shell);
   const viewport = viewportSize();
-  const width = Math.max(shellSize.width, viewport.width, canvasSize.width);
-  const height = Math.max(shellSize.height, viewport.height, canvasSize.height);
+  const hostWidth = Math.max(shellSize.width, viewport.width);
+  const hostHeight = Math.max(shellSize.height, viewport.height);
+  const width = hostWidth > 1 ? hostWidth : canvasSize.width;
+  const height = hostHeight > 1 ? hostHeight : canvasSize.height;
 
   // The entry requires two consecutive drawable frames. A percentage-sized
   // canvas can be measurable for one frame and collapse on the next while an
