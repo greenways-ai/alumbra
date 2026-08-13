@@ -61,32 +61,22 @@ function measure() {
   const canvasSize = elementSize(canvas);
   const shellSize = elementSize(shell);
   const viewport = viewportSize();
-  const width = Math.max(shellSize.width, viewport.width);
-  const height = Math.max(shellSize.height, viewport.height);
+  const width = Math.max(shellSize.width, viewport.width, canvasSize.width);
+  const height = Math.max(shellSize.height, viewport.height, canvasSize.height);
 
-  // A newly exposed iframe or a headless/mobile review can report a valid
-  // document viewport while its percentage-sized canvas alternates between a
-  // drawable box and zero during startup. Once the fallback is needed, keep it
-  // responsive to observed host size rather than removing and reapplying it.
-  if (fallbackApplied) {
-    const stableWidth = width > 1 ? width : canvasSize.width;
-    const stableHeight = height > 1 ? height : canvasSize.height;
-    if (stableWidth > 1 && stableHeight > 1) {
-      canvas.style.width = `${stableWidth}px`;
-      canvas.style.height = `${stableHeight}px`;
-      return publish("viewport-fallback", stableWidth, stableHeight);
-    }
-  }
-
-  if (canvasSize.width > 1 && canvasSize.height > 1) {
-    return publish("layout", canvasSize.width, canvasSize.height);
-  }
-
+  // The entry requires two consecutive drawable frames. A percentage-sized
+  // canvas can be measurable for one frame and collapse on the next while an
+  // iframe, mobile viewport or headless host is settling. Pin every observed
+  // host size immediately, then keep the pixels responsive through the same
+  // resize observations until disposal.
   if (width > 1 && height > 1) {
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     fallbackApplied = true;
-    return publish("viewport-fallback", width, height);
+    const mode = canvasSize.width > 1 && canvasSize.height > 1
+      ? "layout-pinned"
+      : "viewport-fallback";
+    return publish(mode, width, height);
   }
   return publish("waiting", width, height);
 }
