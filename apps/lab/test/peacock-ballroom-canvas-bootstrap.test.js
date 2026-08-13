@@ -39,7 +39,15 @@ test("uses the embedded viewport when percentage layout has not acquired a box y
   assert.doesNotMatch(bootstrap, /setTimeout|setInterval|Date\.now|Math\.random/);
 });
 
-test("returns to ordinary responsive layout once the shell is measurable", () => {
+test("keeps the Catalog fallback stable while standalone layout can return to responsive sizing", () => {
+  assert.match(bootstrap, /parameters\.get\("embed"\) === "catalog"/);
+  assert.match(bootstrap, /fallbackApplied && embeddedHost/);
+  assert.ok(
+    bootstrap.indexOf("fallbackApplied && embeddedHost")
+      < bootstrap.indexOf('canvas.style.removeProperty("width")'),
+  );
+  assert.match(bootstrap, /const embeddedWidth = width > 1 \? width : canvasSize\.width/);
+  assert.match(bootstrap, /const embeddedHeight = height > 1 \? height : canvasSize\.height/);
   assert.match(bootstrap, /canvas\.style\.removeProperty\("width"\)/);
   assert.match(bootstrap, /canvas\.style\.removeProperty\("height"\)/);
   assert.match(bootstrap, /fallbackApplied = false/);
