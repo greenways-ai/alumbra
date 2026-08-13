@@ -33,6 +33,7 @@ const PLAYABLE_WORLD_ACTIVITY = "alumbra-viewport-playcanvas/playable-world";
 const TWO_SESSIONS_ACTIVITY = "alumbra-viewport-playcanvas/two-sessions";
 const LIT_WORLD_ACTIVITY = "alumbra-viewport-playcanvas/lit-world";
 const CATALOG_ACTIVITY = "alumbra-hodos/renderer-catalog";
+const PEACOCK_BALLROOM_ACTIVITY = "alumbra-hara/peacock-ballroom";
 
 const viewportGrid = document.querySelector("[data-viewport-grid]");
 const canvas = document.querySelector("#alumbra-canvas");
@@ -384,10 +385,32 @@ function showActivity(activityId, {
   announce = true,
   stateId = null,
 } = {}) {
-  if (![PLAYABLE_WORLD_ACTIVITY, TWO_SESSIONS_ACTIVITY, LIT_WORLD_ACTIVITY, CATALOG_ACTIVITY, PACKAGED_HARA_ACTIVITY].includes(activityId)) {
+  if (![
+    PLAYABLE_WORLD_ACTIVITY,
+    TWO_SESSIONS_ACTIVITY,
+    LIT_WORLD_ACTIVITY,
+    CATALOG_ACTIVITY,
+    PACKAGED_HARA_ACTIVITY,
+    PEACOCK_BALLROOM_ACTIVITY,
+  ].includes(activityId)) {
     return false;
   }
   activeActivity = activityId;
+
+  if (activityId === PEACOCK_BALLROOM_ACTIVITY) {
+    packagedHara.close(`activity:${activityId}`);
+    activePackagedState = null;
+    primaryViewport.suspend(`activity:${activityId}`);
+    secondaryViewport?.suspend(`activity:${activityId}`);
+    canvas.hidden = true;
+    secondaryCanvas.hidden = true;
+    haraCanvas.hidden = true;
+    packagedWorldError.hidden = true;
+    hotbar.hidden = true;
+    viewportGrid.dataset.mode = "peacock-ballroom";
+    document.body.dataset.viewportMode = "peacock-ballroom";
+    return true;
+  }
 
   if (activityId === LIT_WORLD_ACTIVITY) {
     packagedHara.close(`activity:${activityId}`);
