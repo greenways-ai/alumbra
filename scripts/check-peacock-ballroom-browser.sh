@@ -86,7 +86,9 @@ run_state() {
     'data-peacock-ballroom-landmarks="passed"' \
     'data-peacock-ballroom-disposal="passed"' \
     'data-peacock-ballroom-mobile-controls="ready"' \
-    'data-peacock-ballroom-architecture="passed"'; do
+    'data-peacock-ballroom-architecture="passed"' \
+    'data-peacock-ballroom-progress="100"' \
+    'data-peacock-ballroom-progress-stage="ready"'; do
     if ! grep -Fq "$expected" "$dom"; then
       cat "$log" >&2
       cat "$dom" >&2

@@ -44,6 +44,7 @@
   })();
   </script>
   <link rel="stylesheet" href="./src/peacock-ballroom.css?v=pb-mobile-2" />
+  <link rel="stylesheet" href="./src/peacock-ballroom-progress.css?v=pb-progress-1" />
   <script type="importmap">
   {
     "imports": {
@@ -77,6 +78,10 @@
   data-peacock-ballroom-mobile-controls="pending"
   data-peacock-ballroom-mobile-layout="pending"
   data-peacock-ballroom-target="none"
+  data-peacock-ballroom-drawable="pending"
+  data-peacock-ballroom-architecture="pending"
+  data-peacock-ballroom-progress="1"
+  data-peacock-ballroom-progress-stage="canvas"
 >
   <main class="ballroom-shell">
     <canvas
@@ -130,13 +135,56 @@
       </div>
     </footer>
 
-    <div class="ballroom-loading" data-ballroom-loading>
-      <div class="ballroom-loading-card">
-        <h2>Building the Peacock Ballroom</h2>
-        <p>Materialising Hara architecture, canonical chunks, sunlight, lamps and renderer-owned meshes.</p>
-      </div>
+    <div class="ballroom-loading" data-ballroom-loading data-progress-state="loading" aria-live="polite" aria-busy="true">
+      <section class="ballroom-loading-card" aria-label="World assembly progress">
+        <div class="ballroom-progress-heading">
+          <div>
+            <p class="ballroom-progress-kicker">World assembly</p>
+            <strong data-ballroom-progress-label>Sizing the renderer surface</strong>
+          </div>
+          <output data-ballroom-progress-percent>1%</output>
+        </div>
+        <div
+          class="ballroom-progress-overall"
+          data-ballroom-progress-overall
+          role="progressbar"
+          aria-label="Peacock Ballroom assembly"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="1"
+          style="--ballroom-progress: 1%"
+        ><span data-ballroom-progress-overall-fill style="width: 1%"></span></div>
+        <ol class="ballroom-progress-stages">
+          <li class="ballroom-progress-stage" data-ballroom-progress-stage="canvas" data-progress-state="active" style="--stage-progress: 16%">
+            <span>Renderer surface</span>
+            <span class="ballroom-progress-stage-meter" aria-hidden="true"><span data-ballroom-progress-stage-fill style="width: 16%"></span></span>
+            <small data-ballroom-progress-stage-state>active</small>
+          </li>
+          <li class="ballroom-progress-stage" data-ballroom-progress-stage="canonical" data-progress-state="queued" style="--stage-progress: 0%">
+            <span>Canonical chunks</span>
+            <span class="ballroom-progress-stage-meter" aria-hidden="true"><span data-ballroom-progress-stage-fill></span></span>
+            <small data-ballroom-progress-stage-state>queued</small>
+          </li>
+          <li class="ballroom-progress-stage" data-ballroom-progress-stage="architecture" data-progress-state="queued" style="--stage-progress: 0%">
+            <span>Ornamental projection</span>
+            <span class="ballroom-progress-stage-meter" aria-hidden="true"><span data-ballroom-progress-stage-fill></span></span>
+            <small data-ballroom-progress-stage-state>queued</small>
+          </li>
+          <li class="ballroom-progress-stage" data-ballroom-progress-stage="evidence" data-progress-state="queued" style="--stage-progress: 0%">
+            <span>Lighting &amp; evidence</span>
+            <span class="ballroom-progress-stage-meter" aria-hidden="true"><span data-ballroom-progress-stage-fill></span></span>
+            <small data-ballroom-progress-stage-state>queued</small>
+          </li>
+          <li class="ballroom-progress-stage" data-ballroom-progress-stage="controls" data-progress-state="queued" style="--stage-progress: 0%">
+            <span>Player controls</span>
+            <span class="ballroom-progress-stage-meter" aria-hidden="true"><span data-ballroom-progress-stage-fill></span></span>
+            <small data-ballroom-progress-stage-state>queued</small>
+          </li>
+        </ol>
+      </section>
     </div>
   </main>
+  <script type="module" src="./src/peacock-ballroom-progress.js?v=pb-progress-1"></script>
   <script type="module" src="./src/peacock-ballroom-entry.js?v=pb-mobile-2"></script>
 </body>
 </html>
